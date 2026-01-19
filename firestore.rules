@@ -1,0 +1,33 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow read/write access to all users under any path
+    // WARNING: This is for development purposes only. 
+    // In production, you should restrict access to authenticated users.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+    
+    // Recommended rules for Phase 3 (Uncomment when ready)
+    /*
+    match /stylists/{stylistId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    match /products/{productId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    match /sales/{saleId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    match /recommendations/{recId} {
+      allow read, write: if request.auth != null;
+    }
+    */
+  }
+}
