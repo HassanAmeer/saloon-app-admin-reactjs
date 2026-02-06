@@ -127,8 +127,50 @@ const AppConfig = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-tea-700" />
+            <div className="space-y-6 animate-pulse">
+                {/* Header Skeleton */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-2">
+                        <div className="h-8 w-64 bg-gray-200 rounded-lg" />
+                        <div className="h-4 w-96 bg-gray-100 rounded-lg" />
+                    </div>
+                    <div className="h-10 w-32 bg-tea-100 rounded-lg" />
+                </div>
+
+                {/* Tabs Skeleton */}
+                <div className="flex border-b border-gray-200 overflow-x-auto gap-2 pb-1">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="px-6 py-3">
+                            <div className="h-5 w-24 bg-gray-200 rounded-full" />
+                        </div>
+                    ))}
+                </div>
+
+                {/* Content Skeleton (Simulating Questionnaire/Cards) */}
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="h-6 w-48 bg-gray-200 rounded-lg" />
+                        <div className="h-8 w-32 bg-gray-200 rounded-lg" />
+                    </div>
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="card border border-gray-100 bg-white p-6 space-y-4">
+                            <div className="flex justify-between">
+                                <div className="h-5 w-1/3 bg-gray-100 rounded" />
+                                <div className="h-5 w-5 bg-gray-100 rounded" />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <div className="h-4 w-20 bg-gray-100 rounded" />
+                                    <div className="h-10 w-full bg-gray-50 rounded-lg border border-gray-100" />
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="h-4 w-20 bg-gray-100 rounded" />
+                                    <div className="h-10 w-full bg-gray-50 rounded-lg border border-gray-100" />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }

@@ -47,8 +47,36 @@ const Clients = () => {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <Loader2 className="w-8 h-8 animate-spin text-tea-700" />
+
+            <div className="space-y-6 animate-in fade-in duration-500">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="h-10 w-64 skeleton rounded-lg" />
+                        <div className="h-4 w-96 skeleton rounded-lg" />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1 space-y-4">
+                        <div className="h-12 w-full skeleton rounded-lg" />
+                        <div className="space-y-2">
+                            {[1, 2, 3, 4, 5].map((i) => (
+                                <div key={i} className="h-20 w-full skeleton rounded-xl" />
+                            ))}
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="card h-48 skeleton rounded-xl" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="card h-32 skeleton rounded-xl" />
+                            <div className="card h-32 skeleton rounded-xl" />
+                        </div>
+                        <div className="space-y-4">
+                            <div className="h-8 w-48 skeleton rounded-lg" />
+                            <div className="card h-40 skeleton rounded-xl" />
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
