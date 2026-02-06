@@ -12,8 +12,8 @@ import {
     serverTimestamp,
     setDoc
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
+import { uploadChunkedBase64 } from './file-upload';
 
 // Helper for real-time collection updates
 export const subscribeToCollection = (collectionName, callback, filters = [], sort = null) => {
@@ -55,12 +55,37 @@ export const deleteDocument = async (collectionName, docId) => {
     return await deleteDoc(docRef);
 };
 
-// Image Upload
+// Helper to convert File to Base64
+const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the base64 part
+    reader.onerror = error => reject(error);
+});
+
+// Image Upload using Chunked API
 export const uploadImage = async (file, path) => {
     if (!file) return null;
-    const storageRef = ref(storage, path);
-    await uploadBytes(storageRef, file);
-    return await getDownloadURL(storageRef);
+    try {
+        const base64 = await fileToBase64(file);
+        const result = await uploadChunkedBase64(base64);
+        console.log("Upload Result:", result); // Debugging
+
+        if (!result) return null;
+
+        // Check for common URL fields
+        const url = result.link || result.file_url || result.url || result.data?.file_url || result.data?.url;
+
+        if (!url) {
+            console.error("No URL found in upload response:", result);
+            return null;
+        }
+
+        return url;
+    } catch (error) {
+        console.error("Error in chunked upload:", error);
+        return null;
+    }
 };
 
 // Initialize Database with Mock Data
@@ -71,7 +96,9 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
             mockProducts,
             mockSales,
             mockAIRecommendations,
-            mockAdmin
+            mockAdmin,
+            mockConfig,
+            mockClients
         } = mockData;
 
         const collections = [
@@ -79,7 +106,9 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
             { name: 'products', data: mockProducts, label: 'Products' },
             { name: 'sales', data: mockSales, label: 'Sales' },
             { name: 'recommendations', data: mockAIRecommendations, label: 'AI Recommendations' },
-            { name: 'admins', data: [mockAdmin], label: 'Admin Users' }
+            { name: 'admins', data: [mockAdmin], label: 'Admin Users' },
+            { name: 'settings', data: [{ id: 'app_config', ...mockConfig }], label: 'App Settings' },
+            { name: 'clients', data: mockClients, label: 'Clients' }
         ];
 
         for (const coll of collections) {

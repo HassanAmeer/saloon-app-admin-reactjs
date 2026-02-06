@@ -8,6 +8,8 @@ import Stylists from './pages/Stylists';
 import Products from './pages/Products';
 import Sales from './pages/Sales';
 import AIRecommendations from './pages/AIRecommendations';
+import Clients from './pages/Clients';
+import AppConfig from './pages/AppConfig';
 import Seeding from './pages/Seeding';
 import Developer from './pages/Developer';
 import APIDocumentation from './pages/APIDocumentation';
@@ -33,9 +35,11 @@ function App() {
             <Route index element={<Navigate to="/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="stylists" element={<Stylists />} />
+            <Route path="clients" element={<Clients />} />
             <Route path="products" element={<Products />} />
             <Route path="sales" element={<Sales />} />
             <Route path="ai-recommendations" element={<AIRecommendations />} />
+            <Route path="app-config" element={<AppConfig />} />
             <Route path="developer" element={<Developer />} />
             <Route path="developer/api-docs" element={<APIDocumentation />} />
           </Route>

@@ -87,7 +87,12 @@ const Products = () => {
             let imageUrl = data.imageUrl;
 
             if (file) {
-                imageUrl = await uploadImage(file, `products/${Date.now()}_${file.name}`);
+                const uploadedUrl = await uploadImage(file, `products/${Date.now()}_${file.name}`);
+                if (uploadedUrl) {
+                    imageUrl = uploadedUrl;
+                } else {
+                    throw new Error("Image upload failed");
+                }
             }
 
             const productData = { ...data, imageUrl };

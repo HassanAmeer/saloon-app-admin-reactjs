@@ -463,6 +463,15 @@ export const mockAIRecommendations = [
         hairAnalysis: {
             type: "Dry, damaged",
             condition: "Needs hydration and repair",
+            metrics: [
+                { label: 'Hydration', value: 85 },
+                { label: 'Strength', value: 65 },
+                { label: 'Scalp Health', value: 92 }
+            ],
+            images: {
+                before: "https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=400",
+                after: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400"
+            }
         },
         suggestedProducts: [
             { productId: "prod-1", productName: "Hydrating Shampoo", score: 0.95, sold: true },
@@ -482,6 +491,15 @@ export const mockAIRecommendations = [
         hairAnalysis: {
             type: "Fine, limp",
             condition: "Needs volume",
+            metrics: [
+                { label: 'Hydration', value: 70 },
+                { label: 'Strength', value: 45 },
+                { label: 'Scalp Health', value: 88 }
+            ],
+            images: {
+                before: "https://images.unsplash.com/photo-1551351141-86a1179e8cbb?w=400",
+                after: "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400"
+            }
         },
         suggestedProducts: [
             { productId: "prod-2", productName: "Volume Conditioner", score: 0.94, sold: true },
@@ -580,3 +598,118 @@ export const mockDashboardStats = {
         { id: "prod-10", name: "Argan Oil Elixir", unitsSold: 64, revenue: 2176.00 },
     ],
 };
+
+export const mockConfig = {
+    hairTypes: ['Straight', 'Wavy', 'Curly', 'Coily'],
+    hairConditions: ['Dry', 'Oily', 'Normal', 'Dandruff', 'Colored', 'Thinning'],
+    hairColors: [
+        { id: 'black', name: 'Black', imageUrl: 'https://images.unsplash.com/photo-1543946602-a0fce8117697?w=150' },
+        { id: 'brown', name: 'Brown', imageUrl: 'https://images.unsplash.com/photo-1595152772835-219674b2a8a6?w=150' },
+        { id: 'blonde', name: 'Blonde', imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=150' },
+        { id: 'red', name: 'Red', imageUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150' }
+    ],
+    scanMetrics: ['Hydration', 'Strength', 'Scalp Health'],
+    questionnaire: [
+        { id: 'age', question: 'Age group?', options: ['Under 18', '18-25', '26-35', '36-50', '50+'], type: 'dropdown' },
+        { id: 'gender', question: 'Gender?', options: ['Female', 'Male', 'Non-binary', 'Prefer not to say'], type: 'dropdown' },
+        { id: 'service', question: 'Service you prefer', options: ['Haircut', 'Coloring', 'Treatment', 'Styling'], type: 'dropdown' },
+        { id: 'type', question: 'Hair type', options: ['Straight', 'Wavy', 'Curly', 'Coily'], type: 'dropdown' },
+        { id: 'natural_color', question: 'Natural hair color', options: ['Black', 'Brown', 'Blonde', 'Red', 'Grey'], type: 'dropdown' },
+        { id: 'chemically_treated', question: 'Chemically treated?', options: ['Yes, coloring', 'Yes, perming', 'Yes, straightening', 'No'], type: 'dropdown' },
+        { id: 'health', question: "Hair's current health?", options: ['Very Healthy', 'Healthy', 'Minor Damage', 'Severely Damaged'], type: 'dropdown' },
+        { id: 'face_issues', question: 'Face issues', options: ['Acne', 'Dryness', 'Oily skin', 'None'], type: 'dropdown' },
+        { id: 'scalp_feel', question: 'How oily or dry does your scalp feel?', options: ['Very Oily', 'Oily', 'Normal', 'Dry', 'Very Dry'], type: 'dropdown' },
+        { id: 'allergies', question: 'Allergies or sensitivities to hair products', options: ['Fragrance', 'Parabens', 'Sulfates', 'None'], type: 'multiselect' },
+        { id: 'preferences', question: 'Prefer natural or chemical-based products', options: ['100% Natural', 'Mainly Natural', 'No Preference', 'Professional Chemical'], type: 'dropdown' },
+        { id: 'brand', question: 'Use any specific brand?', options: ['Loreal', 'Matrix', 'Wella', 'Schwarzkopf', 'None'], type: 'dropdown' }
+    ],
+    homeBanner: {
+        imageUrl: 'https://images.unsplash.com/photo-1560869713-7d0a29430803?w=800',
+        title: 'Appointment',
+        subtitle: 'Lahore, Pakistan',
+        showStats: true
+    },
+    salonInfo: {
+        name: 'Elegance Hair Salon',
+        location: 'Lahore, Pakistan',
+        phone: '+92 300 1234567',
+        owner: 'Hassan Ameer',
+        logoUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=150'
+    },
+    homeCategories: [
+        { id: 'ai', label: 'A.I', icon: 'Sparkles' },
+        { id: 'scans', label: 'Hair Scans', icon: 'Scan' },
+        { id: 'products', label: 'Products', icon: 'Package' }
+    ],
+    supportEmail: 'support@saloon-app.com',
+    supportPhone: '+1 (555) 123-4567',
+    termsAndConditions: 'Please read our terms and conditions...',
+    privacyPolicy: 'Your privacy is important to us...',
+    aiModelSettings: {
+        sensitivity: 0.75,
+        autoRecommend: true
+    }
+};
+
+export const mockClients = [
+    {
+        id: "client-201",
+        name: "Jane Doe",
+        email: "jane.doe@example.com",
+        phone: "+1 (555) 001-2233",
+        address: "456 Oak Ave, Style City",
+        joinDate: getDateAgo(120),
+        lastVisit: getDateAgo(5),
+        totalVisits: 8,
+        hairAnalysis: {
+            type: "Dry, damaged",
+            condition: "Needs hydration"
+        },
+        salonId: "salon-1"
+    },
+    {
+        id: "client-202",
+        name: "John Smith",
+        email: "john.smith@example.com",
+        phone: "+1 (555) 001-4455",
+        address: "789 Pine Rd, Style City",
+        joinDate: getDateAgo(90),
+        lastVisit: getDateAgo(10),
+        totalVisits: 5,
+        hairAnalysis: {
+            type: "Fine, limp",
+            condition: "Lacks volume"
+        },
+        salonId: "salon-1"
+    },
+    {
+        id: "client-204",
+        name: "Emily Brown",
+        email: "emily.b@example.com",
+        phone: "+1 (555) 001-6677",
+        address: "321 Maple Dr, Style City",
+        joinDate: getDateAgo(60),
+        lastVisit: getDateAgo(2),
+        totalVisits: 3,
+        hairAnalysis: {
+            type: "Normal",
+            condition: "Healthy"
+        },
+        salonId: "salon-1"
+    },
+    {
+        id: "client-205",
+        name: "Anna White",
+        email: "anna.w@example.com",
+        phone: "+1 (555) 001-8899",
+        address: "159 Cedar Blvd, Style City",
+        joinDate: getDateAgo(30),
+        lastVisit: getDateAgo(1),
+        totalVisits: 2,
+        hairAnalysis: {
+            type: "Curly",
+            condition: "Frizzy"
+        },
+        salonId: "salon-1"
+    }
+];

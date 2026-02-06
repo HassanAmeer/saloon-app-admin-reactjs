@@ -330,14 +330,63 @@ const AIRecommendations = () => {
                                     </p>
                                 </div>
 
-                                <div className="bg-tea-50 rounded-lg p-4">
-                                    <p className="text-sm font-semibold text-tea-800 mb-2">Hair Analysis</p>
-                                    <p className="text-gray-700">
-                                        <span className="font-medium">Type:</span> {selectedRec.hairAnalysis?.type}
-                                    </p>
-                                    <p className="text-gray-700">
-                                        <span className="font-medium">Condition:</span> {selectedRec.hairAnalysis?.condition}
-                                    </p>
+                                <div className="bg-tea-50 rounded-xl p-6 border border-tea-100">
+                                    <h3 className="text-sm font-bold text-tea-800 uppercase tracking-wider mb-4">Hair Analysis Results</h3>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-medium mb-1">Hair Type</p>
+                                            <p className="text-gray-900 font-semibold">{selectedRec.hairAnalysis?.type}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-medium mb-1">Condition</p>
+                                            <p className="text-gray-900 font-semibold">{selectedRec.hairAnalysis?.condition}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Scan Metrics */}
+                                    {selectedRec.hairAnalysis?.metrics && (
+                                        <div className="space-y-4 mb-6">
+                                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Health Metrics</p>
+                                            <div className="grid grid-cols-1 gap-3">
+                                                {selectedRec.hairAnalysis.metrics.map((metric, idx) => (
+                                                    <div key={idx}>
+                                                        <div className="flex justify-between text-xs mb-1">
+                                                            <span className="text-tea-800 font-medium">{metric.label}</span>
+                                                            <span className="text-tea-700 font-bold">{metric.value}%</span>
+                                                        </div>
+                                                        <div className="w-full bg-tea-100 rounded-full h-1.5 overflow-hidden">
+                                                            <div
+                                                                className="bg-tea-600 h-full transition-all duration-1000"
+                                                                style={{ width: `${metric.value}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Comparison Images */}
+                                    {selectedRec.hairAnalysis?.images && (
+                                        <div className="space-y-4 pt-4 border-t border-tea-100">
+                                            <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Before & After Comparison</p>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-2">
+                                                    <div className="aspect-square rounded-lg overflow-hidden border border-tea-200">
+                                                        <img src={selectedRec.hairAnalysis.images.before} alt="Before" className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <p className="text-center text-xs font-bold text-gray-500">BEFORE</p>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="aspect-square rounded-lg overflow-hidden border border-tea-200">
+                                                        <img src={selectedRec.hairAnalysis.images.after} alt="After" className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <p className="text-center text-xs font-bold text-tea-700">AFTER</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>

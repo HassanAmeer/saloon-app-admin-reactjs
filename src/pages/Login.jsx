@@ -52,8 +52,8 @@ const Login = () => {
                     {/* Demo Credentials Info */}
                     <div className="mb-6 p-4 bg-brown-50 border border-brown-200 rounded-lg">
                         <p className="text-sm font-medium text-tea-900 mb-2">Demo Credentials:</p>
-                        <p className="text-xs text-tea-800">Email: admin@example.com</p>
-                        <p className="text-xs text-tea-800">Password: password123</p>
+                        <p className="text-xs text-tea-800">Email: admin@gmail.com</p>
+                        <p className="text-xs text-tea-800">Password: 12345678</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -67,7 +67,7 @@ const Login = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="input-field"
-                                placeholder="admin@example.com"
+                                placeholder="admin@gmail.com"
                                 required
                             />
                         </div>

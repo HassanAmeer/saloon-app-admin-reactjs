@@ -9,6 +9,7 @@ import {
     Code2,
     LogOut,
     Menu,
+    Settings,
     X
 } from 'lucide-react';
 import { useState } from 'react';
@@ -27,9 +28,11 @@ const DashboardLayout = () => {
     const navItems = [
         { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/stylists', icon: Users, label: 'Stylists' },
+        { path: '/clients', icon: Users, label: 'Clients' },
         { path: '/products', icon: Package, label: 'Products' },
         { path: '/sales', icon: TrendingUp, label: 'Sales' },
         { path: '/ai-recommendations', icon: BotIcon, label: 'AI Recommendations' },
+        { path: '/app-config', icon: Settings, label: 'App Config' },
         { path: '/developer', icon: Code2, label: 'Developer' },
     ];
 

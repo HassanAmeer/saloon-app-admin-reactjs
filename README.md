@@ -186,7 +186,7 @@ All mock data is in `src/data/mockData.js`:
 // users collection
 {
   id: "user-id",
-  email: "admin@example.com",
+  email: "admin@gmail.com",
   name: "Salon Owner",
   role: "admin", // or "stylist"
   salonId: "salon-id",
