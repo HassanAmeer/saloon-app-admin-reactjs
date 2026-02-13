@@ -75,7 +75,12 @@ const Stylists = () => {
             if (modalMode === 'add') {
                 await createDocument('stylists', data);
             } else if (modalMode === 'edit') {
-                await updateDocument('stylists', selectedStylist.id, data);
+                // Don't update password if it's empty (placeholder: "Leave blank to keep current")
+                const updateData = { ...data };
+                if (!updateData.password) {
+                    delete updateData.password;
+                }
+                await updateDocument('stylists', selectedStylist.id, updateData);
             }
             setShowModal(false);
         } catch (error) {
@@ -258,13 +263,15 @@ const Stylists = () => {
 };
 
 const StylistModal = ({ mode, stylist, onClose, onSave }) => {
-    const [formData, setFormData] = useState(stylist || {
+    const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
         status: 'Active',
         totalSales: 0,
         unitsSold: 0,
+        password: '',
+        ...stylist
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -321,6 +328,20 @@ const StylistModal = ({ mode, stylist, onClose, onSave }) => {
                                 required
                             />
                         </div>
+
+                        {!isViewMode && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                                <input
+                                    type="password"
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="input-field"
+                                    placeholder={mode === 'add' ? "Set password" : "Leave blank to keep current"}
+                                    required={mode === 'add'}
+                                />
+                            </div>
+                        )}
 
                         {!isViewMode && (
                             <div>
