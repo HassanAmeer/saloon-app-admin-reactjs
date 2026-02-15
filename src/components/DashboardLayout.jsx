@@ -60,7 +60,7 @@ const DashboardLayout = () => {
                     <div className="flex flex-col h-full">
                         {/* Logo */}
                         <div className="hidden lg:flex items-center gap-3 px-6 py-5 border-b border-gray-200">
-                            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+                            <div className="w-14 h-14 flex items-center justify-center overflow-hidden">
                                 <img src="/logo.png" alt="Saloon Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>

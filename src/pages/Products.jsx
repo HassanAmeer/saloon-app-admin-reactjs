@@ -204,11 +204,11 @@ const Products = () => {
                 {filteredProducts.map((product) => (
                     <div key={product.id} className="card hover:shadow-lg transition-shadow duration-200">
                         {/* Product Image */}
-                        <div className="w-full h-48 scale-125 bg-gray-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden border border-gray-100 p-2">
+                        <div className="w-full h-48 scale-110 bg-gray-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden border border-gray-100 p-1">
                             <img
                                 src={product.imageUrl || '/empty.png'}
                                 alt={product.name}
-                                className={product.imageUrl ? "w-full h-full object-cover" : "w-4/5 h-4/5 object-contain opacity-20 filter grayscale"}
+                                className={product.imageUrl ? "w-full h-full object-cover" : "w-4/5 h-4/5 object-contain opacity-20 filter grayscale rounded-lg"}
                                 onError={(e) => {
                                     e.target.onerror = null;
                                     e.target.src = '/empty.png';
