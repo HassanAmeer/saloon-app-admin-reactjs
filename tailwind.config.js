@@ -7,6 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
+        primary: {
+          DEFAULT: '#5d5cde',
+          glow: '#7b7af7',
+        },
         tea: {
           50: '#faf8f5',
           100: '#f5f3f0',

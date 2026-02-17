@@ -1,19 +1,37 @@
 // Mock data for Phase 1 - Static UI
 
-export const mockAdmin = {
-    id: "admin-1",
+// Mock data for Phase 1 - Static UI
+
+export const mockSuperAdmin = {
+    id: "super-admin-1",
     email: "admin@gmail.com",
     password: "12345678",
-    name: "Salon Owner",
-    role: "admin",
-    salonId: "salon-1",
+    name: "Platform Owner",
+    role: "super",
 };
+
+export const mockSalonManagers = [
+    {
+        id: "manager-1",
+        email: "saloon@manager.com",
+        password: "12345678",
+        name: "Hassan Ameer",
+        phone: "+0123456789",
+        bio: "Expert salon manager with 10 years experience",
+        skills: "Management, Styling, Customer Service",
+        status: "Active",
+        salonId: "salon-1",
+        role: "manager",
+        imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop"
+    }
+];
 
 export const mockSalon = {
     id: "salon-1",
     name: "Elegance Hair Salon",
     address: "123 Beauty Street, Style City",
-    phone: "+1 234 567 8900",
+    phone: "+0123456789",
+    managerId: "manager-1"
 };
 
 export const mockStylists = [
@@ -27,7 +45,11 @@ export const mockStylists = [
         totalSales: 24450.00,
         unitsSold: 356,
         salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop"
+        bio: "Master colorist and stylist with a passion for creative hair design.",
+        skills: "Balayage, Color Correction, Precision Cutting",
+        imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop",
+        clientsCount: 156,
+        scansCount: 432
     },
     {
         id: "stylist-2",
@@ -39,103 +61,11 @@ export const mockStylists = [
         totalSales: 21230.50,
         unitsSold: 284,
         salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-3",
-        name: "Sarah Williams",
-        email: "sarah@salon.com",
-        phone: "+1 234 567 8903",
-        password: "12345678",
-        status: "Active",
-        totalSales: 19875.25,
-        unitsSold: 258,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-4",
-        name: "David Martinez",
-        email: "david@salon.com",
-        phone: "+1 234 567 8904",
-        password: "12345678",
-        status: "Active",
-        totalSales: 15420.00,
-        unitsSold: 197,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-5",
-        name: "Lisa Anderson",
-        email: "lisa@salon.com",
-        phone: "+1 234 567 8905",
-        password: "12345678",
-        status: "Active",
-        totalSales: 18650.75,
-        unitsSold: 242,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-6",
-        name: "James Wilson",
-        email: "james@salon.com",
-        phone: "+1 234 567 8906",
-        password: "12345678",
-        status: "Active",
-        totalSales: 12150.00,
-        unitsSold: 165,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-7",
-        name: "Chloe Taylor",
-        email: "chloe@salon.com",
-        phone: "+1 234 567 8907",
-        password: "12345678",
-        status: "Active",
-        totalSales: 9840.50,
-        unitsSold: 112,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-8",
-        name: "Robert Brown",
-        email: "robert@salon.com",
-        phone: "+1 234 567 8908",
-        password: "12345678",
-        status: "Active",
-        totalSales: 7560.00,
-        unitsSold: 98,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-9",
-        name: "Sophie Lee",
-        email: "sophie@salon.com",
-        phone: "+1 234 567 8909",
-        password: "12345678",
-        status: "Active",
-        totalSales: 5430.75,
-        unitsSold: 76,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop"
-    },
-    {
-        id: "stylist-10",
-        name: "Ryan Garcia",
-        email: "ryan@salon.com",
-        phone: "+1 234 567 8910",
-        password: "12345678",
-        status: "Inactive",
-        totalSales: 3210.00,
-        unitsSold: 45,
-        salonId: "salon-1",
-        imageUrl: "https://images.unsplash.com/photo-1552058544-dba50427b968?w=150&h=150&fit=crop"
+        bio: "Specialist in men's grooming and modern textures.",
+        skills: "Fade Techniques, Beard Grooming, Textured Cuts",
+        imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
+        clientsCount: 124,
+        scansCount: 312
     }
 ];
 

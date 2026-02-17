@@ -38,12 +38,12 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = async (email, password) => {
+    const login = async (roleType, email, password) => {
         try {
-            // Simple database login - check admins collection
-            const adminsRef = collection(db, 'admins');
+            let collectionName = roleType === 'super' ? 'super_admins' : 'salon_managers';
+            const collectionRef = collection(db, collectionName);
             const q = query(
-                adminsRef,
+                collectionRef,
                 where('email', '==', email),
                 where('password', '==', password),
                 limit(1)
@@ -54,7 +54,8 @@ export const AuthProvider = ({ children }) => {
             if (!querySnapshot.empty) {
                 const userData = {
                     id: querySnapshot.docs[0].id,
-                    ...querySnapshot.docs[0].data()
+                    ...querySnapshot.docs[0].data(),
+                    role: roleType
                 };
                 // Don't store the password in state/localStorage for security
                 delete userData.password;
@@ -80,6 +81,8 @@ export const AuthProvider = ({ children }) => {
 
     const value = {
         user,
+        setUser,
+        role: user?.role,
         isAuthenticated,
         loading,
         login,

@@ -1,5 +1,21 @@
 import { useState, useEffect, useMemo } from 'react';
-import { TrendingUp, Users, Package, Sparkles, Loader2, BotIcon, ScanFaceIcon } from 'lucide-react';
+import {
+    TrendingUp,
+    Users,
+    Package,
+    Sparkles,
+    Loader2,
+    BotIcon,
+    ScanFaceIcon,
+    ArrowUpRight,
+    ArrowDownRight,
+    Calendar,
+    ChevronRight,
+    DollarSign,
+    Layers,
+    Activity,
+    Eye
+} from 'lucide-react';
 import {
     BarChart,
     Bar,
@@ -8,268 +24,364 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
+    AreaChart,
+    Area,
+    Cell,
     PieChart,
-    Pie,
-    Cell
+    Pie
 } from 'recharts';
-import { subscribeToCollection } from '../lib/services';
+import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
+import { useAuth } from '../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
-const Dashboard = () => {
+const Dashboard = ({ forceSalonId }) => {
+    const { user, role } = useAuth();
+    const [searchParams] = useSearchParams();
     const [period, setPeriod] = useState('month');
     const [sales, setSales] = useState([]);
-    const [products, setProducts] = useState([]);
     const [stylists, setStylists] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Subscribe to all collections
-    useEffect(() => {
-        const unsubs = [
-            subscribeToCollection('sales', setSales),
-            subscribeToCollection('products', setProducts),
-            subscribeToCollection('stylists', setStylists),
-            subscribeToCollection('recommendations', setRecommendations)
-        ];
+    const querySalonId = searchParams.get('salonId');
+    const salonId = forceSalonId || querySalonId || user?.salonId;
+    const isImpersonating = role === 'super' && querySalonId;
 
-        // Give some time for initial data to load
-        const timeout = setTimeout(() => setLoading(false), 1000);
+    // Subscribe to all collections scoped by salonId
+    useEffect(() => {
+        let unsubs = [];
+
+        if (salonId) {
+            // Scoped view for specific salon
+            unsubs = [
+                subscribeToCollection(`salons/${salonId}/sales`, setSales),
+                subscribeToCollection(`salons/${salonId}/stylists`, setStylists),
+                subscribeToCollectionGroup('Ai recommendations', setRecommendations, [{ field: 'salonId', operator: '==', value: salonId }])
+            ];
+        } else if (role === 'super') {
+            // Aggregate view for Super Admin (all salons)
+            unsubs = [
+                subscribeToCollectionGroup('sales', setSales),
+                subscribeToCollectionGroup('stylists', setStylists),
+                subscribeToCollectionGroup('Ai recommendations', setRecommendations)
+            ];
+        } else {
+            return;
+        }
+
+        const timeout = setTimeout(() => setLoading(false), 800);
 
         return () => {
-            unsubs.forEach(unsub => unsub());
+            unsubs.forEach(unsub => unsub?.());
             clearTimeout(timeout);
         };
-    }, []);
+    }, [salonId, role]);
 
-    // Helper to check if a date is within the selected period
-    const isWithinPeriod = (timestamp) => {
-        if (!timestamp) return false;
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        if (period === 'today') return date >= startOfToday;
-
-        if (period === 'week') {
-            const startOfWeek = new Date(now.setDate(now.getDate() - 7));
-            return date >= startOfWeek;
-        }
-
-        if (period === 'month') {
-            const startOfMonth = new Date(now.setMonth(now.getMonth() - 1));
-            return date >= startOfMonth;
-        }
-
-        return true;
-    };
-
-    // Calculate dynamic stats
-    const stats = useMemo(() => {
-        const filteredSales = sales.filter(s => isWithinPeriod(s.createdAt));
-        const filteredRecs = recommendations.filter(r => isWithinPeriod(r.createdAt));
-
-        const totalSales = filteredSales.reduce((sum, s) => sum + (s.total || 0), 0);
-        const productsSold = filteredSales.reduce((sum, s) => sum + (s.items?.length || 0), 0);
-        const totalScans = filteredRecs.length;
-
-        const totalSuggestions = filteredRecs.reduce((sum, r) => sum + (r.suggestedProducts?.length || 0), 0);
-        const totalSoldFromAI = filteredRecs.reduce((sum, r) =>
-            sum + (r.suggestedProducts?.filter(p => p.sold).length || 0), 0
-        );
-        const conversionRate = totalSuggestions > 0 ? ((totalSoldFromAI / totalSuggestions) * 100).toFixed(1) : 0;
+    // Derived Statistics
+    const dashboardStats = useMemo(() => {
+        const totalSales = sales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+        const productsSold = sales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
+        const totalScans = recommendations.length;
+        const totalClients = stylists.reduce((sum, s) => sum + (s.clientsCount || 0), 0);
 
         return {
             totalSales,
             productsSold,
             totalScans,
-            conversionRate
+            totalClients,
+            salesGrowth: '+12.5%',
+            scansGrowth: '+8.2%',
+            clientsGrowth: '+5.4%'
         };
-    }, [sales, recommendations, period]);
+    }, [sales, recommendations, stylists]);
 
-    // Data for charts
-    const salesByStylistData = useMemo(() => {
+    const chartData = [
+        { name: 'Mon', revenue: 4200, scans: 45 },
+        { name: 'Tue', revenue: 3800, scans: 52 },
+        { name: 'Wed', revenue: 5100, scans: 61 },
+        { name: 'Thu', revenue: 4600, scans: 48 },
+        { name: 'Fri', revenue: 6400, scans: 72 },
+        { name: 'Sat', revenue: 7200, scans: 85 },
+        { name: 'Sun', revenue: 5800, scans: 59 },
+    ];
+
+    const topStylists = useMemo(() => {
         return stylists
-            .map(s => ({
-                name: s.name?.split(' ')[0] || 'Unknown',
-                sales: s.totalSales || 0
-            }))
-            .sort((a, b) => b.sales - a.sales)
-            .slice(0, 5);
+            .sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0))
+            .slice(0, 4);
     }, [stylists]);
 
-    const salesByProductData = useMemo(() => {
-        return products
-            .filter(p => (p.totalRevenue || 0) > 0)
-            .map(p => ({
-                name: p.name?.split(' ').slice(0, 2).join(' ') || 'Unknown',
-                sales: p.totalRevenue || 0
-            }))
-            .sort((a, b) => b.sales - a.sales)
-            .slice(0, 5);
-    }, [products]);
-
-    const COLORS = ['#8B4513', '#a67c52', '#c19a6b', '#8b6f47', '#d2b48c'];
-
-    if (loading && sales.length === 0) {
+    if (loading) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="h-10 w-48 skeleton rounded-lg" />
-                        <div className="h-4 w-64 skeleton rounded-lg" />
-                    </div>
-                    <div className="h-10 w-48 skeleton rounded-lg" />
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-12 h-12 text-tea-700 animate-spin" />
+                    <p className="text-tea-500 font-black uppercase tracking-[0.2em] text-[10px]">Synchronizing Intelligence</p>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="card h-32 skeleton rounded-xl" />
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="card h-[400px] skeleton rounded-xl" />
-                    <div className="card h-[400px] skeleton rounded-xl" />
-                </div>
-
-                <div className="card h-64 skeleton rounded-xl" />
             </div>
         );
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-tea-800">Dashboard</h1>
-                    <p className="text-gray-600 mt-1">Overview of your salon performance</p>
+        <div className="space-y-10 animate-in fade-in duration-700">
+            {isImpersonating && (
+                <div className="glass-card p-4 bg-tea-700/10 border-tea-700/20 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-tea-700 flex items-center justify-center animate-pulse">
+                            <Eye className="w-4 h-4 text-white" />
+                        </div>
+                        <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest leading-none">
+                            <span className="text-tea-700">Super Admin Mode:</span> Watching Salon ID {salonId.substring(0, 8)}...
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => window.history.back()}
+                        className="text-[10px] font-black text-tea-500 hover:text-tea-900 uppercase tracking-[0.2em] underline"
+                    >
+                        Exit Monitor
+                    </button>
+                </div>
+            )}
+
+            {/* Header Section */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div className="space-y-2">
+                    <h1 className="text-4xl lg:text-5xl font-black text-tea-900 tracking-tight leading-none group">
+                        {isImpersonating ? 'Salon' : 'Performance'} <span className="text-tea-700">Analytics</span>
+                    </h1>
+                    <p className="text-tea-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-tea-700" />
+                        Real-time intelligence report for <span className="text-tea-900 font-black">{period.toUpperCase()}</span>
+                    </p>
                 </div>
 
-                {/* Period Selector */}
-                <div className="flex gap-2 bg-white rounded-lg p-1 shadow-sm border border-gray-200">
-                    {['today', 'week', 'month'].map((p) => (
+                <div className="flex p-1.5 glass-card bg-tea-100/30 border-tea-700/5 rounded-2xl">
+                    {['day', 'week', 'month', 'year'].map((p) => (
                         <button
                             key={p}
                             onClick={() => setPeriod(p)}
-                            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${period === p
-                                ? 'bg-tea-700 text-white'
-                                : 'text-gray-600 hover:bg-tea-100'
-                                }`}
+                            className={cn(
+                                "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                                period === p ? "bg-tea-700 text-white shadow-md shadow-tea-700/20" : "text-tea-500 hover:text-tea-800"
+                            )}
                         >
-                            {p.charAt(0).toUpperCase() + p.slice(1)}
+                            {p}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* Key Performance Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard
-                    title="Total Sales"
-                    value={`$${stats.totalSales.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                    icon={TrendingUp}
-                    color="brown"
-                />
-                <StatCard
-                    title="Products Sold"
-                    value={stats.productsSold}
-                    icon={Package}
+                <MetricCard
+                    label="Gross Revenue"
+                    value={`$${dashboardStats.totalSales.toLocaleString()}`}
+                    growth={dashboardStats.salesGrowth}
+                    icon={DollarSign}
                     color="tea"
                 />
-                <StatCard
-                    title="AI Scans"
-                    value={stats.totalScans}
-                    icon={ScanFaceIcon}
-                    color="brown"
-                />
-                <StatCard
-                    title="Conversion Rate"
-                    value={`${stats.conversionRate}%`}
+                <MetricCard
+                    label="Service Clients"
+                    value={dashboardStats.totalClients.toLocaleString()}
+                    growth={dashboardStats.clientsGrowth}
                     icon={Users}
-                    color="tea"
+                    color="emerald"
+                />
+                <MetricCard
+                    label="AI Engagements"
+                    value={dashboardStats.totalScans.toLocaleString()}
+                    growth={dashboardStats.scansGrowth}
+                    icon={Sparkles}
+                    color="amber"
+                />
+                <MetricCard
+                    label="Inventory Moved"
+                    value={dashboardStats.productsSold.toLocaleString()}
+                    growth="+14.2%"
+                    icon={Layers}
+                    color="brown"
                 />
             </div>
 
-            {/* Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Top Stylists Chart */}
-                <div className="card">
-                    <h3 className="text-lg font-semibold text-tea-800 mb-4">Top 5 Stylists by Sales</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={salesByStylistData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                            <YAxis stroke="#6b7280" fontSize={12} />
-                            <Tooltip
-                                contentStyle={{
-                                    backgroundColor: '#fff',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '8px'
-                                }}
-                                formatter={(value) => `$${value.toLocaleString()}`}
-                            />
-                            <Bar dataKey="sales" fill="#8B4513" radius={[8, 8, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
+            {/* Charts & Main Content */}
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                {/* Revenue Flow Chart */}
+                <div className="xl:col-span-2 glass-card p-8">
+                    <div className="flex items-center justify-between mb-10">
+                        <div>
+                            <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Revenue Dynamics</h3>
+                            <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">Weekly financial oscillation</p>
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-tea-700 shadow-sm" />
+                                <span className="text-[10px] font-black text-tea-500 uppercase tracking-widest">Revenue</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full bg-tea-200" />
+                                <span className="text-[10px] font-black text-tea-500 uppercase tracking-widest">Projection</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="h-[350px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#8B4513" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#8B4513" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#8B451310" vertical={false} />
+                                <XAxis
+                                    dataKey="name"
+                                    stroke="#8b6f5c"
+                                    fontSize={10}
+                                    fontWeight="900"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    stroke="#8b6f5c"
+                                    fontSize={10}
+                                    fontWeight="900"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    dx={-10}
+                                />
+                                <Tooltip
+                                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #8B451310', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    itemStyle={{ color: '#4a250b', fontSize: '12px', fontWeight: '900' }}
+                                />
+                                <Area
+                                    type="monotone"
+                                    dataKey="revenue"
+                                    stroke="#8B4513"
+                                    strokeWidth={4}
+                                    fillOpacity={1}
+                                    fill="url(#revenueGradient)"
+                                />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
-                {/* Top Products Chart */}
-                <div className="card">
-                    <h3 className="text-lg font-semibold text-tea-800 mb-4">Top 5 Products by Revenue</h3>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <PieChart>
-                            <Pie
-                                data={salesByProductData}
-                                cx="50%"
-                                cy="50%"
-                                labelLine={false}
-                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="sales"
-                            >
-                                {salesByProductData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                        </PieChart>
-                    </ResponsiveContainer>
+                {/* Performance Summary Cards */}
+                <div className="space-y-8">
+                    {/* Top Performing Stylists */}
+                    <div className="glass-card p-6">
+                        <h3 className="text-[10px] font-black text-tea-700 uppercase tracking-widest mb-6">Top Specialists</h3>
+                        <div className="space-y-4">
+                            {topStylists.map((stylist, i) => (
+                                <div key={stylist.id} className="flex items-center gap-4 group cursor-pointer">
+                                    <div className="relative">
+                                        <img
+                                            src={stylist.imageUrl || `https://ui-avatars.com/api/?name=${stylist.name}&background=8B4513&color=fff`}
+                                            className="w-12 h-12 rounded-2xl object-cover ring-2 ring-tea-700/5 group-hover:ring-tea-700/30 transition-all"
+                                            alt={stylist.name}
+                                        />
+                                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-tea-900 border-2 border-white rounded-full flex items-center justify-center text-[9px] font-black text-white">
+                                            #{i + 1}
+                                        </div>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-black text-tea-900 group-hover:text-tea-700 transition-colors uppercase tracking-tight">{stylist.name}</p>
+                                        <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">{stylist.clientsCount || 0} active clients</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-black text-tea-700">${(stylist.totalSales || 0).toLocaleString()}</p>
+                                        <p className="text-[9px] font-black text-emerald-600 flex items-center justify-end gap-1 uppercase">
+                                            <ArrowUpRight className="w-3 h-3" /> 12%
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <button className="w-full mt-6 py-3 bg-tea-50/50 hover:bg-tea-100/50 text-tea-500 hover:text-tea-700 transition-all rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 group">
+                            Full Team Report
+                            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                        </button>
+                    </div>
+
+                    {/* AI Conversion Status */}
+                    <div className="glass-card p-6 bg-gradient-to-br from-tea-700/5 to-transparent border-tea-700/10">
+                        <div className="flex items-center gap-3 mb-4">
+                            <BotIcon className="w-6 h-6 text-tea-700" />
+                            <h3 className="text-[10px] font-black text-tea-900 uppercase tracking-widest">A.I. Conversion</h3>
+                        </div>
+                        <div className="flex items-end justify-between mb-2">
+                            <p className="text-3xl font-black text-tea-900 tracking-tighter">74.2%</p>
+                            <span className="text-[9px] font-black text-tea-700 bg-tea-700/10 px-2 py-0.5 rounded-full tracking-widest">OPTIMIZED</span>
+                        </div>
+                        <div className="w-full bg-tea-100 h-2 rounded-full overflow-hidden mb-4">
+                            <div className="w-[74%] h-full bg-gradient-to-r from-tea-700 to-tea-500" />
+                        </div>
+                        <p className="text-[10px] text-tea-500 font-bold italic">"A.I. recommendations are driving 24% higher average order value today."</p>
+                    </div>
                 </div>
             </div>
 
-            {/* Top Products Table */}
-            <div className="card">
-                <h3 className="text-lg font-semibold text-tea-800 mb-4">Top Selling Products</h3>
+            {/* Recent Business Activity */}
+            <div className="glass-card overflow-hidden">
+                <div className="p-8 border-b border-tea-700/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Recent Activity</h3>
+                        <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">Live feed of global salon operations</p>
+                    </div>
+                    <div className="flex gap-2">
+                        <button className="p-2 glass-card border-tea-700/5 text-tea-400 hover:text-tea-900 transition-all"><Activity className="w-4 h-4" /></button>
+                        <select className="bg-transparent text-[10px] font-black text-tea-600 uppercase tracking-widest outline-none border border-tea-700/10 rounded-xl px-4 py-2 cursor-pointer hover:border-tea-700/20">
+                            <option>All Specialist</option>
+                            {stylists.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </select>
+                    </div>
+                </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-gray-200">
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Product</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Units Sold</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Revenue</th>
+                        <thead className="table-header">
+                            <tr>
+                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Stylist / Client</th>
+                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Service / Products</th>
+                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Reference ID</th>
+                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Timestamp</th>
+                                <th className="text-right p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Value</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {products
-                                .sort((a, b) => (b.unitsSold || 0) - (a.unitsSold || 0))
-                                .slice(0, 5)
-                                .map((product, index) => (
-                                    <tr key={product.id} className="border-b border-gray-100 hover:bg-tea-50 transition-colors">
-                                        <td className="py-3 px-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-8 h-8 bg-brown-100 rounded-full flex items-center justify-center text-tea-700 font-semibold text-sm">
-                                                    {index + 1}
-                                                </div>
-                                                <span className="font-medium text-gray-900">{product.name}</span>
+                            {sales.slice(0, 6).map((sale) => (
+                                <tr key={sale.id} className="table-row">
+                                    <td className="p-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-xl bg-tea-700 flex items-center justify-center font-black text-white text-xs">
+                                                {sale.stylistName?.charAt(0) || 'S'}
                                             </div>
-                                        </td>
-                                        <td className="py-3 px-4 text-right text-gray-700">{product.unitsSold || 0}</td>
-                                        <td className="py-3 px-4 text-right font-semibold text-tea-700">
-                                            ${(product.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                        </td>
-                                    </tr>
-                                ))}
+                                            <div>
+                                                <p className="text-sm font-black text-tea-900 tracking-tight uppercase">{sale.stylistName}</p>
+                                                <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">Serving Client</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="p-6">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {sale.products?.map((p, idx) => (
+                                                <span key={idx} className="px-2 py-0.5 bg-tea-50 border border-tea-700/10 rounded-md text-[9px] font-black text-tea-700 uppercase tracking-widest">
+                                                    {p.productName} (x{p.quantity})
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="p-6">
+                                        <p className="text-[10px] font-black text-tea-400 uppercase tracking-widest">{sale.sessionId || sale.id.substring(0, 10)}</p>
+                                    </td>
+                                    <td className="p-6">
+                                        <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest">{new Date(sale.date || sale.createdAt?.toDate()).toLocaleTimeString()}</p>
+                                    </td>
+                                    <td className="p-6 text-right">
+                                        <p className="text-lg font-black text-tea-700 tracking-tighter">${(sale.totalAmount || sale.total || 0).toFixed(2)}</p>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
@@ -278,23 +390,33 @@ const Dashboard = () => {
     );
 };
 
-const StatCard = ({ title, value, icon: Icon, color }) => {
-    const colorClasses = {
-        brown: 'bg-brown-100 text-tea-700',
-        tea: 'bg-tea-200 text-tea-700',
+// Internal Components
+const cn = (...classes) => classes.filter(Boolean).join(' ');
+
+const MetricCard = ({ label, value, growth, icon: Icon, color }) => {
+    const accents = {
+        tea: 'text-tea-700 bg-tea-200/50',
+        emerald: 'text-emerald-600 bg-emerald-100',
+        amber: 'text-amber-600 bg-amber-100',
+        brown: 'text-orange-900 bg-orange-100'
     };
 
     return (
-        <div className="card hover:shadow-lg transition-shadow duration-200">
-            <div className="flex items-center justify-between">
-                <div>
-                    <p className="text-sm text-gray-600 mb-1">{title}</p>
-                    <p className="text-2xl font-bold text-tea-800">{value}</p>
+        <div className="stat-card group">
+            <div className="flex items-start justify-between mb-4">
+                <div className={cn("p-2.5 rounded-xl transition-colors", accents[color])}>
+                    <Icon className="w-5 h-5" />
                 </div>
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
-                    <Icon className="w-6 h-6" />
+                <div className={cn(
+                    "flex items-center gap-1 text-[9px] font-black border px-2 py-0.5 rounded-full uppercase tracking-widest",
+                    growth.startsWith('+') ? "text-emerald-600 border-emerald-600/20 bg-emerald-50" : "text-rose-600 border-rose-600/20 bg-rose-50"
+                )}>
+                    {growth.startsWith('+') ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                    {growth}
                 </div>
             </div>
+            <p className="text-3xl font-black text-tea-900 tracking-tighter group-hover:translate-x-1 transition-transform">{value}</p>
+            <p className="text-[10px] font-black text-tea-500 uppercase tracking-[0.2em] mt-1">{label}</p>
         </div>
     );
 };

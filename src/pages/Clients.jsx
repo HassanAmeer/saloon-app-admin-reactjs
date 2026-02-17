@@ -11,7 +11,8 @@ import {
     History,
     CheckCircle
 } from 'lucide-react';
-import { subscribeToCollection } from '../lib/services';
+import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
+import { useAuth } from '../contexts/AuthContext';
 
 const Clients = () => {
     const [clients, setClients] = useState([]);
@@ -21,21 +22,25 @@ const Clients = () => {
     const [selectedClient, setSelectedClient] = useState(null);
 
     // Subscribe to real-time updates
+    const { user } = useAuth();
+
     useEffect(() => {
-        const unsubscribeClients = subscribeToCollection('clients', (data) => {
+        if (!user?.salonId) return;
+
+        const unsubscribeClients = subscribeToCollectionGroup('clients', (data) => {
             setClients(data);
             setLoading(false);
-        }, [], { field: 'name', direction: 'asc' });
+        }, [{ field: 'salonId', operator: '==', value: user.salonId }], { field: 'name', direction: 'asc' });
 
-        const unsubscribeRecs = subscribeToCollection('recommendations', (data) => {
+        const unsubscribeRecs = subscribeToCollectionGroup('Ai recommendations', (data) => {
             setRecommendations(data);
-        }, [], { field: 'createdAt', direction: 'desc' });
+        }, [{ field: 'salonId', operator: '==', value: user.salonId }], { field: 'createdAt', direction: 'desc' });
 
         return () => {
             unsubscribeClients();
             unsubscribeRecs();
         };
-    }, []);
+    }, [user?.salonId]);
 
     const filteredClients = clients.filter(client =>
         client.name?.toLowerCase().includes(searchTerm.toLowerCase())

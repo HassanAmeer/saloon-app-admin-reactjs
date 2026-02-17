@@ -2,55 +2,130 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --primary: #8B4513;
+  --primary-glow: #c19a6b;
+  --secondary: #d2b48c;
+  --bg-dark: #faf8f5;
+  --card-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(139, 69, 19, 0.15);
+  --text-main: #4a250b;
+  --text-muted: #8b6f5c;
+}
+
 @layer base {
   body {
-    @apply bg-tea-50 text-gray-900;
+    @apply bg-[#faf8f5] text-tea-900 min-h-screen font-sans;
+    background-image:
+      radial-gradient(at 0% 0%, hsla(30, 30%, 95%, 1) 0, transparent 50%),
+      radial-gradient(at 50% 0%, hsla(20, 20%, 90%, 1) 0, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(35, 40%, 92%, 1) 0, transparent 50%);
+    background-attachment: fixed;
   }
 }
 
 @layer components {
+  .glass-card {
+    @apply backdrop-blur-md bg-white/70 border border-tea-700/10 rounded-2xl shadow-sm transition-all duration-300;
+  }
+
+  .glass-card:hover {
+    @apply border-tea-700/20 shadow-lg shadow-tea-700/5;
+  }
+
   .btn-primary {
-    @apply bg-tea-700 hover:bg-tea-800 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-tea-700 hover:bg-tea-600 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 shadow-md shadow-tea-700/20 active:scale-95 flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
-    @apply bg-tea-200 hover:bg-tea-300 text-tea-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
-  }
-
-  .card {
-    @apply bg-white rounded-lg shadow-md p-6;
+    @apply bg-tea-100/50 hover:bg-tea-200/50 text-tea-800 font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 border border-tea-700/5 active:scale-95 flex items-center justify-center gap-2;
   }
 
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tea-700 focus:border-transparent;
+    @apply w-full px-4 py-3 bg-white/80 border border-tea-700/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-tea-700/30 focus:border-tea-700/30 transition-all duration-200 text-tea-900 placeholder:text-tea-400;
   }
 
   .sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-tea-100 hover:text-tea-700 rounded-lg transition-colors duration-200;
+    @apply flex items-center gap-3 px-4 py-3 text-tea-600 hover:bg-tea-100/50 hover:text-tea-900 rounded-xl transition-all duration-200;
   }
 
   .sidebar-link-active {
-    @apply flex items-center gap-3 px-4 py-3 bg-tea-700 text-white rounded-lg;
+    @apply flex items-center gap-3 px-4 py-3 bg-tea-700 text-white rounded-xl shadow-md shadow-tea-700/20;
   }
 
-  .skeleton {
-    @apply bg-gray-200 animate-pulse rounded;
-    background: linear-gradient(90deg,
-        rgba(255, 255, 255, 0) 0,
-        rgba(255, 255, 255, 0.2) 20%,
-        rgba(255, 255, 255, 0.5) 60%,
-        rgba(255, 255, 255, 0));
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+  .stat-card {
+    @apply glass-card p-6 flex flex-col gap-1 relative overflow-hidden;
   }
 
-  @keyframes shimmer {
-    0% {
-      background-position: -200% 0;
-    }
-
-    100% {
-      background-position: 200% 0;
-    }
+  .stat-card::after {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-1 bg-tea-400 opacity-50;
   }
+
+  .table-container {
+    @apply glass-card overflow-hidden;
+  }
+
+  .table-header {
+    @apply bg-tea-50/80 border-b border-tea-700/10;
+  }
+
+  .table-row {
+    @apply border-b border-tea-700/5 hover:bg-tea-50/50 transition-colors duration-150;
+  }
+
+  .badge {
+    @apply px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest;
+  }
+
+  .badge-success {
+    @apply bg-emerald-500/10 text-emerald-600 border border-emerald-500/20;
+  }
+
+  .badge-warning {
+    @apply bg-amber-500/10 text-amber-600 border border-amber-500/20;
+  }
+
+  .badge-danger {
+    @apply bg-rose-500/10 text-rose-600 border border-rose-500/20;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#faf8f5];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-tea-200 rounded-full hover:bg-tea-300 transition-colors;
+}
+
+/* Modal and Animations */
+.scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

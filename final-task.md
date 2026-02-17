@@ -1,92 +1,109 @@
-# Salon Admin Dashboard - Comprehensive Implementation Prompt
 
-## Project Overview
-Develop a **React.js Admin Panel** with **Firebase** backend for a Salon Management System. The system features two distinct access levels: **Super Admin** and **Salon Manager**.
 
-## 1. Super Admin Role
-The Super Admin is the highest level authority, responsible for onboarding Salon Managers and overseeing the entire platform.
 
-### A. Create Salon Manager
-*   **Input**: Email and Password.
-*   **Automatic Data Seeding**: Upon creation, the following default data **MUST** be generated for the new Salon Manager:
-    *   **Profile**:
-        *   **Support Contact**: Default Email (`saloon@manager.com`) and Phone (`+0123456789`).
-    *   **Inventory (Default Products)**:
-        1.  Product Name: `Argan Oil Elixir`
-        2.  Product Name: `Silver Bright Shampoo`
-    *   **Questionnaire**: Default "Flutter App Questionnaire" data.
-    *   **Hair Data**:
-        *   Default "Hair Types"
-        *   Default "Hair Conditions"
-        *   Default "Hair Scan Metrics"
-    *   **Visuals**: Existing default "Visual Hair Colors".
+You are an expert React + Firebase developer. please add or resture existing project featurres according to requremnets.
 
-### B. Global Management & Analytics
-*   **Dashboard**: View all Salon Managers.
-*   **Drill-Down**: Select a specific Salon Manager to view:
-    *   Profile details (Bio, Name, Contact, etc.).
-    *   **Performance Metrics**:
-        *   Total Stylists count.
-        *   Total Clients per Stylist.
-        *   Product Sales & Revenue.
-        *   Questions and Hair Types added.
-    *   **Management**: Ability to update any aspect of the Salon Manager's data.
+There are EXACTLY TWO admin panels / dashboards:
 
----
+1. Super Admin Panel (platform owner — highest level)
+route should be /super
+2. Salon Manager Panel (each salon owner/manager — created only by Super Admin)
+route should be /manager
 
-## 2. Salon Manager Role
-The Salon Manager manages their specific salon operations, stylists, and products.
+No separate stylist admin panel exists on web — stylists log in and work ONLY via the Flutter mobile app.
 
-### A. Stylist Management
-*   **Create Stylist**:
-    *   Manager generates Login Credentials (Email/Password) for the stylist.
-    *   *Note*: Stylists use these credentials to log in to the mobile app (no signup UI in the app).
-*   **Stylist List & Details**:
-    *   **Table View**: Columns for Name, Email, Phone, Active Status, Stylist ID.
-    *   **Detailed View** (Click to expand):
-        *   Profile Editing (Name, Bio, Skills, Contact, Password).
-        *   Toggle Active/Inactive status.
-        *   **Analytics**: Charts for Clients, Products Sold, and Scans.
-        *   **Clients Table**: granular data on clients under this stylist (Products Sold, Quantity, Date/Time, Amount, Session ID).
-        *   **AI Recommendations**: View/Manage AI recommendations linked to the stylist/client.
+### User Roles & Creation Flow (Strict Hierarchy – No Self-Signup Anywhere)
 
-### B. Sales & Analytics (Salon Manager Dashboard)
-*   **Overview Cards**: Visually appealing "Box Cards" displaying:
-    *   Total Sales & Revenue.
-    *   Total Products Sold.
-    *   Total Clients.
-    *   Stylist Performance ranking.
-*   **Detailed Sales Table**:
-    *   List of Client Names (linked to Stylist).
-    *   Products Purchased (Quantity).
-    *   Transaction details (Date, Time, Amount, Session ID).
-    *   *Interactivity*: Clicking a Stylist name navigates to that Stylist's specific analytics.
+- Super Admin (pre-created or first user — single or very few)
+  - Creates Salon Managers (only email + password at creation time)
+- Salon Manager
+  - Creates Stylists (email + password + basic info) → credentials given to stylist for Flutter app login
+- Stylist (mobile-only)
+  - Creates and manages Clients via Flutter app
+  - Performs scans, sales, recommendations, etc. in app
+- Client (end user — mobile app only)
 
-### C. Profile & Settings
-*   **Profile**: Update Name, Bio, Email, Phone, Password.
-*   **Company Info**:
-    *   Update **Privacy Policy** and **Terms & Conditions** (unique to each salon).
-    *   **Support Contact**: Update Email/Phone (defaults provided on creation).
-*   **Sidebar**: dedicated "Profile" button for easy access.
+All data is strictly owned by the Salon (tenant): every Firestore document MUST include or be nested under a salonId (the Firestore doc ID of the Salon Manager).
 
----
+### Super Admin Panel Features
 
-## 3. Data Structure & Migration
-**File**: `src/data-migration/data-migration.mockData.js`
+- Dashboard listing all Salon Managers (table or cards)
+- Create new Salon Manager: only email + password required
+- Click any Salon Manager → "impersonate/view as" mode: Super Admin sees and can edit **everything** inside that salon exactly like the Salon Manager would (full read/write access)
+- Global overview if needed (total salons, total stylists across all, etc.)
 
-*   **Requirement**: This file must contain all default data structures for the migration.
-*   **Structure**: Organize data by Firebase Collections and Documents (e.g., `products`, `questionnaires`, `hairMetrics`, `visualColors`).
-*   **Usage**: ensuring when a Super Admin creates a manager, this structured data is what gets pushed to the database.
+**Automatic defaults when Super Admin creates a new Salon Manager:**
 
-## 4. UI/UX Guidelines
-*   **Aesthetics**: Modern, clean design with valid visual hierarchy.
-*   **Components**:
-    *   **Box Cards**: For high-level statistics.
-    *   **Interactive Tables**: For lists (Stylists, Clients, Sales) with sort/filter capabilities.
-    *   **Charts**: For visual analytics (Sales trends, Stylist performance).
-*   **Navigation**: intuitive Sidebar with clear separation of sections.
+- Auto-set profile defaults:
+  - supportEmail: "salon@manager.com"
+  - supportPhone: "+0123456789"
+- Auto-add 2 default products to the salon's product catalog:
+  1. Argan Oil Elixir
+  2. Silver Bright Shampoo
+- Copy default shared/global data into the new salon (as subcollections or documents):
+  - Full Questionnaire JSON/structure for Flutter app
+  - Hair Types list
+  - Hair Conditions list
+  - Hair Scan Metrics list
+  - Visual Hair Colors list
 
----
+### Salon Manager Panel Features
 
-**Implementation Note**:
-Refer to `@salon_dashboard_sow.xlsx - Sheet 1 (1).pdf` for any missing granular details regarding the data schema or flow.
+Sidebar navigation with:
+- Dashboard (overview cards: total stylists, total clients, total sales, total revenue, top stylist, etc.)
+- My Profile (update name, bio, skills, email, phone, password, logo/photo)
+- Support Settings (update support email & phone — overrides defaults)
+- Privacy Policy & Terms & Conditions (rich text editor to set custom per salon)
+- Stylists
+  - Create new stylist (name, email, phone, password, bio, skills, photo, active status)
+  - List all stylists (table): name, email, phone, active/inactive, stylist ID, stats (# clients, # products sold, # scans)
+  - Click stylist → detail view:
+    - Edit profile
+    - List of their clients (fetched from Firestore — read-only or limited edit by manager)
+    - Sales/products sold by this stylist (table + charts)
+    - AI recommendations history for this stylist
+    - Analytics charts (clients growth, sales over time…)
+- Products
+  - CRUD own salon-specific products (name, desc, price, image, stock…)
+- Sales & Analytics (main dashboard section)
+  - Summary cards: total revenue, total products sold, total clients, avg per stylist…
+  - Transactions table: date/time, stylist, client name, products/quantity, amount, session ID
+  - Click stylist in table → drill-down to that stylist's full analytics
+- AI Recommendations: view per-stylist recommendations (generated in app, shown here)
+
+### Firestore Data Modeling (Recommended Multi-Tenant Structure)
+
+Use subcollections for strong isolation + easy security rules:
+
+just hint saloon manager example structer like : 
+salons/{salonId}           ← salonId = doc ID of salon manager
+├── profile                ← {name, email, phone, supportEmail, supportPhone,logo, bio, skills…}
+├── stylists/{stylistId}
+│   ├── profile           ← {name, email, phone, bio, skills, photo, active, no passwordHash }
+│   ├── clients/{clientId}       ← basic client info (read-only or limited edit from web)
+│   └── Ai recommendations/{recId}  ← AI recs done by stylist to clients in app
+└── sales/{saleId}               ← {date, stylistId, clientId, products[], amount, sessionId…}
+└── app configue
+└── settings
+└── products
+└── and others 
+
+
+
+
+
+
+
+- Super Admin can list all salons via a top-level collection like `salons` (with owner uid or similar)
+- Use custom claims or a users collection to store role + salonId for quick auth checks
+- Security Rules must enforce: request.auth.uid == salon owner OR super admin → full access; stylist uid → only their own data via app
+
+### Important Rules
+
+- No signup/login pages for anyone except perhaps initial Super Admin setup
+- All creation is top-down (Super Admin → Salon Manager → Stylist)
+- Stylist/client creation & most actions happen in Flutter → dashboard mainly shows/analyzes/edits
+- When Salon Manager views/creates data, always scope queries to their own salonId
+- Super Admin can override/scoped to any salonId when viewing a specific salon
+- Add seed/mock data migration script (data-migration.mockData.js) for defaults + sample stylists/products/sales
+

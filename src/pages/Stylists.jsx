@@ -7,32 +7,58 @@ import {
     UserX,
     Check,
     X,
-    Loader2
+    Loader2,
+    Users,
+    TrendingUp,
+    Package,
+    Sparkles,
+    Settings,
+    ArrowUpRight,
+    Camera,
+    Upload,
+    ArrowLeft,
+    Mail,
+    Phone,
+    Briefcase,
+    Calendar
 } from 'lucide-react';
 import {
     subscribeToCollection,
     createDocument,
-    updateDocument
+    updateDocument,
+    uploadImage
 } from '../lib/services';
+import { useAuth } from '../contexts/AuthContext';
+import {
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area
+} from 'recharts';
 
 const Stylists = () => {
+    const { user } = useAuth();
     const [stylists, setStylists] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [showModal, setShowModal] = useState(false);
-    const [modalMode, setModalMode] = useState('add'); // 'add', 'edit', 'view'
+    const [modalMode, setModalMode] = useState('add');
     const [selectedStylist, setSelectedStylist] = useState(null);
+    const [viewingDetail, setViewingDetail] = useState(false);
 
-    // Subscribe to real-time updates
     useEffect(() => {
-        const unsubscribe = subscribeToCollection('stylists', (data) => {
+        if (!user?.salonId) return;
+        const unsubscribe = subscribeToCollection(`salons/${user.salonId}/stylists`, (data) => {
             setStylists(data);
             setLoading(false);
         }, [], { field: 'createdAt', direction: 'desc' });
 
         return () => unsubscribe();
-    }, []);
+    }, [user?.salonId]);
 
     const filteredStylists = stylists.filter(stylist => {
         const matchesSearch = stylist.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,362 +67,333 @@ const Stylists = () => {
         return matchesSearch && matchesStatus;
     });
 
-    const handleAdd = () => {
-        setModalMode('add');
-        setSelectedStylist(null);
-        setShowModal(true);
-    };
-
-    const handleEdit = (stylist) => {
-        setModalMode('edit');
-        setSelectedStylist(stylist);
-        setShowModal(true);
-    };
-
-    const handleView = (stylist) => {
-        setModalMode('view');
-        setSelectedStylist(stylist);
-        setShowModal(true);
-    };
-
-    const handleDeactivate = async (stylist) => {
-        try {
-            await updateDocument('stylists', stylist.id, {
-                status: stylist.status === 'Active' ? 'Inactive' : 'Active'
-            });
-        } catch (error) {
-            console.error("Error toggling status:", error);
-            alert("Failed to update stylist status");
-        }
-    };
-
     const handleSave = async (data) => {
         try {
+            const folderPath = `salons/${user.salonId}/stylists`;
             if (modalMode === 'add') {
-                await createDocument('stylists', data);
-            } else if (modalMode === 'edit') {
-                // Don't update password if it's empty (placeholder: "Leave blank to keep current")
+                await createDocument(folderPath, {
+                    ...data,
+                    salonId: user.salonId,
+                    totalSales: 0,
+                    unitsSold: 0,
+                    clientsCount: 0,
+                    scansCount: 0,
+                    createdAt: new Date()
+                });
+            } else {
                 const updateData = { ...data };
-                if (!updateData.password) {
-                    delete updateData.password;
-                }
-                await updateDocument('stylists', selectedStylist.id, updateData);
+                if (!updateData.password) delete updateData.password;
+                await updateDocument(folderPath, selectedStylist.id, updateData);
             }
             setShowModal(false);
         } catch (error) {
-            console.error("Error saving stylist:", error);
-            alert("Failed to save stylist");
+            console.error(error);
+            alert("Error saving stylist");
         }
     };
 
-    if (loading) {
-        return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="h-10 w-64 skeleton rounded-lg" />
-                        <div className="h-4 w-48 skeleton rounded-lg" />
-                    </div>
-                    <div className="h-10 w-40 skeleton rounded-lg" />
-                </div>
+    if (loading) return <div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-10 h-10 text-tea-700 animate-spin" /></div>;
 
-                <div className="card h-16 skeleton rounded-xl" />
-
-                <div className="card overflow-hidden">
-                    <div className="space-y-4 p-4">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                            <div key={i} className="flex gap-4 items-center">
-                                <div className="w-10 h-10 skeleton rounded-full" />
-                                <div className="flex-1 h-8 skeleton rounded" />
-                                <div className="w-48 h-8 skeleton rounded" />
-                                <div className="w-32 h-8 skeleton rounded" />
-                                <div className="w-24 h-8 skeleton rounded" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
+    if (viewingDetail && selectedStylist) {
+        return <StylistDetail stylist={selectedStylist} onBack={() => setViewingDetail(false)} />;
     }
 
     return (
-        <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold text-tea-800">Stylist Management</h1>
-                    <p className="text-gray-600 mt-1">Manage your salon stylists</p>
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-2">
+                    <h1 className="text-4xl font-black text-tea-900 tracking-tight">Team <span className="text-tea-700">Stylists</span></h1>
+                    <p className="text-tea-500 font-bold text-xs uppercase tracking-widest leading-none">Manage specialist profiles and monitor performance</p>
                 </div>
-                <button onClick={handleAdd} className="btn-primary flex items-center gap-2">
+                <button onClick={() => { setModalMode('add'); setSelectedStylist(null); setShowModal(true); }} className="btn-primary">
                     <Plus className="w-5 h-5" />
-                    Add Stylist
+                    <span>Register Specialist</span>
                 </button>
             </div>
 
-            {/* Filters */}
-            <div className="card">
-                <div className="flex flex-col md:flex-row gap-4">
-                    {/* Search */}
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Search by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field pl-10"
-                        />
-                    </div>
-
-                    {/* Status Filter */}
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="input-field md:w-48"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
+            <div className="glass-card p-4 flex flex-col md:flex-row gap-4">
+                <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-tea-400" />
+                    <input
+                        type="text"
+                        placeholder="Filter by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="input-field pl-12 bg-white/50 border-tea-700/5"
+                    />
                 </div>
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="input-field md:w-56 bg-white/50 border-tea-700/5">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
             </div>
 
-            {/* Stylists Table */}
-            <div className="card overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-gray-200 bg-tea-50">
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Name</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Email</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Phone</th>
-                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Status</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total Sales</th>
-                                <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Units Sold</th>
-                                <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredStylists.map((stylist) => (
-                                <tr key={stylist.id} className="border-b border-gray-100 hover:bg-tea-50 transition-colors">
-                                    <td className="py-3 px-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-brown-100 rounded-full flex items-center justify-center text-tea-700 font-semibold text-sm">
-                                                {stylist.name?.split(' ').map(n => n[0]).join('') || '?'}
-                                            </div>
-                                            <span className="font-medium text-gray-900">{stylist.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4 text-gray-700">{stylist.email}</td>
-                                    <td className="py-3 px-4 text-gray-700">{stylist.phone}</td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${stylist.status === 'Active'
-                                            ? 'bg-tea-100 text-tea-800'
-                                            : 'bg-gray-100 text-gray-700'
-                                            }`}>
-                                            {stylist.status === 'Active' ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
-                                            {stylist.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-3 px-4 text-right font-semibold text-tea-700">
-                                        ${stylist.totalSales?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                    </td>
-                                    <td className="py-3 px-4 text-right text-gray-700">{stylist.unitsSold}</td>
-                                    <td className="py-3 px-4">
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => handleView(stylist)}
-                                                className="p-2 text-gray-600 hover:bg-tea-100 rounded-lg transition-colors"
-                                                title="View Profile"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleEdit(stylist)}
-                                                className="p-2 text-tea-700 hover:bg-brown-50 rounded-lg transition-colors"
-                                                title="Edit"
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeactivate(stylist)}
-                                                className={`p-2 rounded-lg transition-colors ${stylist.status === 'Active'
-                                                    ? 'text-red-600 hover:bg-red-50'
-                                                    : 'text-tea-700 hover:bg-tea-50'
-                                                    }`}
-                                                title={stylist.status === 'Active' ? 'Deactivate' : 'Activate'}
-                                            >
-                                                <UserX className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredStylists.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="w-48 h-48 mb-6 opacity-80">
-                            <img src="/empty.png" alt="No stylists" className="w-full h-full object-contain filter grayscale" />
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {filteredStylists.map((stylist) => (
+                    <div key={stylist.id} className="glass-card overflow-hidden group hover:bg-tea-50/50">
+                        <div className="p-6 flex flex-col md:flex-row gap-6">
+                            <div className="flex flex-col items-center gap-4 min-w-[140px]">
+                                <div className="w-24 h-24 rounded-3xl overflow-hidden ring-4 ring-tea-700/5 transition-all">
+                                    <img src={stylist.imageUrl || `https://ui-avatars.com/api/?name=${stylist.name}&background=8B4513&color=fff`} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-black text-tea-900 uppercase tracking-tight">{stylist.name}</h3>
+                                    <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">{stylist.status}</p>
+                                </div>
+                            </div>
+                            <div className="flex-1 space-y-6">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    <StatMini label="Sales" value={`$${stylist.totalSales || 0}`} />
+                                    <StatMini label="Clients" value={stylist.clientsCount || 0} />
+                                    <StatMini label="Units" value={stylist.unitsSold || 0} />
+                                    <StatMini label="Scans" value={stylist.scansCount || 0} />
+                                </div>
+                                <div className="flex gap-2 pt-4 border-t border-tea-700/5">
+                                    <button onClick={() => { setSelectedStylist(stylist); setViewingDetail(true); }} className="flex-1 btn-secondary text-[10px] font-black uppercase tracking-widest"><Eye className="w-4 h-4" /> View Details</button>
+                                    <button onClick={() => { setSelectedStylist(stylist); setModalMode('edit'); setShowModal(true); }} className="p-2 btn-secondary"><Edit className="w-4 h-4" /></button>
+                                </div>
+                            </div>
                         </div>
-                        <h3 className="text-xl font-bold text-tea-800 mb-2">No Stylists Found</h3>
-                        <p className="text-gray-600 max-w-xs mx-auto">
-                            No team members are currently registered. Add your stylists to start tracking their performance and AI recommendations.
-                        </p>
                     </div>
-                )}
+                ))}
             </div>
 
-            {/* Modal */}
-            {showModal && (
-                <StylistModal
-                    mode={modalMode}
-                    stylist={selectedStylist}
-                    onClose={() => setShowModal(false)}
-                    onSave={handleSave}
-                />
-            )}
+            {showModal && <StylistModal mode={modalMode} stylist={selectedStylist} onClose={() => setShowModal(false)} onSave={handleSave} />}
         </div>
     );
 };
+
+const StatMini = ({ label, value }) => (
+    <div className="space-y-1">
+        <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{label}</p>
+        <p className="text-sm font-black text-tea-900">{value}</p>
+    </div>
+);
+
+const StylistDetail = ({ stylist, onBack }) => {
+    const [activeTab, setActiveTab] = useState('analytics');
+    const [clients, setClients] = useState([]);
+    const [sales, setSales] = useState([]);
+
+    useEffect(() => {
+        if (!stylist.id || !user?.salonId) return;
+
+        const unsubs = [
+            subscribeToCollection(`salons/${user.salonId}/stylists/${stylist.id}/clients`, setClients),
+            subscribeToCollection(`salons/${user.salonId}/sales`, setSales, [{ field: 'stylistId', operator: '==', value: stylist.id }])
+        ];
+        return () => unsubs.forEach(u => u());
+    }, [stylist.id, user?.salonId]);
+
+    const statsData = [
+        { name: 'Mon', sales: 400, clients: 24 },
+        { name: 'Tue', sales: 300, clients: 13 },
+        { name: 'Wed', sales: 500, clients: 98 },
+        { name: 'Thu', sales: 278, clients: 39 },
+        { name: 'Fri', sales: 189, clients: 48 },
+        { name: 'Sat', sales: 239, clients: 38 },
+        { name: 'Sun', sales: 349, clients: 43 },
+    ];
+
+    return (
+        <div className="space-y-8 animate-in slide-in-from-right duration-500">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+                <button onClick={onBack} className="p-3 glass-card hover:bg-tea-50 text-tea-700 rounded-2xl border-tea-700/10"><ArrowLeft className="w-6 h-6" /></button>
+                <div className="flex-1 flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
+                    <img
+                        src={stylist.imageUrl || `https://ui-avatars.com/api/?name=${stylist.name}&background=8B4513&color=fff`}
+                        className="w-32 h-32 rounded-[2.5rem] border-4 border-tea-700/10"
+                    />
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <h2 className="text-4xl font-black text-tea-900 uppercase tracking-tight">{stylist.name}</h2>
+                            <p className="text-tea-500 font-bold text-xs uppercase tracking-widest">{stylist.email} | {stylist.phone}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                            {stylist.skills?.split(',').map((s, i) => <span key={i} className="px-3 py-1 bg-tea-100/50 border border-tea-700/10 rounded-lg text-[9px] font-black text-tea-700 uppercase tracking-widest">{s.trim()}</span>)}
+                        </div>
+                        <p className="text-tea-600 text-sm italic font-bold max-w-xl">"{stylist.bio || 'Expert stylist dedicated to providing the best hair care experience.'}"</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex border-b border-tea-700/5 gap-8 overflow-x-auto no-scrollbar">
+                {[
+                    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+                    { id: 'clients', label: 'Clients', icon: Users },
+                    { id: 'sales', label: 'Sales', icon: Package },
+                    { id: 'ai', label: 'AI Recommendations', icon: Sparkles }
+                ].map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 pb-4 border-b-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'border-tea-700 text-tea-700' : 'border-transparent text-tea-400'}`}>
+                        <tab.icon className="w-4 h-4" /> {tab.label}
+                    </button>
+                ))}
+            </div>
+
+            <div className="min-h-[400px]">
+                {activeTab === 'analytics' && <AnalyticsPanel statsData={statsData} stylist={stylist} />}
+                {activeTab === 'clients' && <RecordsTable type="clients" data={clients} />}
+                {activeTab === 'sales' && <RecordsTable type="sales" data={sales} />}
+                {activeTab === 'ai' && <AIRecommendationsPanel />}
+            </div>
+        </div>
+    );
+};
+
+const AnalyticsPanel = ({ statsData, stylist }) => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 glass-card p-6">
+            <h3 className="text-lg font-black text-tea-900 uppercase tracking-tight mb-8">Performance History</h3>
+            <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={statsData}>
+                        <defs><linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8B4513" stopOpacity={0.2} /><stop offset="95%" stopColor="#8B4513" stopOpacity={0} /></linearGradient></defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#8B451305" vertical={false} />
+                        <XAxis dataKey="name" stroke="#8b6f5c" fontSize={10} axisLine={false} tickLine={false} />
+                        <YAxis stroke="#8b6f5c" fontSize={10} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
+                        <Area type="monotone" dataKey="sales" stroke="#8B4513" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                    </AreaChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
+        <div className="space-y-6">
+            <StatCard label="Growth" value="+24%" growth="+5%" />
+            <StatCard label="Retention" value="92%" growth="+2%" />
+            <StatCard label="Yearly" value={`$${(stylist.totalSales * 1.2 || 0).toFixed(0)}`} growth="+15%" />
+        </div>
+    </div>
+);
+
+const StatCard = ({ label, value, growth }) => (
+    <div className="glass-card p-6">
+        <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">{label}</p>
+        <p className="text-3xl font-black text-tea-900 mt-1">{value}</p>
+        <p className="text-[9px] text-emerald-600 font-black mt-2 uppercase flex items-center gap-1 tracking-widest"><ArrowUpRight className="w-3 h-3" /> {growth}</p>
+    </div>
+);
+
+const RecordsTable = ({ type, data }) => (
+    <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
+            <table className="w-full">
+                <thead className="table-header">
+                    <tr>
+                        <th className="text-left p-6 text-[10px] font-black text-tea-400 uppercase tracking-widest">{type === 'clients' ? 'Client' : 'Order ID'}</th>
+                        <th className="text-left p-6 text-[10px] font-black text-tea-400 uppercase tracking-widest">{type === 'clients' ? 'Contact' : 'Products'}</th>
+                        <th className="text-left p-6 text-[10px] font-black text-tea-400 uppercase tracking-widest">{type === 'clients' ? 'Joined' : 'Qty'}</th>
+                        <th className="text-right p-6 text-[10px] font-black text-tea-400 uppercase tracking-widest">{type === 'clients' ? 'Status' : 'Amount'}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {data.length === 0 ? (
+                        <tr><td colSpan="4" className="p-20 text-center text-tea-400 font-black uppercase tracking-[0.3em] text-[10px]">Synchronizing Records...</td></tr>
+                    ) : (
+                        data.map(item => (
+                            <tr key={item.id} className="table-row">
+                                <td className="p-6">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-tea-700 flex items-center justify-center font-black text-white text-[10px]">{item.name?.charAt(0) || 'U'}</div>
+                                        <p className="text-sm font-black text-tea-900 uppercase">{item.name || item.id.substring(0, 8)}</p>
+                                    </div>
+                                </td>
+                                <td className="p-6 text-[10px] text-tea-500 font-black uppercase tracking-widest">{type === 'clients' ? item.email : item.products?.map(p => p.productName).join(', ')}</td>
+                                <td className="p-6 text-[10px] text-tea-900 font-black uppercase tracking-widest">{type === 'clients' ? new Date(item.joinDate?.toDate?.() || item.joinDate).toLocaleDateString() : '1'}</td>
+                                <td className="p-6 text-right font-black text-tea-700">
+                                    {type === 'clients' ? <span className="badge badge-success">ACTIVE</span> : `$${(item.totalAmount || item.total || 0).toFixed(2)}`}
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+    </div>
+);
+
+const AIRecommendationsPanel = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[1, 2, 3, 4].map(i => (
+            <div key={i} className="glass-card p-6 flex gap-6 items-center border-l-4 border-tea-700">
+                <div className="w-12 h-12 rounded-xl bg-tea-100 flex items-center justify-center text-tea-700"><Sparkles className="w-6 h-6" /></div>
+                <div>
+                    <h4 className="font-black text-tea-900 text-[10px] uppercase tracking-widest">Growth Opportunity</h4>
+                    <p className="text-[10px] text-tea-500 font-bold uppercase tracking-widest mt-1 leading-relaxed">Recommended <span className="text-tea-900 font-black">Argan Oil</span> for Client #{i} based on scan.</p>
+                </div>
+            </div>
+        ))}
+    </div>
+);
 
 const StylistModal = ({ mode, stylist, onClose, onSave }) => {
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        status: 'Active',
-        totalSales: 0,
-        unitsSold: 0,
-        password: '',
+        name: '', email: '', phone: '', status: 'Active', bio: '', skills: '', password: '', imageUrl: '',
         ...stylist
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        await onSave(formData);
-        setIsSubmitting(false);
-    };
-
-    const isViewMode = mode === 'view';
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-                <div className="p-6">
-                    <h2 className="text-2xl font-bold text-tea-800 mb-6">
-                        {mode === 'add' ? 'Add New Stylist' : mode === 'edit' ? 'Edit Stylist' : 'Stylist Profile'}
-                    </h2>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                            <input
-                                type="text"
-                                value={formData.name}
-                                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                className="input-field"
-                                disabled={isViewMode}
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input
-                                type="email"
-                                value={formData.email}
-                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                className="input-field"
-                                disabled={isViewMode}
-                                required
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                            <input
-                                type="tel"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="input-field"
-                                disabled={isViewMode}
-                                required
-                            />
-                        </div>
-
-                        {!isViewMode && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+        <div className="fixed inset-0 bg-tea-900/40 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+            <div className="glass-card max-w-2xl w-full p-8 space-y-8 max-h-[90vh] overflow-y-auto custom-scrollbar border-tea-700/10 shadow-2xl">
+                <h2 className="text-3xl font-black text-tea-900 uppercase tracking-tighter">{mode === 'add' ? 'New' : 'Edit'} <span className="text-tea-700">Specialist</span></h2>
+                <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <InputGroup label="Full Name" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} />
+                        <InputGroup label="Email" type="email" value={formData.email} onChange={v => setFormData({ ...formData, email: v })} />
+                        <InputGroup label="Phone" value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} />
+                        <InputGroup label="Password" type="password" value={formData.password} onChange={v => setFormData({ ...formData, password: v })} placeholder={mode === 'edit' ? 'Optional' : ''} />
+                    </div>
+                    <div className="flex flex-col items-center gap-4 py-4 border-y border-tea-700/5">
+                        <div className="relative group">
+                            <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden border-2 border-dashed border-tea-700/20 group-hover:border-tea-700/50 transition-colors">
+                                {formData.imageUrl ? (
+                                    <img src={formData.imageUrl} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/50 text-tea-400">
+                                        <Camera className="w-8 h-8 mb-2" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">No Image</span>
+                                    </div>
+                                )}
+                            </div>
+                            <label className="absolute inset-0 flex items-center justify-center bg-tea-900/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-[2.5rem]">
                                 <input
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    className="input-field"
-                                    placeholder={mode === 'add' ? "Set password" : "Leave blank to keep current"}
-                                    required={mode === 'add'}
+                                    type="file"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            const url = await uploadImage(file, `stylists/${Date.now()}_${file.name}`);
+                                            setFormData({ ...formData, imageUrl: url });
+                                        }
+                                    }}
                                 />
-                            </div>
-                        )}
-
-                        {!isViewMode && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <select
-                                    value={formData.status}
-                                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                    className="input-field"
-                                >
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                </select>
-                            </div>
-                        )}
-
-                        {isViewMode && (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Sales</label>
-                                    <p className="text-lg font-semibold text-tea-700">
-                                        ${formData.totalSales?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                                    </p>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Units Sold</label>
-                                    <p className="text-lg font-semibold text-gray-900">{formData.unitsSold}</p>
-                                </div>
-                            </>
-                        )}
-
-                        <div className="flex gap-3 pt-4">
-                            {!isViewMode && (
-                                <button
-                                    type="submit"
-                                    className="flex-1 btn-primary flex items-center justify-center gap-2"
-                                    disabled={isSubmitting}
-                                >
-                                    {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-                                    {mode === 'add' ? 'Add Stylist' : 'Save Changes'}
-                                </button>
-                            )}
-                            <button
-                                type="button"
-                                onClick={onClose}
-                                className="flex-1 btn-secondary"
-                                disabled={isSubmitting}
-                            >
-                                {isViewMode ? 'Close' : 'Cancel'}
-                            </button>
+                                <Upload className="w-6 h-6 text-white" />
+                            </label>
                         </div>
-                    </form>
-                </div>
+                        <div className="text-center">
+                            <p className="text-[10px] font-black text-tea-700 uppercase tracking-widest leading-none">Specialist Portrait</p>
+                            <p className="text-[9px] text-tea-400 mt-1 uppercase font-bold">Click to upload photo</p>
+                        </div>
+                    </div>
+                    <InputGroup label="Professional Skills" value={formData.skills} onChange={v => setFormData({ ...formData, skills: v })} placeholder="Coloring, Styling, etc." />
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-tea-700 uppercase tracking-widest ml-1">Biography</label>
+                        <textarea className="input-field min-h-[100px] py-3 bg-white/50" value={formData.bio} onChange={e => setFormData({ ...formData, bio: e.target.value })} />
+                    </div>
+                    <div className="flex gap-4 pt-4">
+                        <button type="button" onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
+                        <button type="submit" className="flex-1 btn-primary">Save Member</button>
+                    </div>
+                </form>
             </div>
         </div>
     );
 };
+
+const InputGroup = ({ label, type = "text", value, onChange, placeholder }) => (
+    <div className="space-y-2">
+        <label className="text-[10px] font-black text-tea-700 uppercase tracking-widest ml-1">{label}</label>
+        <input type={type} value={value} onChange={e => onChange(e.target.value)} className="input-field bg-white/50" placeholder={placeholder} required={type !== 'password'} />
+    </div>
+);
 
 export default Stylists;

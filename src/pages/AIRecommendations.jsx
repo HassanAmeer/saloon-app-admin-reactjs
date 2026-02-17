@@ -8,7 +8,8 @@ import {
     Loader2,
     BotIcon
 } from 'lucide-react';
-import { subscribeToCollection } from '../lib/services';
+import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
+import { useAuth } from '../contexts/AuthContext';
 
 const AIRecommendations = () => {
     const [recommendations, setRecommendations] = useState([]);
@@ -19,13 +20,16 @@ const AIRecommendations = () => {
     const [selectedRec, setSelectedRec] = useState(null);
 
     // Subscribe to recommendations and stylists
+    const { user } = useAuth();
     useEffect(() => {
-        const unsubscribeRecs = subscribeToCollection('recommendations', (data) => {
+        if (!user?.salonId) return;
+
+        const unsubscribeRecs = subscribeToCollectionGroup('Ai recommendations', (data) => {
             setRecommendations(data);
             setLoading(false);
-        }, [], { field: 'createdAt', direction: 'desc' });
+        }, [{ field: 'salonId', operator: '==', value: user.salonId }], { field: 'createdAt', direction: 'desc' });
 
-        const unsubscribeStylists = subscribeToCollection('stylists', (data) => {
+        const unsubscribeStylists = subscribeToCollection(`salons/${user.salonId}/stylists`, (data) => {
             setStylists(data);
         });
 
@@ -33,7 +37,7 @@ const AIRecommendations = () => {
             unsubscribeRecs();
             unsubscribeStylists();
         };
-    }, []);
+    }, [user?.salonId]);
 
     const filteredRecommendations = recommendations.filter(rec => {
         const recDate = rec.createdAt?.toDate() || new Date(rec.date);

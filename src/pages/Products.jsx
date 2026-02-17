@@ -16,6 +16,7 @@ import {
     deleteDocument,
     uploadImage
 } from '../lib/services';
+import { useAuth } from '../contexts/AuthContext';
 
 const Products = () => {
     const [products, setProducts] = useState([]);
@@ -31,14 +32,18 @@ const Products = () => {
     const categories = ['all', ...new Set(products.map(p => p.category))];
 
     // Subscribe to real-time updates
+    const { user } = useAuth();
+    const salonPath = user?.salonId ? `salons/${user.salonId}/products` : null;
+
     useEffect(() => {
-        const unsubscribe = subscribeToCollection('products', (data) => {
+        if (!salonPath) return;
+        const unsubscribe = subscribeToCollection(salonPath, (data) => {
             setProducts(data);
             setLoading(false);
         }, [], { field: 'createdAt', direction: 'desc' });
 
         return () => unsubscribe();
-    }, []);
+    }, [salonPath]);
 
     const filteredProducts = products.filter(product => {
         const matchesSearch = product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -66,7 +71,7 @@ const Products = () => {
     const handleDelete = async (productId) => {
         if (window.confirm('Are you sure you want to delete this product?')) {
             try {
-                await deleteDocument('products', productId);
+                await deleteDocument(salonPath, productId);
             } catch (error) {
                 console.error("Error deleting product:", error);
                 alert("Failed to delete product");
@@ -76,7 +81,7 @@ const Products = () => {
 
     const toggleActive = async (product) => {
         try {
-            await updateDocument('products', product.id, { active: !product.active });
+            await updateDocument(salonPath, product.id, { active: !product.active });
         } catch (error) {
             console.error("Error toggling active status:", error);
         }
@@ -95,12 +100,12 @@ const Products = () => {
                 }
             }
 
-            const productData = { ...data, imageUrl };
+            const productData = { ...data, imageUrl, salonId: user.salonId };
 
             if (modalMode === 'add') {
-                await createDocument('products', productData);
+                await createDocument(salonPath, productData);
             } else {
-                await updateDocument('products', selectedProduct.id, productData);
+                await updateDocument(salonPath, selectedProduct.id, productData);
             }
             setShowModal(false);
         } catch (error) {

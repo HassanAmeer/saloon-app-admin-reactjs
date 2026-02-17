@@ -1,5 +1,6 @@
 import {
     collection,
+    collectionGroup,
     addDoc,
     updateDoc,
     deleteDoc,
@@ -16,8 +17,27 @@ import { db, storage } from './firebase';
 import { uploadChunkedBase64 } from './file-upload';
 
 // Helper for real-time collection updates
-export const subscribeToCollection = (collectionName, callback, filters = [], sort = null) => {
-    let q = collection(db, collectionName);
+export const subscribeToCollection = (collectionPath, callback, filters = [], sort = null) => {
+    let ref = collection(db, collectionPath);
+    let queryRef = query(ref);
+
+    filters.forEach(f => {
+        queryRef = query(queryRef, where(f.field, f.operator, f.value));
+    });
+
+    if (sort) {
+        queryRef = query(queryRef, orderBy(sort.field, sort.direction));
+    }
+
+    return onSnapshot(queryRef, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(data);
+    });
+};
+
+// Helper for collectionGroup updates (for deep nested data like recommendations)
+export const subscribeToCollectionGroup = (collectionId, callback, filters = [], sort = null) => {
+    let q = query(collectionGroup(db, collectionId));
 
     filters.forEach(f => {
         q = query(q, where(f.field, f.operator, f.value));
@@ -88,7 +108,7 @@ export const uploadImage = async (file, path) => {
     }
 };
 
-// Initialize Database with Mock Data
+// Initialize Database with Mock Data (Multi-Tenant Nested Pattern)
 export const initializeData = async (mockData, onProgress = () => { }) => {
     try {
         const {
@@ -96,41 +116,80 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
             mockProducts,
             mockSales,
             mockAIRecommendations,
-            mockAdmin,
+            mockSuperAdmin,
+            mockSalonManagers,
+            mockSalon,
             mockConfig,
             mockClients
         } = mockData;
 
-        const collections = [
-            { name: 'stylists', data: mockStylists, label: 'Stylists' },
-            { name: 'products', data: mockProducts, label: 'Products' },
-            { name: 'sales', data: mockSales, label: 'Sales' },
-            { name: 'recommendations', data: mockAIRecommendations, label: 'AI Recommendations' },
-            { name: 'admins', data: [mockAdmin], label: 'Admin Users' },
-            { name: 'settings', data: [{ id: 'app_config', ...mockConfig }], label: 'App Settings' },
-            { name: 'clients', data: mockClients, label: 'Clients' }
-        ];
+        // 1. Seed Global Super Admins
+        onProgress({ status: 'seeding', label: 'Super Admins', count: 1 });
+        await setDoc(doc(db, 'super_admins', mockSuperAdmin.id), { ...mockSuperAdmin, role: 'super', createdAt: serverTimestamp() });
 
-        for (const coll of collections) {
-            onProgress({ status: 'seeding', label: coll.label, count: coll.data.length });
+        // 2. Seed Global Salon Managers (for login reference)
+        onProgress({ status: 'seeding', label: 'Salon Managers', current: 0, total: mockSalonManagers.length });
+        let managerCount = 0;
+        for (const manager of mockSalonManagers) {
+            await setDoc(doc(db, 'salon_managers', manager.id), { ...manager, createdAt: serverTimestamp() });
+            managerCount++;
+            onProgress({ status: 'seeding', label: 'Salon Managers', current: managerCount, total: mockSalonManagers.length });
+        }
 
-            try {
-                for (const item of (coll.data || [])) {
-                    const { id, ...itemData } = item;
-                    const docId = id?.toString() || Math.random().toString(36).substring(7);
+        // 3. Seed Global Platform Config
+        await setDoc(doc(db, 'settings', 'platform_config'), { ...mockConfig, updatedAt: serverTimestamp() });
 
-                    await setDoc(doc(db, coll.name, docId), {
-                        ...itemData,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    });
+        // 4. Seed Nested Salon Structure
+        const salons = [mockSalon]; // In real scenario, loop through all salons
+        let salonIndex = 0;
+        for (const salon of salons) {
+            salonIndex++;
+            onProgress({ status: 'seeding', label: `Salon: ${salon.name}`, current: salonIndex, total: salons.length });
+            const salonPath = `salons/${salon.id}`;
+            const salonRef = doc(db, salonPath);
+
+            // A. Salon Profile Doc (Root + Profile Sub-resource)
+            await setDoc(salonRef, { ...salon, createdAt: serverTimestamp() });
+            await setDoc(doc(db, `${salonPath}/settings`, 'profile'), { ...salon, updatedAt: serverTimestamp() });
+
+            // B. App Config (salons/{id}/settings/app_config)
+            await setDoc(doc(db, `salons/${salon.id}/settings`, 'app_config'), { ...mockConfig, updatedAt: serverTimestamp() });
+
+            // C. Products Subcollection
+            for (const product of mockProducts.filter(p => p.salonId === salon.id)) {
+                await setDoc(doc(db, `salons/${salon.id}/products`, product.id), { ...product, createdAt: serverTimestamp() });
+            }
+
+            // D. Sales Subcollection
+            onProgress({ status: 'seeding', label: 'Sales History', count: mockSales.length });
+            for (const sale of mockSales.filter(s => s.salonId === salon.id)) {
+                await setDoc(doc(db, `salons/${salon.id}/sales`, sale.id), { ...sale, createdAt: serverTimestamp() });
+            }
+
+            // E. Stylists & Nested Data
+            onProgress({ status: 'seeding', label: 'Specialists & Clients', count: mockStylists.length });
+            for (const stylist of mockStylists.filter(s => s.salonId === salon.id)) {
+                const stylistPath = `${salonPath}/stylists/${stylist.id}`;
+
+                // Root stylist doc + profile sub-doc
+                await setDoc(doc(db, `${salonPath}/stylists`, stylist.id), { ...stylist, createdAt: serverTimestamp() });
+                await setDoc(doc(db, `${stylistPath}/profile`, 'data'), { ...stylist, updatedAt: serverTimestamp() });
+
+                // Nested Clients under Stylist
+                const stylistClients = mockClients.filter(c => c.salonId === salon.id);
+                for (const client of stylistClients) {
+                    await setDoc(doc(db, `${stylistPath}/clients`, client.id), { ...client, createdAt: serverTimestamp() });
                 }
-                onProgress({ status: 'success', label: coll.label, count: coll.data.length });
-            } catch (e) {
-                console.error(`❌ [Firebase] Error seeding ${coll.name}:`, e.message);
-                onProgress({ status: 'error', label: coll.label, error: e.message });
+
+                // Nested AI Recommendations under Stylist
+                const stylistRecs = mockAIRecommendations.filter(r => r.stylistId === stylist.id);
+                for (const rec of stylistRecs) {
+                    await setDoc(doc(db, `${stylistPath}/Ai recommendations`, rec.id), { ...rec, createdAt: serverTimestamp() });
+                }
             }
         }
+
+        onProgress({ status: 'success', label: 'Database Initialization', count: 1 });
         onProgress({ status: 'complete' });
     } catch (error) {
         onProgress({ status: 'error', error: error.message });

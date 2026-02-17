@@ -7,6 +7,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { subscribeToCollection } from '../lib/services';
+import { useAuth } from '../contexts/AuthContext';
 
 const Sales = () => {
     const [sales, setSales] = useState([]);
@@ -16,13 +17,16 @@ const Sales = () => {
     const [stylistFilter, setStylistFilter] = useState('all');
 
     // Subscribe to sales and stylists
+    const { user } = useAuth();
     useEffect(() => {
-        const unsubscribeSales = subscribeToCollection('sales', (data) => {
+        if (!user?.salonId) return;
+
+        const unsubscribeSales = subscribeToCollection(`salons/${user.salonId}/sales`, (data) => {
             setSales(data);
             setLoading(false);
         }, [], { field: 'createdAt', direction: 'desc' });
 
-        const unsubscribeStylists = subscribeToCollection('stylists', (data) => {
+        const unsubscribeStylists = subscribeToCollection(`salons/${user.salonId}/stylists`, (data) => {
             setStylists(data);
         });
 
@@ -30,7 +34,7 @@ const Sales = () => {
             unsubscribeSales();
             unsubscribeStylists();
         };
-    }, []);
+    }, [user?.salonId]);
 
     const filteredSales = sales.filter(sale => {
         const saleDate = sale.createdAt?.toDate() || new Date(sale.date);

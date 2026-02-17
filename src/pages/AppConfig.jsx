@@ -17,16 +17,13 @@ import {
     Image as ImageIcon,
     Upload
 } from 'lucide-react';
-import {
-    subscribeToCollection,
-    updateDocument,
-    createDocument,
-    uploadImage
-} from '../lib/services';
+import { uploadImage } from '../lib/services';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { useAuth } from '../contexts/AuthContext';
 
 const AppConfig = () => {
+    const { user, role } = useAuth();
     const [configs, setConfigs] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -35,8 +32,11 @@ const AppConfig = () => {
     // Subscribe to app configuration
     useEffect(() => {
         const fetchConfig = async () => {
+            if (!user?.salonId && role !== 'super') return;
             try {
-                const configRef = doc(db, 'settings', 'app_config');
+                const configRef = role === 'super'
+                    ? doc(db, 'settings', 'platform_config')
+                    : doc(db, `salons/${user.salonId}/settings`, 'app_config');
                 const configSnap = await getDoc(configRef);
 
                 if (configSnap.exists()) {
@@ -78,12 +78,16 @@ const AppConfig = () => {
         };
 
         fetchConfig();
-    }, []);
+    }, [user?.salonId]);
 
     const handleSave = async () => {
+        if (!user?.salonId && role !== 'super') return;
         setIsSaving(true);
         try {
-            await setDoc(doc(db, 'settings', 'app_config'), configs);
+            const configRef = role === 'super'
+                ? doc(db, 'settings', 'platform_config')
+                : doc(db, `salons/${user.salonId}/settings`, 'app_config');
+            await setDoc(configRef, configs);
             alert('Settings saved successfully!');
         } catch (error) {
             console.error("Error saving config:", error);
@@ -392,7 +396,7 @@ const AppConfig = () => {
                             </button>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {configs.hairColors?.map((color, idx) => (
+                            {configs.hairColors?.map((color) => (
                                 <div key={color.id} className="card relative group overflow-hidden">
                                     <button
                                         onClick={() => setConfigs({ ...configs, hairColors: configs.hairColors.filter(c => c.id !== color.id) })}

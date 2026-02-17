@@ -1,25 +1,30 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogIn } from 'lucide-react';
 
-const Login = () => {
+const Login = ({ forcedRole }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+
+    // Use the forcedRole prop if provided, otherwise check search params, fallback to manager
+    const requestedRole = forcedRole || searchParams.get('role') || 'manager';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        const result = await login(email, password);
+        const result = await login(requestedRole, email, password);
 
         if (result.success) {
-            navigate('/dashboard');
+            // Redirect to the appropriate dashboard
+            navigate(requestedRole === 'super' ? '/super/dashboard' : '/manager/dashboard');
         } else {
             setError(result.error);
         }
@@ -28,37 +33,39 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-tea-100 via-tea-50 to-brown-50 px-4">
-            <div className="max-w-md w-full">
-                {/* Logo/Brand Section */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-20 h-20 mb-4">
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-tea-50/20">
+            {/* Background Decorative Elements */}
+            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-tea-700/10 rounded-full blur-[120px] animate-pulse" />
+            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brown-500/10 rounded-full blur-[120px] animate-pulse" />
+
+            <div className="max-w-md w-full relative z-10">
+                {/* Logo Section */}
+                <div className="flex items-center gap-2 text-center mb-10 group">
+                    <div className="inline-flex items-center justify-center w-24 h-24 mb-6 group-hover:scale-110 group-hover:rotate-180 transition-all duration-100">
                         <img src="/logo.png" alt="Saloon Logo" className="w-full h-full object-contain" />
                     </div>
-                    <h1 className="text-3xl font-bold text-tea-800 mb-2">Saloon Admin</h1>
-                    <p className="text-gray-600">AI-Powered Product Recommendations</p>
+                    <h1 className="text-4xl font-black text-tea-900 mb-2 tracking-tight">
+                        {requestedRole === 'super' ? 'Super' : 'Saloon Manager'} <span className="text-tea-700">Admin</span>
+                    </h1>
                 </div>
 
                 {/* Login Card */}
-                <div className="card">
-                    <h2 className="text-2xl font-semibold text-tea-800 mb-6">Sign In</h2>
+                <div className="glass-card p-8 lg:p-10 border border-tea-700/5">
+                    <div className="mb-8 text-center sm:text-left">
+                        <h2 className="text-2xl font-black text-tea-900 mb-2 tracking-tight">Welcome Back</h2>
+                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your {requestedRole === 'super' ? 'Super Admin' : 'Saloon Manager Admin'} account</p>
+                    </div>
 
                     {error && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-xl text-xs font-black flex items-center gap-3 animate-shake">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                             {error}
                         </div>
                     )}
 
-                    {/* Demo Credentials Info */}
-                    <div className="mb-6 p-4 bg-brown-50 border border-brown-200 rounded-lg">
-                        <p className="text-sm font-medium text-tea-900 mb-2">Demo Credentials:</p>
-                        <p className="text-xs text-tea-800">Email: admin@gmail.com</p>
-                        <p className="text-xs text-tea-800">Password: 12345678</p>
-                    </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="space-y-2">
+                            <label htmlFor="email" className="block text-[10px] font-black uppercase tracking-widest text-tea-700 ml-1">
                                 Email Address
                             </label>
                             <input
@@ -67,13 +74,13 @@ const Login = () => {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="input-field"
-                                placeholder="admin@gmail.com"
+                                placeholder="name@company.com"
                                 required
                             />
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                        <div className="space-y-2">
+                            <label htmlFor="password" title="Password" className="block text-[10px] font-black uppercase tracking-widest text-tea-700 ml-1">
                                 Password
                             </label>
                             <input
@@ -90,18 +97,40 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full btn-primary py-4 text-lg mt-4 group"
                         >
-                            {loading ? 'Signing in...' : 'Sign In'}
+                            {loading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    <span>Verifying...</span>
+                                </div>
+                            ) : (
+                                <>
+                                    <span>Sign In</span>
+                                    <LogIn className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600">
-                            Phase 2: Firebase Integrated
+                    <div className="mt-8 pt-8 border-t border-tea-700/5 text-center">
+                        <p className="text-[10px] text-tea-400 uppercase tracking-[0.2em] font-black">
+                            Secure Multi-Tenant Authentication
                         </p>
                     </div>
                 </div>
+
+                {/* Role Switcher - Only show if not forced into a role */}
+                {!forcedRole && (
+                    <div className="mt-6 flex justify-center gap-4">
+                        <button
+                            onClick={() => navigate(`/login?role=${requestedRole === 'super' ? 'manager' : 'super'}`)}
+                            className="text-[10px] font-black text-tea-500 hover:text-tea-700 transition-colors uppercase tracking-widest"
+                        >
+                            Switch to {requestedRole === 'super' ? 'Manager' : 'Super Admin'} Login
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
