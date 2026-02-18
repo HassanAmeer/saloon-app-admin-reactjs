@@ -36,7 +36,10 @@ const Products = () => {
     const salonPath = user?.salonId ? `salons/${user.salonId}/products` : null;
 
     useEffect(() => {
-        if (!salonPath) return;
+        if (!salonPath) {
+            setLoading(false);
+            return;
+        }
         const unsubscribe = subscribeToCollection(salonPath, (data) => {
             setProducts(data);
             setLoading(false);

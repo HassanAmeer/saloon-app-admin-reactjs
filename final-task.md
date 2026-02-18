@@ -75,7 +75,7 @@ Sidebar navigation with:
 
 Use subcollections for strong isolation + easy security rules:
 
-just hint saloon manager example structer like : 
+just hint salon manager example structer like : 
 salons/{salonId}           ← salonId = doc ID of salon manager
 ├── profile                ← {name, email, phone, supportEmail, supportPhone,logo, bio, skills…}
 ├── stylists/{stylistId}

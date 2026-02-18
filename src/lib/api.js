@@ -1,5 +1,5 @@
 /**
- * Saloon App-Side API Layer
+ * salon App-Side API Layer
  * This module provides abstract functions for the mobile/client-side 
  * implementation, hiding the underlying Firebase logic.
  */

@@ -25,7 +25,10 @@ const Clients = () => {
     const { user } = useAuth();
 
     useEffect(() => {
-        if (!user?.salonId) return;
+        if (!user?.salonId) {
+            setLoading(false);
+            return;
+        }
 
         const unsubscribeClients = subscribeToCollectionGroup('clients', (data) => {
             setClients(data);

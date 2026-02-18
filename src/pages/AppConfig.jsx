@@ -32,7 +32,10 @@ const AppConfig = () => {
     // Subscribe to app configuration
     useEffect(() => {
         const fetchConfig = async () => {
-            if (!user?.salonId && role !== 'super') return;
+            if (!user?.salonId && role !== 'super') {
+                setLoading(false);
+                return;
+            }
             try {
                 const configRef = role === 'super'
                     ? doc(db, 'settings', 'platform_config')
@@ -58,7 +61,7 @@ const AppConfig = () => {
                             { id: 'scans', label: 'Hair Scans', icon: 'Scan' },
                             { id: 'products', label: 'Products', icon: 'Package' }
                         ],
-                        supportEmail: 'support@saloon-app.com',
+                        supportEmail: 'support@salon-app.com',
                         supportPhone: '+1 (555) 123-4567',
                         termsAndConditions: 'Please read our terms and conditions...',
                         privacyPolicy: 'Your privacy is important to us...',

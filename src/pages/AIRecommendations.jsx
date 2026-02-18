@@ -22,7 +22,10 @@ const AIRecommendations = () => {
     // Subscribe to recommendations and stylists
     const { user } = useAuth();
     useEffect(() => {
-        if (!user?.salonId) return;
+        if (!user?.salonId) {
+            setLoading(false);
+            return;
+        }
 
         const unsubscribeRecs = subscribeToCollectionGroup('Ai recommendations', (data) => {
             setRecommendations(data);

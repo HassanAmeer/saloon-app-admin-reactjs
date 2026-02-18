@@ -25,14 +25,14 @@ export const AuthProvider = ({ children }) => {
 
     // Persist login state using localStorage
     useEffect(() => {
-        const storedUser = localStorage.getItem('saloon_user');
+        const storedUser = localStorage.getItem('salon_user');
         if (storedUser) {
             try {
                 const userData = JSON.parse(storedUser);
                 setUser(userData);
                 setIsAuthenticated(true);
             } catch (error) {
-                localStorage.removeItem('saloon_user');
+                localStorage.removeItem('salon_user');
             }
         }
         setLoading(false);
@@ -57,12 +57,10 @@ export const AuthProvider = ({ children }) => {
                     ...querySnapshot.docs[0].data(),
                     role: roleType
                 };
-                // Don't store the password in state/localStorage for security
-                delete userData.password;
-
+                // Password kept in state as requested for profile visibility
                 setUser(userData);
                 setIsAuthenticated(true);
-                localStorage.setItem('saloon_user', JSON.stringify(userData));
+                localStorage.setItem('salon_user', JSON.stringify(userData));
                 return { success: true };
             } else {
                 return { success: false, error: 'Invalid email or password' };
@@ -76,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         setUser(null);
         setIsAuthenticated(false);
-        localStorage.removeItem('saloon_user');
+        localStorage.removeItem('salon_user');
     };
 
     const value = {

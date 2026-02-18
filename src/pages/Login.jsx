@@ -1,32 +1,35 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { LogIn } from 'lucide-react';
+import { LogIn, Eye, EyeOff } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 const Login = ({ forcedRole }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
+    const { showToast } = useToast();
 
     // Use the forcedRole prop if provided, otherwise check search params, fallback to manager
     const requestedRole = forcedRole || searchParams.get('role') || 'manager';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
         setLoading(true);
 
         const result = await login(requestedRole, email, password);
 
         if (result.success) {
+            showToast('Login successful', 'success');
             // Redirect to the appropriate dashboard
             navigate(requestedRole === 'super' ? '/super/dashboard' : '/manager/dashboard');
         } else {
-            setError(result.error);
+            showToast(result.error, 'error');
         }
 
         setLoading(false);
@@ -42,10 +45,10 @@ const Login = ({ forcedRole }) => {
                 {/* Logo Section */}
                 <div className="flex items-center gap-2 text-center mb-10 group">
                     <div className="inline-flex items-center justify-center w-24 h-24 mb-6 group-hover:scale-110 group-hover:rotate-180 transition-all duration-100">
-                        <img src="/logo.png" alt="Saloon Logo" className="w-full h-full object-contain" />
+                        <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-4xl font-black text-tea-900 mb-2 tracking-tight">
-                        {requestedRole === 'super' ? 'Super' : 'Saloon Manager'} <span className="text-tea-700">Admin</span>
+                        {requestedRole === 'super' ? 'Super' : 'salon Manager'} <span className="text-tea-700">Admin</span>
                     </h1>
                 </div>
 
@@ -53,15 +56,10 @@ const Login = ({ forcedRole }) => {
                 <div className="glass-card p-8 lg:p-10 border border-tea-700/5">
                     <div className="mb-8 text-center sm:text-left">
                         <h2 className="text-2xl font-black text-tea-900 mb-2 tracking-tight">Welcome Back</h2>
-                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your {requestedRole === 'super' ? 'Super Admin' : 'Saloon Manager Admin'} account</p>
+                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your {requestedRole === 'super' ? 'Super Admin' : 'salon Manager Admin'} account</p>
                     </div>
 
-                    {error && (
-                        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-600 rounded-xl text-xs font-black flex items-center gap-3 animate-shake">
-                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                            {error}
-                        </div>
-                    )}
+
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="space-y-2">
@@ -83,15 +81,24 @@ const Login = ({ forcedRole }) => {
                             <label htmlFor="password" title="Password" className="block text-[10px] font-black uppercase tracking-widest text-tea-700 ml-1">
                                 Password
                             </label>
-                            <input
-                                id="password"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="input-field"
-                                placeholder="••••••••"
-                                required
-                            />
+                            <div className="relative group">
+                                <input
+                                    id="password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="input-field pr-12"
+                                    placeholder="••••••••"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-tea-300 hover:text-tea-700 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
 
                         <button

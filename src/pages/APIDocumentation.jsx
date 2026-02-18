@@ -69,7 +69,7 @@ const APIDocumentation = () => {
                 </button>
                 <div>
                     <h1 className="text-3xl font-bold text-tea-800">API Documentation</h1>
-                    <p className="text-gray-600 mt-1">Full reference for Saloon App-Side Integration</p>
+                    <p className="text-gray-600 mt-1">Full reference for salon App-Side Integration</p>
                 </div>
             </div>
 
@@ -100,7 +100,7 @@ const APIDocumentation = () => {
                         </div>
                         <p className="text-gray-600 mb-4">
                             The client-side API layer uses Firebase Auth as its primary security mechanism.
-                            All requests made through the <code className="bg-gray-100 px-1 rounded">@saloon/api</code> library are automatically signed with the current user's token.
+                            All requests made through the <code className="bg-gray-100 px-1 rounded">@salon/api</code> library are automatically signed with the current user's token.
                         </p>
                     </div>
 
@@ -152,8 +152,8 @@ const result = await saveAIRecommendation({
                                     <div className="bg-gray-50 p-4 border-b border-gray-100 flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <span className={`text-xs font-bold px-2 py-1 rounded ${route.method === 'GET' ? 'bg-blue-100 text-blue-700' :
-                                                    route.method === 'POST' ? 'bg-green-100 text-green-700' :
-                                                        'bg-orange-100 text-orange-700'
+                                                route.method === 'POST' ? 'bg-green-100 text-green-700' :
+                                                    'bg-orange-100 text-orange-700'
                                                 }`}>
                                                 {route.method}
                                             </span>

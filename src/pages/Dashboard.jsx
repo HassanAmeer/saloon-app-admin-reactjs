@@ -14,7 +14,9 @@ import {
     DollarSign,
     Layers,
     Activity,
-    Eye
+    Eye,
+    Building2,
+    User
 } from 'lucide-react';
 import {
     BarChart,
@@ -40,6 +42,8 @@ const Dashboard = ({ forceSalonId }) => {
     const [period, setPeriod] = useState('month');
     const [sales, setSales] = useState([]);
     const [stylists, setStylists] = useState([]);
+    const [managers, setManagers] = useState([]);
+    const [clients, setClients] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -50,30 +54,35 @@ const Dashboard = ({ forceSalonId }) => {
     // Subscribe to all collections scoped by salonId
     useEffect(() => {
         let unsubs = [];
+        let timeout;
 
         if (salonId) {
             // Scoped view for specific salon
             unsubs = [
                 subscribeToCollection(`salons/${salonId}/sales`, setSales),
                 subscribeToCollection(`salons/${salonId}/stylists`, setStylists),
+                subscribeToCollectionGroup('clients', setClients, [{ field: 'salonId', operator: '==', value: salonId }]),
                 subscribeToCollectionGroup('Ai recommendations', setRecommendations, [{ field: 'salonId', operator: '==', value: salonId }])
             ];
+            timeout = setTimeout(() => setLoading(false), 1000);
         } else if (role === 'super') {
             // Aggregate view for Super Admin (all salons)
             unsubs = [
                 subscribeToCollectionGroup('sales', setSales),
                 subscribeToCollectionGroup('stylists', setStylists),
+                subscribeToCollection('salon_managers', setManagers),
+                subscribeToCollectionGroup('clients', setClients),
                 subscribeToCollectionGroup('Ai recommendations', setRecommendations)
             ];
+            timeout = setTimeout(() => setLoading(false), 1000);
         } else {
-            return;
+            // For managers without a salonId, stop the loader so they can see the error
+            setLoading(false);
         }
-
-        const timeout = setTimeout(() => setLoading(false), 800);
 
         return () => {
             unsubs.forEach(unsub => unsub?.());
-            clearTimeout(timeout);
+            if (timeout) clearTimeout(timeout);
         };
     }, [salonId, role]);
 
@@ -82,18 +91,24 @@ const Dashboard = ({ forceSalonId }) => {
         const totalSales = sales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
         const productsSold = sales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
         const totalScans = recommendations.length;
+        const totalStylists = stylists.length;
         const totalClients = stylists.reduce((sum, s) => sum + (s.clientsCount || 0), 0);
+        const totalManagers = managers.length;
 
         return {
             totalSales,
             productsSold,
             totalScans,
+            totalStylists,
             totalClients,
+            totalManagers,
             salesGrowth: '+12.5%',
             scansGrowth: '+8.2%',
-            clientsGrowth: '+5.4%'
+            clientsGrowth: '+5.4%',
+            managersGrowth: '+10.0%',
+            stylistGrowth: '+4.2%'
         };
-    }, [sales, recommendations, stylists]);
+    }, [sales, recommendations, stylists, managers]);
 
     const chartData = [
         { name: 'Mon', revenue: 4200, scans: 45 },
@@ -105,11 +120,20 @@ const Dashboard = ({ forceSalonId }) => {
         { name: 'Sun', revenue: 5800, scans: 59 },
     ];
 
-    const topStylists = useMemo(() => {
-        return stylists
-            .sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0))
-            .slice(0, 4);
-    }, [stylists]);
+    const lastSoldProducts = useMemo(() => {
+        const allProducts = sales.flatMap(sale =>
+            (sale.products || []).map(p => ({
+                ...p,
+                saleDate: sale.date || sale.createdAt?.toDate(),
+                stylistName: sale.stylistName,
+                clientName: sale.clientName
+            }))
+        );
+
+        return allProducts
+            .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
+            .slice(0, 5);
+    }, [sales]);
 
     if (loading) {
         return (
@@ -117,6 +141,18 @@ const Dashboard = ({ forceSalonId }) => {
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-12 h-12 text-tea-700 animate-spin" />
                     <p className="text-tea-500 font-black uppercase tracking-[0.2em] text-[10px]">Synchronizing Intelligence</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (role === 'manager' && !salonId) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="glass-card p-10 text-center space-y-4 max-w-md">
+                    <Activity className="w-12 h-12 text-rose-500 mx-auto" />
+                    <h2 className="text-2xl font-black text-tea-900 uppercase">Configuration Error</h2>
+                    <p className="text-tea-500 text-sm font-bold">Your manager account is not linked to any Salon ID. Please contact the Super Admin to resolve this.</p>
                 </div>
             </div>
         );
@@ -173,34 +209,69 @@ const Dashboard = ({ forceSalonId }) => {
 
             {/* Key Performance Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard
-                    label="Gross Revenue"
-                    value={`$${dashboardStats.totalSales.toLocaleString()}`}
-                    growth={dashboardStats.salesGrowth}
-                    icon={DollarSign}
-                    color="tea"
-                />
-                <MetricCard
-                    label="Service Clients"
-                    value={dashboardStats.totalClients.toLocaleString()}
-                    growth={dashboardStats.clientsGrowth}
-                    icon={Users}
-                    color="emerald"
-                />
-                <MetricCard
-                    label="AI Engagements"
-                    value={dashboardStats.totalScans.toLocaleString()}
-                    growth={dashboardStats.scansGrowth}
-                    icon={Sparkles}
-                    color="amber"
-                />
-                <MetricCard
-                    label="Inventory Moved"
-                    value={dashboardStats.productsSold.toLocaleString()}
-                    growth="+14.2%"
-                    icon={Layers}
-                    color="brown"
-                />
+                {role === 'super' && !salonId ? (
+                    <>
+                        <MetricCard
+                            label="salon Managers"
+                            value={dashboardStats.totalManagers.toLocaleString()}
+                            growth={dashboardStats.managersGrowth}
+                            icon={Building2}
+                            color="tea"
+                        />
+                        <MetricCard
+                            label="Total Stylists"
+                            value={dashboardStats.totalStylists.toLocaleString()}
+                            growth={dashboardStats.stylistGrowth}
+                            icon={ScanFaceIcon}
+                            color="emerald"
+                        />
+                        <MetricCard
+                            label="Total Clients"
+                            value={dashboardStats.totalClients.toLocaleString()}
+                            growth={dashboardStats.clientsGrowth}
+                            icon={Users}
+                            color="amber"
+                        />
+                        <MetricCard
+                            label="Products Sold"
+                            value={dashboardStats.productsSold.toLocaleString()}
+                            growth="+14.2%"
+                            icon={Package}
+                            color="brown"
+                        />
+                    </>
+                ) : (
+                    <>
+                        <MetricCard
+                            label="Gross Revenue"
+                            value={`$${dashboardStats.totalSales.toLocaleString()}`}
+                            growth={dashboardStats.salesGrowth}
+                            icon={DollarSign}
+                            color="tea"
+                        />
+                        <MetricCard
+                            label="Service Clients"
+                            value={dashboardStats.totalClients.toLocaleString()}
+                            growth={dashboardStats.clientsGrowth}
+                            icon={Users}
+                            color="emerald"
+                        />
+                        <MetricCard
+                            label="AI Engagements"
+                            value={dashboardStats.totalScans.toLocaleString()}
+                            growth={dashboardStats.scansGrowth}
+                            icon={Sparkles}
+                            color="amber"
+                        />
+                        <MetricCard
+                            label="Inventory Moved"
+                            value={dashboardStats.productsSold.toLocaleString()}
+                            growth="+14.2%"
+                            icon={Layers}
+                            color="brown"
+                        />
+                    </>
+                )}
             </div>
 
             {/* Charts & Main Content */}
@@ -269,43 +340,42 @@ const Dashboard = ({ forceSalonId }) => {
 
                 {/* Performance Summary Cards */}
                 <div className="space-y-8">
-                    {/* Top Performing Stylists */}
+                    {/* Last Sold Products */}
                     <div className="glass-card p-6">
-                        <h3 className="text-[10px] font-black text-tea-700 uppercase tracking-widest mb-6">Top Specialists</h3>
+                        <h3 className="text-[10px] font-black text-tea-700 uppercase tracking-widest mb-6">Last 5 Sold Products</h3>
                         <div className="space-y-4">
-                            {topStylists.map((stylist, i) => (
-                                <div key={stylist.id} className="flex items-center gap-4 group cursor-pointer">
+                            {lastSoldProducts.map((product, index) => (
+                                <div key={`${product.productName}-${index}`} className="flex items-center gap-4 group cursor-pointer">
                                     <div className="relative">
-                                        <img
-                                            src={stylist.imageUrl || `https://ui-avatars.com/api/?name=${stylist.name}&background=8B4513&color=fff`}
-                                            className="w-12 h-12 rounded-2xl object-cover ring-2 ring-tea-700/5 group-hover:ring-tea-700/30 transition-all"
-                                            alt={stylist.name}
-                                        />
-                                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-tea-900 border-2 border-white rounded-full flex items-center justify-center text-[9px] font-black text-white">
-                                            #{i + 1}
+                                        <div className="w-12 h-12 rounded-2xl bg-tea-50 border border-tea-100 flex items-center justify-center text-tea-600">
+                                            <Package className="w-6 h-6" />
                                         </div>
                                     </div>
                                     <div className="flex-1">
-                                        <p className="text-sm font-black text-tea-900 group-hover:text-tea-700 transition-colors uppercase tracking-tight">{stylist.name}</p>
-                                        <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">{stylist.clientsCount || 0} active clients</p>
+                                        <p className="text-sm font-black text-tea-900 group-hover:text-tea-700 transition-colors uppercase tracking-tight">
+                                            {product.productName} <span className="text-tea-400">×{product.quantity}</span>
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">
+                                                Sold by <span className="text-tea-600 italic">{product.stylistName || 'House Stylist'}</span>
+                                            </p>
+                                        </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-black text-tea-700">${(stylist.totalSales || 0).toLocaleString()}</p>
-                                        <p className="text-[9px] font-black text-emerald-600 flex items-center justify-end gap-1 uppercase">
-                                            <ArrowUpRight className="w-3 h-3" /> 12%
+                                        <p className="text-[10px] font-black text-tea-700 uppercase tracking-widest">
+                                            ${(product.price * product.quantity || 0).toFixed(2)}
+                                        </p>
+                                        <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">
+                                            To {product.clientName || 'General Client'}
                                         </p>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                        <button className="w-full mt-6 py-3 bg-tea-50/50 hover:bg-tea-100/50 text-tea-500 hover:text-tea-700 transition-all rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 group">
-                            Full Team Report
-                            <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                        </button>
                     </div>
 
                     {/* AI Conversion Status */}
-                    <div className="glass-card p-6 bg-gradient-to-br from-tea-700/5 to-transparent border-tea-700/10">
+                    {/* <div className="glass-card p-6 bg-gradient-to-br from-tea-700/5 to-transparent border-tea-700/10">
                         <div className="flex items-center gap-3 mb-4">
                             <BotIcon className="w-6 h-6 text-tea-700" />
                             <h3 className="text-[10px] font-black text-tea-900 uppercase tracking-widest">A.I. Conversion</h3>
@@ -318,74 +388,10 @@ const Dashboard = ({ forceSalonId }) => {
                             <div className="w-[74%] h-full bg-gradient-to-r from-tea-700 to-tea-500" />
                         </div>
                         <p className="text-[10px] text-tea-500 font-bold italic">"A.I. recommendations are driving 24% higher average order value today."</p>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
-            {/* Recent Business Activity */}
-            <div className="glass-card overflow-hidden">
-                <div className="p-8 border-b border-tea-700/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Recent Activity</h3>
-                        <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">Live feed of global salon operations</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <button className="p-2 glass-card border-tea-700/5 text-tea-400 hover:text-tea-900 transition-all"><Activity className="w-4 h-4" /></button>
-                        <select className="bg-transparent text-[10px] font-black text-tea-600 uppercase tracking-widest outline-none border border-tea-700/10 rounded-xl px-4 py-2 cursor-pointer hover:border-tea-700/20">
-                            <option>All Specialist</option>
-                            {stylists.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                    </div>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead className="table-header">
-                            <tr>
-                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Stylist / Client</th>
-                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Service / Products</th>
-                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Reference ID</th>
-                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Timestamp</th>
-                                <th className="text-right p-6 text-[10px] font-black text-tea-500 uppercase tracking-widest">Value</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {sales.slice(0, 6).map((sale) => (
-                                <tr key={sale.id} className="table-row">
-                                    <td className="p-6">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-tea-700 flex items-center justify-center font-black text-white text-xs">
-                                                {sale.stylistName?.charAt(0) || 'S'}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-black text-tea-900 tracking-tight uppercase">{sale.stylistName}</p>
-                                                <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">Serving Client</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="p-6">
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {sale.products?.map((p, idx) => (
-                                                <span key={idx} className="px-2 py-0.5 bg-tea-50 border border-tea-700/10 rounded-md text-[9px] font-black text-tea-700 uppercase tracking-widest">
-                                                    {p.productName} (x{p.quantity})
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </td>
-                                    <td className="p-6">
-                                        <p className="text-[10px] font-black text-tea-400 uppercase tracking-widest">{sale.sessionId || sale.id.substring(0, 10)}</p>
-                                    </td>
-                                    <td className="p-6">
-                                        <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest">{new Date(sale.date || sale.createdAt?.toDate()).toLocaleTimeString()}</p>
-                                    </td>
-                                    <td className="p-6 text-right">
-                                        <p className="text-lg font-black text-tea-700 tracking-tighter">${(sale.totalAmount || sale.total || 0).toFixed(2)}</p>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
     );
 };

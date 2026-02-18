@@ -50,7 +50,7 @@ const Seeding = () => {
                     <div className="p-8 border-b border-gray-50 bg-gradient-to-r from-tea-700 to-tea-800">
                         <div className="flex items-center gap-4 text-white">
                             <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
-                                <img src="/logo.png" alt="Saloon Logo" className="w-full h-full object-contain" />
+                                <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold">Database Migration</h1>
@@ -166,7 +166,7 @@ const Seeding = () => {
                 </div>
 
                 <p className="mt-6 text-center text-gray-500 text-sm">
-                    Saloon Admin Panel &bull; v2.0 Firebase Integrated
+                    salon Admin Panel &bull; v2.0 Firebase Integrated
                 </p>
             </div>
         </div>

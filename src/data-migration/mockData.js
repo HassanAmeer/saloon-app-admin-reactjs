@@ -13,7 +13,7 @@ export const mockSuperAdmin = {
 export const mockSalonManagers = [
     {
         id: "manager-1",
-        email: "saloon@manager.com",
+        email: "salon@manager.com",
         password: "12345678",
         name: "Hassan Ameer",
         phone: "+0123456789",
@@ -23,6 +23,30 @@ export const mockSalonManagers = [
         salonId: "salon-1",
         role: "manager",
         imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop"
+    },
+    {
+        id: "manager-2",
+        email: "alex@manager.com",
+        password: "12345678",
+        name: "Alex Rivera",
+        phone: "+1987654321",
+        bio: "Operations specialist focused on premium client experiences.",
+        status: "Active",
+        salonId: "salon-1",
+        role: "manager",
+        imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop"
+    },
+    {
+        id: "manager-3",
+        email: "sophia@manager.com",
+        password: "12345678",
+        name: "Sophia Chen",
+        phone: "+1122334455",
+        bio: "Creative director with a focus on sustainable beauty practices.",
+        status: "Active",
+        salonId: "salon-1",
+        role: "manager",
+        imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop"
     }
 ];
 
@@ -66,6 +90,38 @@ export const mockStylists = [
         imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop",
         clientsCount: 124,
         scansCount: 312
+    },
+    {
+        id: "stylist-3",
+        name: "Sarah Williams",
+        email: "sarah@salon.com",
+        phone: "+1 234 567 8903",
+        password: "12345678",
+        status: "Active",
+        totalSales: 18500.00,
+        unitsSold: 210,
+        salonId: "salon-1",
+        bio: "Organic treatment specialist and bridal stylist.",
+        skills: "Bridal Updos, Organic Treatments, Hair Botox",
+        imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop",
+        clientsCount: 98,
+        scansCount: 245
+    },
+    {
+        id: "stylist-4",
+        name: "David Martinez",
+        email: "david@salon.com",
+        phone: "+1 234 567 8904",
+        password: "12345678",
+        status: "Active",
+        totalSales: 15400.00,
+        unitsSold: 185,
+        salonId: "salon-1",
+        bio: "Precision cutting and urban style expert.",
+        skills: "Undercuts, Geometric Styles, Texture Enhancement",
+        imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3dbdf5bb3d?w=150&h=150&fit=crop",
+        clientsCount: 85,
+        scansCount: 195
     }
 ];
 
@@ -249,6 +305,42 @@ export const mockProducts = [
         aiEnabled: true,
         preSelected: true,
         salonId: "salon-1",
+    },
+    {
+        id: "prod-11",
+        name: "Detoxifying Charcoal Mask",
+        brand: "Pure Care",
+        category: "Treatment",
+        price: 42.00,
+        sku: "PC-CM-011",
+        description: "Deep cleansing charcoal mask for oily scalp",
+        inventory: 25,
+        unitsSold: 45,
+        totalRevenue: 1890.00,
+        active: true,
+        imageUrl: "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?w=300",
+        tags: ["oily hair", "detox", "charcoal"],
+        aiEnabled: true,
+        preSelected: false,
+        salonId: "salon-1",
+    },
+    {
+        id: "prod-12",
+        name: "Biotin Growth Serum",
+        brand: "Vital Hair",
+        category: "Treatment",
+        price: 55.00,
+        sku: "VH-GS-012",
+        description: "Advanced growth serum with biotin and caffeine",
+        inventory: 20,
+        unitsSold: 32,
+        totalRevenue: 1760.00,
+        active: true,
+        imageUrl: "https://images.unsplash.com/photo-1610915769747-0348705fced4?w=300",
+        tags: ["thinning hair", "growth", "biotin"],
+        aiEnabled: true,
+        preSelected: true,
+        salonId: "salon-1",
     }
 ];
 
@@ -274,6 +366,7 @@ export const mockSales = [
         total: 94.98,
         totalAmount: 94.98,
         salonId: "salon-1",
+        clientName: "Jane Doe"
     },
     {
         id: "sale-2",
@@ -288,6 +381,7 @@ export const mockSales = [
         total: 61.49,
         totalAmount: 61.49,
         salonId: "salon-1",
+        clientName: "John Smith"
     },
     {
         id: "sale-3",
@@ -301,6 +395,7 @@ export const mockSales = [
         total: 22.00,
         totalAmount: 22.00,
         salonId: "salon-1",
+        clientName: "Mark Wilson"
     },
     // Yesterday
     {
@@ -317,6 +412,7 @@ export const mockSales = [
         total: 119.47,
         totalAmount: 119.47,
         salonId: "salon-1",
+        clientName: "Emily Brown"
     },
     {
         id: "sale-5",
@@ -331,6 +427,7 @@ export const mockSales = [
         total: 124.00,
         totalAmount: 124.00,
         salonId: "salon-1",
+        clientName: "Anna White"
     },
     // Past Week
     {
@@ -346,6 +443,7 @@ export const mockSales = [
         total: 64.50,
         totalAmount: 64.50,
         salonId: "salon-1",
+        clientName: "Jane Doe"
     },
     {
         id: "sale-7",
@@ -359,6 +457,7 @@ export const mockSales = [
         total: 74.97,
         totalAmount: 74.97,
         salonId: "salon-1",
+        clientName: "John Smith"
     },
     {
         id: "sale-8",
@@ -373,6 +472,7 @@ export const mockSales = [
         total: 63.99,
         totalAmount: 63.99,
         salonId: "salon-1",
+        clientName: "Emily Brown"
     },
     {
         id: "sale-9",
@@ -385,8 +485,38 @@ export const mockSales = [
             { productId: "prod-7", productName: "Scalp Revitalizer", quantity: 1, price: 38.00 },
         ],
         totalAmount: 70.99,
-        total: 70.99,
         salonId: "salon-1",
+        clientName: "Anna White"
+    },
+    {
+        id: "sale-10",
+        date: getDateAgo(0),
+        stylistId: "stylist-3",
+        stylistName: "Sarah Williams",
+        sessionId: "session-110",
+        products: [
+            { productId: "prod-11", productName: "Detoxifying Charcoal Mask", quantity: 2, price: 42.00 },
+            { productId: "prod-1", productName: "Hydrating Shampoo", quantity: 2, price: 24.99 },
+        ],
+        total: 133.98,
+        totalAmount: 133.98,
+        salonId: "salon-1",
+        clientName: "Jessica Lee"
+    },
+    {
+        id: "sale-11",
+        date: getDateAgo(0),
+        stylistId: "stylist-4",
+        stylistName: "David Martinez",
+        sessionId: "session-111",
+        products: [
+            { productId: "prod-12", productName: "Biotin Growth Serum", quantity: 2, price: 55.00 },
+            { productId: "prod-2", productName: "Volume Conditioner", quantity: 2, price: 28.50 },
+        ],
+        total: 167.00,
+        totalAmount: 167.00,
+        salonId: "salon-1",
+        clientName: "Michael Rogers"
     }
 ];
 
@@ -501,6 +631,52 @@ export const mockAIRecommendations = [
             { productId: "prod-10", productName: "Argan Oil Elixir", score: 0.94, sold: true },
         ],
         salonId: "salon-1",
+    },
+    {
+        id: "rec-6",
+        sessionId: "session-110",
+        date: getDateAgo(0),
+        stylistId: "stylist-3",
+        stylistName: "Sarah Williams",
+        clientId: "client-206",
+        clientName: "Jessica Lee",
+        hairAnalysis: {
+            type: "Oily scalp, Dry ends",
+            condition: "Requires deep scalp detox and tip hydration",
+            metrics: [
+                { label: 'Hydration', value: 45 },
+                { label: 'Strength', value: 78 },
+                { label: 'Scalp Health', value: 30 }
+            ]
+        },
+        suggestedProducts: [
+            { productId: "prod-11", productName: "Detoxifying Charcoal Mask", score: 0.98, sold: true },
+            { productId: "prod-1", productName: "Hydrating Shampoo", score: 0.92, sold: true },
+        ],
+        salonId: "salon-1",
+    },
+    {
+        id: "rec-7",
+        sessionId: "session-111",
+        date: getDateAgo(0),
+        stylistId: "stylist-4",
+        stylistName: "David Martinez",
+        clientId: "client-207",
+        clientName: "Michael Rogers",
+        hairAnalysis: {
+            type: "Thinning, Lacks vitality",
+            condition: "Growth stimulation and volume focus",
+            metrics: [
+                { label: 'Hydration', value: 60 },
+                { label: 'Strength', value: 40 },
+                { label: 'Scalp Health', value: 55 }
+            ]
+        },
+        suggestedProducts: [
+            { productId: "prod-12", productName: "Biotin Growth Serum", score: 0.97, sold: true },
+            { productId: "prod-2", productName: "Volume Conditioner", score: 0.90, sold: true },
+        ],
+        salonId: "salon-1",
     }
 ];
 
@@ -581,7 +757,7 @@ export const mockConfig = {
         { id: 'scans', label: 'Hair Scans', icon: 'Scan' },
         { id: 'products', label: 'Products', icon: 'Package' }
     ],
-    supportEmail: 'support@saloon-app.com',
+    supportEmail: 'support@salon-app.com',
     supportPhone: '+1 (555) 123-4567',
     termsAndConditions: 'Please read our terms and conditions...',
     privacyPolicy: 'Your privacy is important to us...',
@@ -649,6 +825,36 @@ export const mockClients = [
         hairAnalysis: {
             type: "Curly",
             condition: "Frizzy"
+        },
+        salonId: "salon-1"
+    },
+    {
+        id: "client-206",
+        name: "Jessica Lee",
+        email: "jessica.lee@example.com",
+        phone: "+1 (555) 002-1122",
+        address: "123 Cherry Ln, Style City",
+        joinDate: getDateAgo(15),
+        lastVisit: getDateAgo(0),
+        totalVisits: 1,
+        hairAnalysis: {
+            type: "Mixed (Oily/Dry)",
+            condition: "Scalp issues"
+        },
+        salonId: "salon-1"
+    },
+    {
+        id: "client-207",
+        name: "Michael Rogers",
+        email: "m.rogers@example.com",
+        phone: "+1 (555) 002-3344",
+        address: "456 Birch Dr, Style City",
+        joinDate: getDateAgo(10),
+        lastVisit: getDateAgo(0),
+        totalVisits: 1,
+        hairAnalysis: {
+            type: "Thinning",
+            condition: "Needs growth"
         },
         salonId: "salon-1"
     }

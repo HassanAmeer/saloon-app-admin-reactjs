@@ -11,7 +11,8 @@ import {
     Menu,
     Settings,
     X,
-    Sparkles
+    Sparkles,
+    Activity
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../lib/utils';
@@ -28,18 +29,19 @@ const DashboardLayout = () => {
 
     const managerNavItems = [
         { path: '/manager/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/manager/activity', icon: Activity, label: 'Recent Activity' },
         { path: '/manager/stylists', icon: Users, label: 'Stylists' },
         { path: '/manager/products', icon: Package, label: 'Products' },
         { path: '/manager/sales', icon: TrendingUp, label: 'Sales & Analytics' },
-        { path: '/manager/ai-recommendations', icon: Sparkles, label: 'AI Intelligence' },
-        { path: '/manager/profile', icon: Users, label: 'Profile' },
         { path: '/manager/app-config', icon: Settings, label: 'App Config' },
+        { path: '/manager/profile', icon: Users, label: 'Profile' },
         { path: '/manager/settings', icon: Settings, label: 'Settings' },
     ];
 
     const superNavItems = [
         { path: '/super/dashboard', icon: LayoutDashboard, label: 'Super Dashboard' },
-        { path: '/super/managers', icon: Users, label: 'Saloon Managers' },
+        { path: '/super/activity', icon: Activity, label: 'Recent Activity' },
+        { path: '/super/managers', icon: Users, label: 'salon Managers' },
         { path: '/super/profile', icon: Users, label: 'My Profile' },
     ];
 
@@ -50,8 +52,8 @@ const DashboardLayout = () => {
             {/* Mobile Header */}
             <div className="lg:hidden backdrop-blur-md bg-white/80 border-b border-tea-700/10 px-4 py-4 flex items-center justify-between sticky top-0 z-50">
                 <div className="flex items-center gap-2">
-                    <img src="/logo.png" alt="Saloon Logo" className="w-8 h-8 object-contain" />
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">Saloon Admin</h1>
+                    <img src="/logo.png" alt="salon Logo" className="w-8 h-8 object-contain" />
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">salon Admin</h1>
                 </div>
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -73,10 +75,10 @@ const DashboardLayout = () => {
                     <div className="px-8 py-8">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 glass-card flex items-center justify-center p-2 rounded-xl group-hover:scale-110 transition-transform">
-                                <img src="/logo.png" alt="Saloon Logo" className="w-full h-full object-contain" />
+                                <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold text-tea-900 tracking-tight">Saloon</h1>
+                                <h1 className="text-xl font-bold text-tea-900 tracking-tight">salon</h1>
                                 <p className="text-xs font-medium text-tea-500 uppercase tracking-widest">
                                     {role === 'super' ? 'Super Admin' : 'Manager'}
                                 </p>
@@ -108,8 +110,12 @@ const DashboardLayout = () => {
                     <div className="p-6 mt-auto">
                         <div className="p-4 glass-card border-none bg-tea-50/50 rounded-2xl">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-tea-500 to-tea-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-tea-700/20">
-                                    {user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-tea-500 to-tea-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-tea-700/20 overflow-hidden border-2 border-white">
+                                    {user?.imageUrl ? (
+                                        <img src={user.imageUrl} alt="User" className="w-full h-full object-cover" />
+                                    ) : (
+                                        user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-semibold text-tea-900 truncate">

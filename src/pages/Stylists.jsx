@@ -51,7 +51,10 @@ const Stylists = () => {
     const [viewingDetail, setViewingDetail] = useState(false);
 
     useEffect(() => {
-        if (!user?.salonId) return;
+        if (!user?.salonId) {
+            setLoading(false);
+            return;
+        }
         const unsubscribe = subscribeToCollection(`salons/${user.salonId}/stylists`, (data) => {
             setStylists(data);
             setLoading(false);
@@ -172,16 +175,19 @@ const StatMini = ({ label, value }) => (
 );
 
 const StylistDetail = ({ stylist, onBack }) => {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('analytics');
     const [clients, setClients] = useState([]);
     const [sales, setSales] = useState([]);
+    const [recommendations, setRecommendations] = useState([]);
 
     useEffect(() => {
         if (!stylist.id || !user?.salonId) return;
 
         const unsubs = [
             subscribeToCollection(`salons/${user.salonId}/stylists/${stylist.id}/clients`, setClients),
-            subscribeToCollection(`salons/${user.salonId}/sales`, setSales, [{ field: 'stylistId', operator: '==', value: stylist.id }])
+            subscribeToCollection(`salons/${user.salonId}/sales`, setSales, [{ field: 'stylistId', operator: '==', value: stylist.id }]),
+            subscribeToCollection(`salons/${user.salonId}/stylists/${stylist.id}/Ai recommendations`, setRecommendations, [], { field: 'createdAt', direction: 'desc' })
         ];
         return () => unsubs.forEach(u => u());
     }, [stylist.id, user?.salonId]);
@@ -235,7 +241,7 @@ const StylistDetail = ({ stylist, onBack }) => {
                 {activeTab === 'analytics' && <AnalyticsPanel statsData={statsData} stylist={stylist} />}
                 {activeTab === 'clients' && <RecordsTable type="clients" data={clients} />}
                 {activeTab === 'sales' && <RecordsTable type="sales" data={sales} />}
-                {activeTab === 'ai' && <AIRecommendationsPanel />}
+                {activeTab === 'ai' && <AIRecommendationsPanel recommendations={recommendations} />}
             </div>
         </div>
     );
@@ -312,17 +318,31 @@ const RecordsTable = ({ type, data }) => (
     </div>
 );
 
-const AIRecommendationsPanel = () => (
+const AIRecommendationsPanel = ({ recommendations }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {[1, 2, 3, 4].map(i => (
-            <div key={i} className="glass-card p-6 flex gap-6 items-center border-l-4 border-tea-700">
-                <div className="w-12 h-12 rounded-xl bg-tea-100 flex items-center justify-center text-tea-700"><Sparkles className="w-6 h-6" /></div>
-                <div>
-                    <h4 className="font-black text-tea-900 text-[10px] uppercase tracking-widest">Growth Opportunity</h4>
-                    <p className="text-[10px] text-tea-500 font-bold uppercase tracking-widest mt-1 leading-relaxed">Recommended <span className="text-tea-900 font-black">Argan Oil</span> for Client #{i} based on scan.</p>
-                </div>
+        {recommendations.length === 0 ? (
+            <div className="col-span-2 py-20 text-center glass-card border-dashed border-tea-700/20">
+                <Sparkles className="w-12 h-12 text-tea-200 mx-auto mb-4" />
+                <p className="text-[10px] font-black text-tea-400 uppercase tracking-[0.3em]">No Intelligence Collected Yet</p>
             </div>
-        ))}
+        ) : (
+            recommendations.map(rec => (
+                <div key={rec.id} className="glass-card p-6 flex gap-6 items-center border-l-4 border-tea-700">
+                    <div className="w-12 h-12 rounded-xl bg-tea-100 flex items-center justify-center text-tea-700">
+                        <Sparkles className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <div className="flex justify-between items-start mb-1">
+                            <h4 className="font-black text-tea-900 text-[10px] uppercase tracking-widest">{rec.title || 'Growth Opportunity'}</h4>
+                            <span className="text-[8px] font-black text-tea-400 uppercase">{new Date(rec.createdAt?.toDate?.() || rec.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-[10px] text-tea-500 font-bold uppercase tracking-widest mt-1 leading-relaxed">
+                            {rec.recommendation || `Recommended treatment for ${rec.clientName || 'Client'} based on scan.`}
+                        </p>
+                    </div>
+                </div>
+            ))
+        )}
     </div>
 );
 

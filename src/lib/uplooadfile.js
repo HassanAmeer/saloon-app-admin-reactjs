@@ -16,7 +16,7 @@ const uploadChunkedBase64 = async (base64) => {
                 'Authorization': 'Bearer 37160f2e00721d906831565829ae1de7'
             },
             body: JSON.stringify({
-                folder_name: "saloonapp",
+                folder_name: "salonapp",
                 is_secret: true,
                 file_id: fileId,
                 chunk_index: i,

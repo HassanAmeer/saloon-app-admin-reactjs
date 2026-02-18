@@ -19,7 +19,10 @@ const Sales = () => {
     // Subscribe to sales and stylists
     const { user } = useAuth();
     useEffect(() => {
-        if (!user?.salonId) return;
+        if (!user?.salonId) {
+            setLoading(false);
+            return;
+        }
 
         const unsubscribeSales = subscribeToCollection(`salons/${user.salonId}/sales`, (data) => {
             setSales(data);
@@ -189,6 +192,7 @@ const Sales = () => {
                             <tr className="border-b border-gray-200 bg-tea-50">
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date & Time</th>
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Stylist</th>
+                                <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Client</th>
                                 <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Products</th>
                                 <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Quantity</th>
                                 <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Total Amount</th>
@@ -216,6 +220,9 @@ const Sales = () => {
                                             </div>
                                             <span className="text-sm font-medium text-gray-900">{sale.stylistName || 'Unknown'}</span>
                                         </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <span className="text-sm text-gray-700 font-medium">{sale.clientName || 'Walk-in'}</span>
                                     </td>
                                     <td className="py-3 px-4">
                                         <div className="space-y-1">

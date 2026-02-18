@@ -74,7 +74,7 @@ const Profile = () => {
             const updatedUser = { ...user, ...updateData };
             delete updatedUser.password;
             setUser(updatedUser);
-            localStorage.setItem('saloon_user', JSON.stringify(updatedUser));
+            localStorage.setItem('salon_user', JSON.stringify(updatedUser));
 
             setSuccess(true);
             setTimeout(() => setSuccess(false), 3000);

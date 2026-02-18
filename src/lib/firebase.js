@@ -14,9 +14,9 @@ import { getStorage } from "firebase/storage";
 // };
 const firebaseConfig = {
     apiKey: "AIzaSyBLWC0k2M7bV5Rd10rYBkFeV22azt6nkJI",
-    authDomain: "saloon-ai2.firebaseapp.com",
-    projectId: "saloon-ai2",
-    storageBucket: "saloon-ai2.firebasestorage.app",
+    authDomain: "salon-ai2.firebaseapp.com",
+    projectId: "salon-ai2",
+    storageBucket: "salon-ai2.firebasestorage.app",
     messagingSenderId: "933337565383",
     appId: "1:933337565383:web:1ac9927892ba3a96bd16e2",
     measurementId: "G-YZLNZZ6RQE"
