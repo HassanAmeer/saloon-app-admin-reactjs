@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../contexts/ToastContext';
 
-const Login = ({ forcedRole }) => {
+const LoginManager = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -15,8 +15,7 @@ const Login = ({ forcedRole }) => {
     const [searchParams] = useSearchParams();
     const { showToast } = useToast();
 
-    // Use the forcedRole prop if provided, otherwise check search params, fallback to manager
-    const requestedRole = forcedRole || searchParams.get('role') || 'manager';
+    const requestedRole = 'manager';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -27,7 +26,7 @@ const Login = ({ forcedRole }) => {
         if (result.success) {
             showToast('Login successful', 'success');
             // Redirect to the appropriate dashboard
-            navigate(requestedRole === 'super' ? '/super/dashboard' : '/manager/dashboard');
+            navigate('/manager/dashboard');
         } else {
             showToast(result.error, 'error');
         }
@@ -48,7 +47,7 @@ const Login = ({ forcedRole }) => {
                         <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-4xl font-black text-tea-900 mb-2 tracking-tight">
-                        {requestedRole === 'super' ? 'Super' : 'salon Manager'} <span className="text-tea-700">Admin</span>
+                        Salon Manager <span className="text-tea-700">Admin</span>
                     </h1>
                 </div>
 
@@ -56,7 +55,7 @@ const Login = ({ forcedRole }) => {
                 <div className="glass-card p-8 lg:p-10 border border-tea-700/5">
                     <div className="mb-8 text-center sm:text-left">
                         <h2 className="text-2xl font-black text-tea-900 mb-2 tracking-tight">Welcome Back</h2>
-                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your {requestedRole === 'super' ? 'Super Admin' : 'salon Manager Admin'} account</p>
+                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Salon Manager account</p>
                     </div>
 
 
@@ -126,21 +125,9 @@ const Login = ({ forcedRole }) => {
                         </p>
                     </div>
                 </div>
-
-                {/* Role Switcher - Only show if not forced into a role */}
-                {!forcedRole && (
-                    <div className="mt-6 flex justify-center gap-4">
-                        <button
-                            onClick={() => navigate(`/login?role=${requestedRole === 'super' ? 'manager' : 'super'}`)}
-                            className="text-[10px] font-black text-tea-500 hover:text-tea-700 transition-colors uppercase tracking-widest"
-                        >
-                            Switch to {requestedRole === 'super' ? 'Manager' : 'Super Admin'} Login
-                        </button>
-                    </div>
-                )}
             </div>
         </div>
     );
 };
 
-export default Login;
+export default LoginManager;

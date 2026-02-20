@@ -11,8 +11,8 @@ import {
     History,
     CheckCircle
 } from 'lucide-react';
-import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
-import { useAuth } from '../contexts/AuthContext';
+import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/services';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Clients = () => {
     const [clients, setClients] = useState([]);

@@ -32,8 +32,8 @@ import {
     PieChart,
     Pie
 } from 'recharts';
-import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
-import { useAuth } from '../contexts/AuthContext';
+import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/services';
+import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 
 const Dashboard = ({ forceSalonId }) => {

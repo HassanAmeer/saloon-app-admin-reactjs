@@ -17,10 +17,10 @@ import {
     Image as ImageIcon,
     Upload
 } from 'lucide-react';
-import { uploadImage } from '../lib/services';
+import { uploadImage } from '../../lib/services';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { useAuth } from '../contexts/AuthContext';
+import { db } from '../../lib/firebase';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AppConfig = () => {
     const { user, role } = useAuth();

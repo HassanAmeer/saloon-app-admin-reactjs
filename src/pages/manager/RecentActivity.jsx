@@ -9,8 +9,8 @@ import {
     Building2,
     Users
 } from 'lucide-react';
-import { subscribeToCollectionGroup, subscribeToCollection } from '../lib/services';
-import { useAuth } from '../contexts/AuthContext';
+import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/services';
+import { useAuth } from '../../contexts/AuthContext';
 
 const RecentActivity = () => {
     const { role, user } = useAuth();

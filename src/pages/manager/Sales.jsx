@@ -6,8 +6,8 @@ import {
     TrendingUp,
     Loader2
 } from 'lucide-react';
-import { subscribeToCollection } from '../lib/services';
-import { useAuth } from '../contexts/AuthContext';
+import { subscribeToCollection } from '../../lib/services';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sales = () => {
     const [sales, setSales] = useState([]);

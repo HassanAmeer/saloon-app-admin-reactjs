@@ -20,11 +20,11 @@ import {
     ShieldCheck,
     Smartphone
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { db } from '../lib/firebase';
+import { useAuth } from '../../contexts/AuthContext';
+import { db } from '../../lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { uploadImage } from '../lib/services';
-import { cn } from '../lib/utils';
+import { uploadImage } from '../../lib/services';
+import { cn } from '../../lib/utils';
 
 const Settings = () => {
     const { user } = useAuth();

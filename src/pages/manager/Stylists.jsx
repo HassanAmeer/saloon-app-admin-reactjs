@@ -27,8 +27,8 @@ import {
     createDocument,
     updateDocument,
     uploadImage
-} from '../lib/services';
-import { useAuth } from '../contexts/AuthContext';
+} from '../../lib/services';
+import { useAuth } from '../../contexts/AuthContext';
 import {
     XAxis,
     YAxis,

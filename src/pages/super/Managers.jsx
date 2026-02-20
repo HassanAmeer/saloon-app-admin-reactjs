@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../contexts/ToastContext';
 import {
     Plus,
     Search,
@@ -21,7 +21,7 @@ import {
     createDocument,
     updateDocument,
     deleteDocument
-} from '../lib/services';
+} from '../../lib/services';
 import { useNavigate } from 'react-router-dom';
 
 const Managers = () => {
@@ -116,7 +116,7 @@ const Managers = () => {
                     supportPhone: '+0123456789'
                 });
 
-                const { mockConfig } = await import('../data-migration/mockData');
+                const { mockConfig } = await import('../../data-migration/mockData');
                 await createDocument('settings', {
                     ...mockConfig,
                     salonId: newSalonId,

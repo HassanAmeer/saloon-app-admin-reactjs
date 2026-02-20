@@ -15,8 +15,8 @@ import {
     updateDocument,
     deleteDocument,
     uploadImage
-} from '../lib/services';
-import { useAuth } from '../contexts/AuthContext';
+} from '../../lib/services';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Products = () => {
     const [products, setProducts] = useState([]);

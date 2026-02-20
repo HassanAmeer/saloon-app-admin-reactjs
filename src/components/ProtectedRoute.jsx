@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import Login from '../pages/Login';
+import LoginManager from '../pages/manager/Login';
+import LoginSuper from '../pages/super/Login';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
     const { isAuthenticated, user, loading } = useAuth();
@@ -8,9 +9,10 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     if (loading) return null;
 
     if (!isAuthenticated) {
-        // Instead of redirecting to /login, show the login form directly for this role
-        // This keeps / for manager login and /super for super admin login
-        return <Login forcedRole={requiredRole} />;
+        if (requiredRole === 'super') {
+            return <LoginSuper />;
+        }
+        return <LoginManager />;
     }
 
     if (requiredRole && user?.role !== requiredRole) {

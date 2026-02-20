@@ -6,7 +6,7 @@ export const mockSuperAdmin = {
     id: "super-admin-1",
     email: "admin@gmail.com",
     password: "12345678",
-    name: "Platform Owner",
+    name: "Super Admin",
     role: "super",
 };
 

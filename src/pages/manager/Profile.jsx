@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToast } from '../contexts/ToastContext';
+import { useToast } from '../../contexts/ToastContext';
 import {
     User,
     Mail,
@@ -18,9 +18,9 @@ import {
     Info,
     Briefcase
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { updateDocument, uploadImage, subscribeToCollection } from '../lib/services';
-import { cn } from '../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
+import { updateDocument, uploadImage, subscribeToCollection } from '../../lib/services';
+import { cn } from '../../lib/utils';
 
 const Profile = () => {
     const { user, setUser, role } = useAuth();
