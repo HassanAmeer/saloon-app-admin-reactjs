@@ -171,7 +171,7 @@ const RecentActivity = () => {
                                                             src={p.imageUrl}
                                                             alt={p.productName}
                                                             className="w-5 h-5 rounded object-cover"
-                                                            fallbackClassName="w-5 h-5 rounded object-contain filter bg-tea-50"
+                                                            fallbackClassName="w-5 h-5 rounded object-cover opacity-50 bg-tea-50"
                                                         />
                                                         <span className="text-[9px] font-black text-tea-800 uppercase tracking-tight">
                                                             {p.productName} <span className="text-tea-400">×{p.quantity}</span>

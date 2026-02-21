@@ -129,8 +129,9 @@ const Clients = () => {
                                         src={client.imageUrl}
                                         alt={client.name}
                                         className="w-full h-full object-cover"
-                                        fallbackClassName={`w-full h-full flex items-center justify-center p-2 opacity-50 grayscale ${selectedClient?.id === client.id ? 'invert text-white' : 'text-tea-700'
+                                        fallbackClassName={`w-full h-full flex items-center justify-center p-2 text-tea-300 shrink-0 ${selectedClient?.id === client.id ? 'invert text-white' : ''
                                             }`}
+                                        FallbackComponent={User}
                                     />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -157,7 +158,8 @@ const Clients = () => {
                                             src={selectedClient.imageUrl}
                                             alt={selectedClient.name}
                                             className="w-full h-full object-cover"
-                                            fallbackClassName="w-full h-full flex items-center justify-center p-5 opacity-40 grayscale"
+                                            fallbackClassName="w-full h-full flex items-center justify-center p-5 text-tea-300 shrink-0"
+                                            FallbackComponent={User}
                                         />
                                     </div>
                                     <div className="flex-1 space-y-2">

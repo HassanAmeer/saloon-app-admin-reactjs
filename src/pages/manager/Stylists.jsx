@@ -4,6 +4,7 @@ import {
     Search,
     Edit,
     Eye,
+    User,
     UserX,
     Check,
     X,
@@ -149,7 +150,8 @@ const Stylists = () => {
                                         src={stylist.imageUrl}
                                         alt={stylist.name}
                                         className="w-full h-full object-cover"
-                                        fallbackClassName="w-full h-full flex items-center justify-center p-6 grayscale opacity-20 shrink-0"
+                                        fallbackClassName="w-full h-full flex items-center justify-center text-tea-300 shrink-0"
+                                        FallbackComponent={User}
                                     />
                                 </div>
                                 <div className="text-center">
@@ -224,7 +226,8 @@ const StylistDetail = ({ stylist, onBack }) => {
                             src={stylist.imageUrl}
                             alt={stylist.name}
                             className="w-full h-full object-cover"
-                            fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20 shrink-0"
+                            fallbackClassName="w-full h-full flex items-center justify-center p-8 text-tea-300 shrink-0"
+                            FallbackComponent={User}
                         />
                     </div>
                     <div className="space-y-4">
@@ -384,7 +387,8 @@ const StylistModal = ({ mode, stylist, onClose, onSave }) => {
                                 <ImageWithFallback
                                     src={formData.imageUrl}
                                     className="w-full h-full object-cover"
-                                    fallbackClassName="w-full h-full flex flex-col items-center justify-center bg-white/50 text-tea-400 p-6 opacity-50 grayscale shrink-0"
+                                    fallbackClassName="w-full h-full flex flex-col items-center justify-center bg-white/50 text-tea-400 p-6 shrink-0"
+                                    FallbackComponent={User}
                                 />
                             </div>
                             <label className="absolute inset-0 flex items-center justify-center bg-tea-900/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-[2.5rem]">

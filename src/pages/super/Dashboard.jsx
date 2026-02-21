@@ -374,7 +374,7 @@ const Dashboard = ({ forceSalonId }) => {
                                                 src={product.imageUrl || product.image}
                                                 alt={product.productName}
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50"
+                                                fallbackClassName="w-full h-full object-contain opacity-50 bg-tea-50"
                                             />
                                         </div>
                                     </div>

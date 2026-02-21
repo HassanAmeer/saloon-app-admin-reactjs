@@ -220,7 +220,7 @@ const Products = () => {
                                 src={product.imageUrl}
                                 alt={product.name}
                                 className="w-full h-full object-cover"
-                                fallbackClassName="w-4/5 h-4/5 object-contain opacity-20 filter grayscale rounded-lg shrink-0"
+                                fallbackClassName="w-full h-full object-contain p-8 opacity-50 grayscale shrink-0"
                             />
                         </div>
 

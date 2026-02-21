@@ -20,7 +20,7 @@ import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Profile = () => {
     const { user, setUser } = useAuth();
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -163,7 +163,8 @@ const Profile = () => {
                                     src={previewUrl}
                                     alt="Avatar"
                                     className="w-full h-full object-cover"
-                                    fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20 shrink-0"
+                                    fallbackClassName="w-full h-full flex items-center justify-center p-8 text-tea-300 shrink-0"
+                                    FallbackComponent={User}
                                 />
                                 <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                     <Camera className="w-8 h-8 text-white" />

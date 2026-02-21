@@ -15,7 +15,8 @@ import {
     X,
     Sparkles,
     Activity,
-    Eye
+    Eye,
+    User
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../lib/utils';
@@ -172,7 +173,8 @@ const DashboardLayout = () => {
                                         src={displayUser?.imageUrl}
                                         alt="User"
                                         className="w-full h-full object-cover"
-                                        fallbackClassName="w-full h-full flex items-center justify-center bg-gradient-to-tr from-tea-500 to-tea-700 p-2 text-white/50 grayscale opacity-50 shrink-0"
+                                        fallbackClassName="w-full h-full flex items-center justify-center bg-gradient-to-tr from-tea-500 to-tea-700 p-2 text-white/50 shrink-0"
+                                        FallbackComponent={User}
                                     />
                                 </div>
                                 <div className="flex-1 min-w-0">

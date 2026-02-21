@@ -14,7 +14,8 @@ import {
     Mail,
     Phone,
     ArrowRight,
-    MapPin
+    MapPin,
+    User
 } from 'lucide-react';
 import {
     subscribeToCollection,
@@ -210,7 +211,8 @@ const Managers = () => {
                                                 src={manager.imageUrl}
                                                 alt={manager.name}
                                                 className="w-full h-full object-cover rounded-2xl"
-                                                fallbackClassName="w-full h-full flex items-center justify-center bg-tea-100 p-4 text-tea-700/50 grayscale opacity-40 shrink-0"
+                                                fallbackClassName="w-full h-full flex items-center justify-center p-4 text-tea-300 shrink-0"
+                                                FallbackComponent={User}
                                             />
                                         </div>
                                         <div>

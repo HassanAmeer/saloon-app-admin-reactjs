@@ -342,12 +342,12 @@ const Dashboard = ({ forceSalonId }) => {
                             {lastSoldProducts.map((product, index) => (
                                 <div key={`${product.productName}-${index}`} className="flex items-center gap-4 group cursor-pointer">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl bg-tea-50 border border-tea-100 flex items-center justify-center text-tea-300 overflow-hidden shadow-inner">
+                                        <div className="w-12 h-12 rounded-xl bg-tea-50 border border-tea-100 flex items-center justify-center text-tea-300 overflow-hidden shadow-inner">
                                             <ImageWithFallback
                                                 src={product.imageUrl || product.image}
                                                 alt={product.productName}
                                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 p-2 opacity-40 grayscale"
+                                                fallbackClassName="w-full h-full object-contain opacity-50 bg-tea-50"
                                             />
                                         </div>
                                     </div>

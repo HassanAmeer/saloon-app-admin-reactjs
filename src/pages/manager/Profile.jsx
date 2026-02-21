@@ -203,7 +203,8 @@ const Profile = () => {
                             src={previewUrl}
                             alt="Portrait"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            fallbackClassName="w-full h-full flex items-center justify-center p-10 grayscale opacity-20 shrink-0"
+                            fallbackClassName="w-full h-full flex items-center justify-center p-10 text-tea-300 shrink-0"
+                            FallbackComponent={User}
                         />
                         <label className="absolute inset-0 bg-tea-900/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer">
                             <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md mb-2">
