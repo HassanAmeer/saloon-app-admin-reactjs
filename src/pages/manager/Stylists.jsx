@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     Plus,
     Search,
@@ -106,7 +106,7 @@ const Stylists = () => {
     if (loading) return <ManagersSkeleton />;
 
     if (viewingDetail && selectedStylist) {
-        return <StylistDetail stylist={selectedStylist} onBack={() => setViewingDetail(false)} />;
+        return <StylistDetail stylist={selectedStylist} salonId={salonId} onBack={() => setViewingDetail(false)} />;
     }
 
     return (
@@ -188,23 +188,47 @@ const StatMini = ({ label, value }) => (
     </div>
 );
 
-const StylistDetail = ({ stylist, onBack }) => {
+const StylistDetail = ({ stylist, salonId, onBack }) => {
     const { user } = useAuth();
     const [activeTab, setActiveTab] = useState('analytics');
-    const [clients, setClients] = useState([]);
-    const [sales, setSales] = useState([]);
+    const [allSales, setAllSales] = useState([]);
     const [recommendations, setRecommendations] = useState([]);
 
     useEffect(() => {
-        if (!stylist.id || !user?.salonId) return;
+        if (!stylist.id || !salonId) return;
 
         const unsubs = [
-            subscribeToCollection(`salons/${user.salonId}/stylists/${stylist.id}/clients`, setClients),
-            subscribeToCollection(`salons/${user.salonId}/sales`, setSales, [{ field: 'stylistId', operator: '==', value: stylist.id }]),
-            subscribeToCollection(`salons/${user.salonId}/stylists/${stylist.id}/Ai recommendations`, setRecommendations, [], { field: 'createdAt', direction: 'desc' })
+            subscribeToCollection(`salons/${salonId}/sales`, setAllSales),
+            subscribeToCollection(`salons/${salonId}/stylists/${stylist.id}/Ai recommendations`, setRecommendations, [], { field: 'createdAt', direction: 'desc' })
         ];
         return () => unsubs.forEach(u => u());
-    }, [stylist.id, user?.salonId]);
+    }, [stylist.id, salonId]);
+
+    // Compute sales belonging only to this stylist
+    const sales = useMemo(() => {
+        return allSales.filter(sale =>
+            sale.stylistId === stylist.id ||
+            sale.stylistName?.toLowerCase() === stylist.name?.toLowerCase()
+        ).sort((a, b) => new Date(b.date || b.createdAt?.toDate()) - new Date(a.date || a.createdAt?.toDate()));
+    }, [allSales, stylist]);
+
+    // Derive organic clients list from the stylist's sales history
+    const clients = useMemo(() => {
+        const clientsMap = new Map();
+        sales.forEach(sale => {
+            const key = sale.clientId || sale.clientName;
+            if (key && !clientsMap.has(key)) {
+                clientsMap.set(key, {
+                    id: key,
+                    name: sale.clientName || 'Private Client',
+                    email: 'Member',
+                    joinDate: sale.date || sale.createdAt?.toDate() || new Date(),
+                    status: 'Active'
+                });
+            }
+        });
+        return Array.from(clientsMap.values());
+    }, [sales]);
 
     const statsData = [
         { name: 'Mon', sales: 400, clients: 24 },
@@ -345,22 +369,27 @@ const AIRecommendationsPanel = ({ recommendations }) => (
                 <p className="text-[10px] font-black text-tea-400 uppercase tracking-[0.3em]">No Intelligence Collected Yet</p>
             </div>
         ) : (
-            recommendations.map(rec => (
-                <div key={rec.id} className="glass-card p-6 flex gap-6 items-center border-l-4 border-tea-700">
-                    <div className="w-12 h-12 rounded-xl bg-tea-100 flex items-center justify-center text-tea-700">
-                        <Bot className="w-6 h-6" />
-                    </div>
-                    <div>
-                        <div className="flex justify-between items-start mb-1">
-                            <h4 className="font-black text-tea-900 text-[10px] uppercase tracking-widest">{rec.title || 'Growth Opportunity'}</h4>
-                            <span className="text-[8px] font-black text-tea-400 uppercase">{new Date(rec.createdAt?.toDate?.() || rec.createdAt).toLocaleDateString()}</span>
+            recommendations.map(rec => {
+                const date = rec.date || rec.createdAt?.toDate?.() || rec.createdAt;
+                return (
+                    <div key={rec.id} className="glass-card p-6 flex gap-6 items-center border-l-4 border-tea-700">
+                        <div className="w-12 h-12 rounded-xl bg-tea-100 flex items-center justify-center text-tea-700 shrink-0">
+                            <Bot className="w-6 h-6" />
                         </div>
-                        <p className="text-[10px] text-tea-500 font-bold uppercase tracking-widest mt-1 leading-relaxed">
-                            {rec.recommendation || `Recommended treatment for ${rec.clientName || 'Client'} based on scan.`}
-                        </p>
+                        <div className="min-w-0">
+                            <div className="flex justify-between items-start mb-1 gap-4">
+                                <h4 className="font-black text-tea-900 text-[10px] uppercase tracking-widest truncate">{rec.clientName || 'Growth Opportunity'}</h4>
+                                <span className="text-[8px] font-black text-tea-400 uppercase shrink-0">
+                                    {date ? new Date(date).toLocaleDateString() : 'Recent'}
+                                </span>
+                            </div>
+                            <p className="text-[10px] text-tea-500 font-bold uppercase tracking-widest mt-1 leading-relaxed line-clamp-2">
+                                {rec.recommendation || rec.hairAnalysis?.condition || 'Analyzing customer hair health for optimizations.'}
+                            </p>
+                        </div>
                     </div>
-                </div>
-            ))
+                );
+            })
         )}
     </div>
 );
