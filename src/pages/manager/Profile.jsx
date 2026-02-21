@@ -1,364 +1,386 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '../../contexts/ToastContext';
 import {
-    User,
-    Mail,
-    Lock,
-    Camera,
-    Save,
-    Loader2,
-    CheckCircle2,
-    Building2,
-    Phone,
+    ArrowLeft,
     Eye,
     EyeOff,
-    MapPin,
-    ShieldCheck,
-    Smartphone,
-    Info,
-    Briefcase
+    Loader2,
+    Camera,
+    User,
+    Building2,
+    Save
 } from 'lucide-react';
+import {
+    getDocument,
+    updateDocument,
+    uploadImage
+} from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
-import { updateDocument, uploadImage, subscribeToCollection, getDocument, subscribeToDocument } from '../../lib/services';
-import { cn } from '../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
-import { ProfileSkeleton } from '../../components/Skeleton';
+import { ManagerFormSkeleton } from '../../components/Skeleton';
 
 const Profile = () => {
     const { user, setUser, type } = useAuth();
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const { showToast } = useToast();
-    const [loading, setLoading] = useState(true);
-    const [salonData, setSalonData] = useState(null);
-    const [showPassword, setShowPassword] = useState(false);
 
     const querySalonId = searchParams.get('salonId');
-    const isImpersonating = type === 'superadmin' && querySalonId;
+    const isImpersonating = type === 'superadmin' && !!querySalonId;
 
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        imageUrl: '',
-        phone: '',
-        bio: '',
-        brand: '',
-        address: ''
-    });
+    const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
 
+    // IDs resolved after loading
+    const [managerId, setManagerId] = useState(null);
+    const [resolvedSalonId, setResolvedSalonId] = useState(null);
+
+    const [formData, setFormData] = useState({
+        manager: {
+            name: '',
+            email: '',
+            phone: '',
+            bio: '',
+            brand: '',
+            address: '',
+            password: '',
+            imageUrl: ''
+        },
+        salon: {
+            name: '',
+            address: '',
+            phone: ''
+        }
+    });
+
     useEffect(() => {
-        const fetchUserData = async () => {
-            let targetUser = user;
-            let collectionName = targetUser?.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
-
-            if (isImpersonating) {
-                // Fetch the salon to get managerId
-                const salon = await getDocument('salons', querySalonId);
-                if (salon?.managerId) {
-                    const manager = await getDocument('salon_managers', salon.managerId);
-                    if (manager) {
-                        targetUser = manager;
-                        collectionName = 'salon_managers';
-                        setSalonData(salon);
-                    }
-                }
-            }
-
-            if (!targetUser?.id) {
-                setLoading(false);
-                return;
-            }
-
+        const fetchData = async () => {
             try {
-                const fullUserData = await getDocument(collectionName, targetUser.id);
-                if (fullUserData) {
-                    setFormData({
-                        name: fullUserData.name || '',
-                        email: fullUserData.email || '',
-                        password: fullUserData.password || '',
-                        imageUrl: fullUserData.imageUrl || '',
-                        phone: fullUserData.phone || '',
-                        bio: fullUserData.bio || '',
-                        brand: fullUserData.brand || '',
-                        address: fullUserData.address || ''
-                    });
-                    setPreviewUrl(fullUserData.imageUrl || null);
+                if (isImpersonating && querySalonId) {
+                    // Super admin impersonating — load manager via salonId
+                    const salon = await getDocument('salons', querySalonId);
+                    if (salon?.managerId) {
+                        const manager = await getDocument('salon_managers', salon.managerId);
+                        if (manager) {
+                            setManagerId(salon.managerId);
+                            setResolvedSalonId(querySalonId);
+                            setFormData({
+                                manager: {
+                                    name: manager.name || '',
+                                    email: manager.email || '',
+                                    phone: manager.phone || '',
+                                    bio: manager.bio || '',
+                                    brand: manager.brand || '',
+                                    address: manager.address || '',
+                                    password: '',
+                                    imageUrl: manager.imageUrl || ''
+                                },
+                                salon: {
+                                    name: salon.name || '',
+                                    address: salon.address || '',
+                                    phone: salon.phone || ''
+                                }
+                            });
+                            setPreviewUrl(manager.imageUrl || null);
+                        }
+                    }
+                } else if (user?.id) {
+                    // Manager direct login
+                    const manager = await getDocument('salon_managers', user.id);
+                    const sId = user.salonId;
+                    setManagerId(user.id);
+                    setResolvedSalonId(sId);
 
-                    if (!isImpersonating) {
-                        // Only update context if we're not impersonating
-                        const updatedUser = {
-                            ...user,
-                            ...fullUserData,
-                        };
-                        setUser(updatedUser);
-                        localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+                    if (manager) {
+                        setFormData(prev => ({
+                            ...prev,
+                            manager: {
+                                name: manager.name || '',
+                                email: manager.email || '',
+                                phone: manager.phone || '',
+                                bio: manager.bio || '',
+                                brand: manager.brand || '',
+                                address: manager.address || '',
+                                password: '',
+                                imageUrl: manager.imageUrl || ''
+                            }
+                        }));
+                        setPreviewUrl(manager.imageUrl || null);
+                    }
+
+                    if (sId) {
+                        const salon = await getDocument('salons', sId);
+                        if (salon) {
+                            setFormData(prev => ({
+                                ...prev,
+                                salon: {
+                                    name: salon.name || '',
+                                    address: salon.address || '',
+                                    phone: salon.phone || ''
+                                }
+                            }));
+                        }
                     }
                 }
             } catch (error) {
-                console.error("Error fetching full user data:", error);
+                console.error('Error fetching profile data:', error);
+                showToast('Failed to load profile data', 'error');
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserData();
-    }, [isImpersonating, querySalonId, user?.id]);
-
-    useEffect(() => {
-        if (user && !isImpersonating) {
-            setFormData(prev => ({
-                ...prev,
-                name: user.name || prev.name,
-                email: user.email || prev.email,
-                password: user.password || prev.password,
-                imageUrl: user.imageUrl || prev.imageUrl,
-                phone: user.phone || prev.phone,
-                bio: user.bio || prev.bio,
-                brand: user.brand || prev.brand,
-                address: user.address || prev.address
-            }));
-            if (user.imageUrl) setPreviewUrl(user.imageUrl);
-
-            if (type === 'salonmanager' && user.salonId) {
-                const unsub = subscribeToCollection('salons', (salons) => {
-                    const mySalon = salons.find(s => s.id === user.salonId);
-                    if (mySalon) setSalonData(mySalon);
-                });
-                return () => unsub();
-            }
-        }
-    }, [user, type, isImpersonating]);
-
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-        }
-    };
+        fetchData();
+    }, [user?.id, querySalonId, isImpersonating, showToast]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        setIsSaving(true);
 
         try {
-            let targetId = user.id;
-            let targetCollection = user.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
+            let finalData = { ...formData };
 
-            if (isImpersonating && salonData?.managerId) {
-                targetId = salonData.managerId;
-                targetCollection = 'salon_managers';
-            }
-
-            let imageUrl = formData.imageUrl;
+            // Upload image if new file selected
             if (selectedFile) {
-                const folder = targetCollection === 'super_admin_setting' ? 'super_admin' : 'managers';
-                const uploadedUrl = await uploadImage(selectedFile, `avatars/${folder}_${targetId}_${Date.now()}`);
-                if (uploadedUrl) {
-                    imageUrl = uploadedUrl;
+                const url = await uploadImage(selectedFile, `managers/${Date.now()}`);
+                if (url) {
+                    finalData.manager.imageUrl = url;
                 }
             }
 
-            const updateData = {
-                name: formData.name,
-                email: formData.email,
-                imageUrl: imageUrl,
-                phone: formData.phone,
-                bio: formData.bio,
-                brand: formData.brand,
-                address: formData.address
-            };
+            // Build update payload — omit blank password
+            const managerPayload = { ...finalData.manager };
+            if (!managerPayload.password) delete managerPayload.password;
 
-            if (formData.password) {
-                updateData.password = formData.password;
+            await updateDocument('salon_managers', managerId, managerPayload);
+
+            if (resolvedSalonId) {
+                await updateDocument('salons', resolvedSalonId, finalData.salon);
             }
 
-            await updateDocument(targetCollection, targetId, updateData);
-
+            // Update local auth context if manager is viewing their own profile
             if (!isImpersonating) {
-                const updatedUser = {
-                    ...user,
-                    ...updateData,
-                };
+                const updatedUser = { ...user, ...managerPayload };
                 setUser(updatedUser);
                 localStorage.setItem('salon_user', JSON.stringify(updatedUser));
             }
 
             showToast('Profile updated successfully', 'success');
         } catch (error) {
-            console.error("Error updating profile:", error);
-            showToast('Failed to update profile', 'error');
+            console.error('Error saving profile:', error);
+            showToast('Failed to save profile', 'error');
         } finally {
-            setLoading(false);
+            setIsSaving(false);
         }
     };
 
-    if (loading) return <ProfileSkeleton />;
+    if (loading) return <ManagerFormSkeleton />;
 
     return (
-        <div className="max-w-5xl mx-auto pb-20 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Premium Header */}
-            <div className="relative overflow-hidden bg-white/40 backdrop-blur-xl p-10 lg:p-14 rounded-[3rem] border border-white/60 shadow-[0_32px_64px_-16px_rgba(44,58,35,0.08)] flex flex-col md:flex-row items-center gap-10">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-tea-100/30 rounded-full blur-3xl -mr-32 -mt-32" />
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-brown-100/20 rounded-full blur-3xl -ml-24 -mb-24" />
-
-                <div className="relative group shrink-0">
-                    <div className="w-44 h-44 rounded-[2.5rem] bg-tea-50 border-[6px] border-white shadow-2xl overflow-hidden ring-1 ring-tea-700/5 rotate-0 group-hover:rotate-3 transition-all duration-500">
-                        <ImageWithFallback
-                            src={previewUrl}
-                            alt="Portrait"
-                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            fallbackClassName="w-full h-full flex items-center justify-center p-10 text-tea-300 shrink-0"
-                            FallbackComponent={User}
-                        />
-                        <label className="absolute inset-0 bg-tea-900/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer">
-                            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md mb-2">
-                                <Camera className="w-6 h-6 text-white" />
-                            </div>
-                            <span className="text-[9px] font-black text-white uppercase tracking-[0.2em]">Change Photo</span>
-                            <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                        </label>
-                    </div>
-                </div>
-
-                <div className="relative text-center md:text-left space-y-5">
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-center md:justify-start gap-2">
-                            <span className="w-6 h-[1px] bg-tea-300" />
-                            <span className="text-[10px] font-black text-tea-600 uppercase tracking-[0.3em]">Administrator Identity</span>
-                        </div>
-                        <h1 className="text-4xl lg:text-5xl font-black text-tea-950 tracking-tight flex flex-col sm:flex-row items-center gap-3">
-                            {formData.name || 'Anonymous User'}
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 glass-card hover:bg-tea-50 text-tea-600 transition-colors border-none"
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                        <h1 className="text-3xl font-black text-tea-900 tracking-tight uppercase">
+                            {isImpersonating ? 'Manager Profile' : 'My Profile'}
                         </h1>
-                    </div>
-
-                    <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                        <div className="px-5 py-2 rounded-2xl bg-tea-900 text-tea-50 text-[10px] font-black uppercase tracking-[0.15em] flex items-center gap-2 shadow-lg shadow-tea-900/20">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            {type === 'superadmin' ? 'Platform Authority' : 'Salon Executive'}
-                        </div>
-                        {type === 'salonmanager' && salonData && (
-                            <div className="px-5 py-2 rounded-2xl bg-white border border-tea-100 text-tea-700 text-[10px] font-black uppercase tracking-[0.15em] flex items-center gap-2 shadow-sm">
-                                <Building2 className="w-3.5 h-3.5" />
-                                {salonData.name}
-                            </div>
-                        )}
+                        <p className="text-tea-500 font-medium tracking-wide">
+                            {isImpersonating ? 'Update manager and salon details' : 'Update your personal and salon details'}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="relative space-y-10">
-                <div className="glass-card p-10 lg:p-14 space-y-10 border-white/50 bg-white/30">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {/* Name Field */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Full Name</label>
-                            <input
-                                className="input-field bg-white/60 focus:bg-white transition-all h-14"
-                                value={formData.name}
-                                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                required
-                            />
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {/* Personal Credentials Card */}
+                <div className="glass-card p-8 space-y-8">
+                    <div className="flex items-center gap-4 border-b border-tea-100 pb-4">
+                        <div className="p-3 bg-tea-100/50 rounded-xl">
+                            <User className="w-6 h-6 text-tea-600" />
                         </div>
+                        <h2 className="text-xl font-black text-tea-900 uppercase tracking-tight">Personal Credentials</h2>
+                    </div>
 
-                        {/* Email Field */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Email Address</label>
-                            <input
-                                className="input-field bg-white/60 focus:bg-white transition-all h-14"
-                                type="email"
-                                value={formData.email}
-                                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                required
-                            />
-                        </div>
-
-                        {/* Phone Field */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Direct Phone</label>
-                            <input
-                                className="input-field bg-white/60 h-14"
-                                value={formData.phone}
-                                onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                placeholder="+1 (000) 000-0000"
-                            />
-                        </div>
-
-                        {/* Brand Field (Conditional) */}
-                        {type === 'salonmanager' && (
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Salon Brand</label>
+                    {/* Avatar Upload */}
+                    <div className="flex flex-col items-start gap-4 pb-4">
+                        <div className="relative group/avatar">
+                            <label className="cursor-pointer">
                                 <input
-                                    className="input-field bg-white/60 h-14"
-                                    value={formData.brand}
-                                    onChange={e => setFormData({ ...formData, brand: e.target.value })}
-                                    placeholder="Brand Name"
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            setSelectedFile(file);
+                                            setPreviewUrl(URL.createObjectURL(file));
+                                        }
+                                    }}
                                 />
-                            </div>
-                        )}
+                                <div className="w-32 h-32 rounded-[2.5rem] bg-tea-100 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden group-hover/avatar:border-tea-200 transition-colors">
+                                    <ImageWithFallback
+                                        src={previewUrl}
+                                        alt="Profile"
+                                        className="w-full h-full object-cover"
+                                        fallbackClassName="w-full h-full flex items-center justify-center text-tea-400 bg-tea-50"
+                                        FallbackComponent={User}
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity">
+                                        <Camera className="w-8 h-8 text-white mb-2" />
+                                        <span className="text-[10px] font-black text-white uppercase tracking-widest">Update</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
 
-                        {/* Address Field */}
-                        <div className={cn("space-y-3", type === 'superadmin' ? "col-span-1" : "col-span-1")}>
-                            <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Professional Address</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Full Name</label>
                             <input
-                                className="input-field bg-white/60 h-14"
-                                value={formData.address}
-                                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                                placeholder="Operational headquarters address"
+                                className="input-field"
+                                value={formData.manager.name}
+                                onChange={e => setFormData({ ...formData, manager: { ...formData.manager, name: e.target.value } })}
+                                required
                             />
                         </div>
-
-                        {/* Password Field */}
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Master Password</label>
-                            <div className="relative group">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Email Address</label>
+                            <input
+                                className="input-field"
+                                type="email"
+                                value={formData.manager.email}
+                                onChange={e => setFormData({ ...formData, manager: { ...formData.manager, email: e.target.value } })}
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Phone Number</label>
+                            <input
+                                className="input-field"
+                                value={formData.manager.phone}
+                                onChange={e => setFormData({ ...formData, manager: { ...formData.manager, phone: e.target.value } })}
+                                placeholder="Personal contact number"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Professional Brand</label>
+                            <input
+                                className="input-field"
+                                value={formData.manager.brand}
+                                onChange={e => setFormData({ ...formData, manager: { ...formData.manager, brand: e.target.value } })}
+                                placeholder="Personal/Agency Brand"
+                            />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Login Password</label>
+                            <div className="relative group/pass">
                                 <input
-                                    className="input-field pr-12 bg-white/60 h-14"
-                                    type={showPassword ? "text" : "password"}
-                                    value={formData.password}
-                                    onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                    placeholder="••••••••"
+                                    className="input-field pr-12"
+                                    type={showPassword ? 'text' : 'password'}
+                                    value={formData.manager.password}
+                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, password: e.target.value } })}
+                                    placeholder="Leave blank to keep current"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-tea-400 hover:text-tea-800 transition-colors p-1"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-tea-400 hover:text-tea-700 hover:bg-tea-50 rounded-lg transition-all"
                                 >
                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                 </button>
                             </div>
                         </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Personal Address</label>
+                            <input
+                                className="input-field"
+                                value={formData.manager.address}
+                                onChange={e => setFormData({ ...formData, manager: { ...formData.manager, address: e.target.value } })}
+                                placeholder="Manager's professional address"
+                            />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Professional Bio</label>
+                            <textarea
+                                className="input-field min-h-[120px] py-4"
+                                value={formData.manager.bio}
+                                onChange={e => setFormData({ ...formData, manager: { ...formData.manager, bio: e.target.value } })}
+                                placeholder="Brief background or experience"
+                            />
+                        </div>
+                    </div>
+                </div>
 
-                        {/* Bio Field (Conditional) */}
-                        {type === 'salonmanager' && (
-                            <div className="space-y-3 col-span-full pt-4">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Executive Narrative</label>
-                                <textarea
-                                    className="input-field min-h-[140px] p-6 resize-none leading-relaxed bg-white/60 focus:bg-white"
-                                    value={formData.bio}
-                                    onChange={e => setFormData({ ...formData, bio: e.target.value })}
-                                    placeholder="Write your professional bio..."
-                                />
-                            </div>
-                        )}
+                {/* Salon Entity Card */}
+                <div className="glass-card p-8 space-y-8">
+                    <div className="flex items-center gap-4 border-b border-tea-100 pb-4">
+                        <div className="p-3 bg-tea-100/50 rounded-xl">
+                            <Building2 className="w-6 h-6 text-tea-600" />
+                        </div>
+                        <h2 className="text-xl font-black text-tea-900 uppercase tracking-tight">Salon Entity Registration</h2>
                     </div>
 
-                    {/* Actions Module */}
-                    <div className="flex items-center justify-end pt-10 border-t border-tea-100/30">
-
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn-primary min-w-[200px] h-14 rounded-2xl shadow-[0_20px_40px_-12px_rgba(42,59,28,0.2)] hover:shadow-[0_25px_50px_-12px_rgba(42,59,28,0.3)] active:scale-95 transition-all flex items-center justify-center gap-4 bg-tea-900 group"
-                        >
-                            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 group-hover:scale-110 transition-transform" />}
-                            <span className="font-black uppercase tracking-[0.2em] text-[10px]">Update Profile</span>
-                        </button>
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Salon Brand Name</label>
+                            <input
+                                className="input-field"
+                                value={formData.salon.name}
+                                onChange={e => setFormData({ ...formData, salon: { ...formData.salon, name: e.target.value } })}
+                                placeholder="e.g. Elegance Studio"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Physical Location</label>
+                            <input
+                                className="input-field"
+                                value={formData.salon.address}
+                                onChange={e => setFormData({ ...formData, salon: { ...formData.salon, address: e.target.value } })}
+                                placeholder="Full address here"
+                                required
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Salon Phone</label>
+                            <input
+                                className="input-field"
+                                value={formData.salon.phone}
+                                onChange={e => setFormData({ ...formData, salon: { ...formData.salon, phone: e.target.value } })}
+                                placeholder="Salon contact number"
+                            />
+                        </div>
                     </div>
+                </div>
+
+                <div className="flex justify-end gap-4 pt-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        disabled={isSaving}
+                        className="btn-secondary px-8"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="btn-primary px-8 flex items-center justify-center gap-2"
+                    >
+                        {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                        {isSaving ? 'Saving...' : 'Save Changes'}
+                    </button>
                 </div>
             </form>
         </div>

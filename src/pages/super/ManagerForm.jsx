@@ -294,6 +294,7 @@ const ManagerForm = ({ mode }) => {
                                 </button>
                             </div>
                         </div>
+
                         <div className="space-y-2 md:col-span-2">
                             <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1">Personal Address</label>
                             <input

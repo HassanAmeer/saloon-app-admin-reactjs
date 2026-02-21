@@ -88,10 +88,36 @@ const Dashboard = ({ forceSalonId }) => {
         };
     }, [salonId, type]);
 
-    // Derived Statistics
+    // Derived Statistics — filtered by period
+    const filteredSales = useMemo(() => {
+        const now = new Date();
+        return sales.filter(sale => {
+            const raw = sale.date || sale.createdAt;
+            if (!raw) return false;
+            const saleDate = raw?.toDate ? raw.toDate() : new Date(raw);
+            if (isNaN(saleDate)) return false;
+
+            if (period === 'day') {
+                return saleDate.toDateString() === now.toDateString();
+            }
+            if (period === 'week') {
+                const weekAgo = new Date(now);
+                weekAgo.setDate(now.getDate() - 7);
+                return saleDate >= weekAgo;
+            }
+            if (period === 'month') {
+                return saleDate.getMonth() === now.getMonth() && saleDate.getFullYear() === now.getFullYear();
+            }
+            if (period === 'year') {
+                return saleDate.getFullYear() === now.getFullYear();
+            }
+            return true;
+        });
+    }, [sales, period]);
+
     const dashboardStats = useMemo(() => {
-        const totalSales = sales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
-        const productsSold = sales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
+        const totalSales = filteredSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+        const productsSold = filteredSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
         const totalScans = recommendations.length;
         const totalStylists = stylists.length;
         const totalClients = stylists.reduce((sum, s) => sum + (s.clientsCount || 0), 0);
@@ -110,20 +136,89 @@ const Dashboard = ({ forceSalonId }) => {
             managersGrowth: '+10.0%',
             stylistGrowth: '+4.2%'
         };
-    }, [sales, recommendations, stylists, managers]);
+    }, [filteredSales, recommendations, stylists, managers]);
 
-    const chartData = [
-        { name: 'Mon', revenue: 4200, scans: 45 },
-        { name: 'Tue', revenue: 3800, scans: 52 },
-        { name: 'Wed', revenue: 5100, scans: 61 },
-        { name: 'Thu', revenue: 4600, scans: 48 },
-        { name: 'Fri', revenue: 6400, scans: 72 },
-        { name: 'Sat', revenue: 7200, scans: 85 },
-        { name: 'Sun', revenue: 5800, scans: 59 },
-    ];
+    const chartData = useMemo(() => {
+        const now = new Date();
+
+        if (period === 'day') {
+            // Group by hour (0-23)
+            const hours = Array.from({ length: 24 }, (_, i) => ({
+                name: `${i.toString().padStart(2, '0')}h`,
+                revenue: 0,
+                scans: 0
+            }));
+            filteredSales.forEach(sale => {
+                const raw = sale.date || sale.createdAt;
+                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                if (!isNaN(d)) {
+                    const h = d.getHours();
+                    hours[h].revenue += (sale.totalAmount || sale.total || 0);
+                    hours[h].scans += (sale.products?.length || 0);
+                }
+            });
+            return hours;
+        }
+
+        if (period === 'week') {
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const buckets = Array.from({ length: 7 }, (_, i) => {
+                const d = new Date(now);
+                d.setDate(now.getDate() - (6 - i));
+                return { name: days[d.getDay()], date: d.toDateString(), revenue: 0, scans: 0 };
+            });
+            filteredSales.forEach(sale => {
+                const raw = sale.date || sale.createdAt;
+                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                if (!isNaN(d)) {
+                    const bucket = buckets.find(b => b.date === d.toDateString());
+                    if (bucket) {
+                        bucket.revenue += (sale.totalAmount || sale.total || 0);
+                        bucket.scans += (sale.products?.length || 0);
+                    }
+                }
+            });
+            return buckets.map(({ name, revenue, scans }) => ({ name, revenue, scans }));
+        }
+
+        if (period === 'month') {
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const buckets = Array.from({ length: daysInMonth }, (_, i) => ({
+                name: `${i + 1}`,
+                revenue: 0,
+                scans: 0
+            }));
+            filteredSales.forEach(sale => {
+                const raw = sale.date || sale.createdAt;
+                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                if (!isNaN(d) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
+                    const day = d.getDate() - 1;
+                    buckets[day].revenue += (sale.totalAmount || sale.total || 0);
+                    buckets[day].scans += (sale.products?.length || 0);
+                }
+            });
+            return buckets;
+        }
+
+        if (period === 'year') {
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const buckets = Array.from({ length: 12 }, (_, i) => ({ name: monthNames[i], revenue: 0, scans: 0 }));
+            filteredSales.forEach(sale => {
+                const raw = sale.date || sale.createdAt;
+                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                if (!isNaN(d) && d.getFullYear() === now.getFullYear()) {
+                    buckets[d.getMonth()].revenue += (sale.totalAmount || sale.total || 0);
+                    buckets[d.getMonth()].scans += (sale.products?.length || 0);
+                }
+            });
+            return buckets;
+        }
+
+        return [];
+    }, [filteredSales, period]);
 
     const lastSoldProducts = useMemo(() => {
-        const allProducts = sales.flatMap(sale =>
+        const allProducts = filteredSales.flatMap(sale =>
             (sale.products || []).map(p => ({
                 ...p,
                 saleDate: sale.date || sale.createdAt?.toDate(),
@@ -135,7 +230,7 @@ const Dashboard = ({ forceSalonId }) => {
         return allProducts
             .sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate))
             .slice(0, 5);
-    }, [sales]);
+    }, [filteredSales]);
 
     if (loading) {
         return <DashboardSkeleton />;
@@ -238,31 +333,31 @@ const Dashboard = ({ forceSalonId }) => {
                 ) : (
                     <>
                         <MetricCard
-                            label="Gross Revenue"
-                            value={`$${dashboardStats.totalSales.toLocaleString()}`}
-                            growth={dashboardStats.salesGrowth}
-                            icon={DollarSign}
+                            label="Total Stylists"
+                            value={dashboardStats.totalStylists.toLocaleString()}
+                            growth={dashboardStats.stylistGrowth}
+                            icon={ScanFaceIcon}
                             color="tea"
                         />
                         <MetricCard
-                            label="Service Clients"
+                            label="Total Clients"
                             value={dashboardStats.totalClients.toLocaleString()}
                             growth={dashboardStats.clientsGrowth}
                             icon={Users}
                             color="emerald"
                         />
                         <MetricCard
-                            label="AI Engagements"
+                            label="Total Scans"
                             value={dashboardStats.totalScans.toLocaleString()}
                             growth={dashboardStats.scansGrowth}
-                            icon={Sparkles}
+                            icon={ScanFaceIcon}
                             color="amber"
                         />
                         <MetricCard
-                            label="Inventory Moved"
+                            label="Sold Products"
                             value={dashboardStats.productsSold.toLocaleString()}
                             growth="+14.2%"
-                            icon={Layers}
+                            icon={Package}
                             color="brown"
                         />
                     </>
