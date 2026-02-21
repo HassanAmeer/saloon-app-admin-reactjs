@@ -21,7 +21,8 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { updateDocument, uploadImage, subscribeToCollection, getDocument, subscribeToDocument } from '../../lib/services';
 import { cn } from '../../lib/utils';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Profile = () => {
     const { user, setUser, type } = useAuth();
@@ -198,13 +199,12 @@ const Profile = () => {
 
                 <div className="relative group shrink-0">
                     <div className="w-44 h-44 rounded-[2.5rem] bg-tea-50 border-[6px] border-white shadow-2xl overflow-hidden ring-1 ring-tea-700/5 rotate-0 group-hover:rotate-3 transition-all duration-500">
-                        {previewUrl ? (
-                            <img src={previewUrl} alt="Portrait" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center text-tea-200">
-                                <User className="w-20 h-20" />
-                            </div>
-                        )}
+                        <ImageWithFallback
+                            src={previewUrl}
+                            alt="Portrait"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            fallbackClassName="w-full h-full flex items-center justify-center p-10 grayscale opacity-20 shrink-0"
+                        />
                         <label className="absolute inset-0 bg-tea-900/40 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-all duration-300 cursor-pointer">
                             <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md mb-2">
                                 <Camera className="w-6 h-6 text-white" />

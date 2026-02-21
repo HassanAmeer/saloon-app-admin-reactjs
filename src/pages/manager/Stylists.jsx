@@ -40,6 +40,7 @@ import {
 } from 'recharts';
 
 import { useSearchParams } from 'react-router-dom';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Stylists = () => {
     const { user } = useAuth();
@@ -144,7 +145,12 @@ const Stylists = () => {
                         <div className="p-6 flex flex-col md:flex-row gap-6">
                             <div className="flex flex-col items-center gap-4 min-w-[140px]">
                                 <div className="w-24 h-24 rounded-3xl overflow-hidden ring-4 ring-tea-700/5 transition-all">
-                                    <img src={stylist.imageUrl || `https://ui-avatars.com/api/?name=${stylist.name}&background=8B4513&color=fff`} className="w-full h-full object-cover" />
+                                    <ImageWithFallback
+                                        src={stylist.imageUrl}
+                                        alt={stylist.name}
+                                        className="w-full h-full object-cover"
+                                        fallbackClassName="w-full h-full flex items-center justify-center p-6 grayscale opacity-20 shrink-0"
+                                    />
                                 </div>
                                 <div className="text-center">
                                     <h3 className="text-lg font-black text-tea-900 uppercase tracking-tight">{stylist.name}</h3>
@@ -213,10 +219,14 @@ const StylistDetail = ({ stylist, onBack }) => {
             <div className="flex flex-col md:flex-row gap-8 items-start">
                 <button onClick={onBack} className="p-3 glass-card hover:bg-tea-50 text-tea-700 rounded-2xl border-tea-700/10"><ArrowLeft className="w-6 h-6" /></button>
                 <div className="flex-1 flex flex-col md:flex-row gap-6 items-center md:items-start text-center md:text-left">
-                    <img
-                        src={stylist.imageUrl || `https://ui-avatars.com/api/?name=${stylist.name}&background=8B4513&color=fff`}
-                        className="w-32 h-32 rounded-[2.5rem] border-4 border-tea-700/10"
-                    />
+                    <div className="w-32 h-32 rounded-[2.5rem] border-4 border-tea-700/10 overflow-hidden">
+                        <ImageWithFallback
+                            src={stylist.imageUrl}
+                            alt={stylist.name}
+                            className="w-full h-full object-cover"
+                            fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20 shrink-0"
+                        />
+                    </div>
                     <div className="space-y-4">
                         <div className="space-y-1">
                             <h2 className="text-4xl font-black text-tea-900 uppercase tracking-tight">{stylist.name}</h2>
@@ -371,14 +381,11 @@ const StylistModal = ({ mode, stylist, onClose, onSave }) => {
                     <div className="flex flex-col items-center gap-4 py-4 border-y border-tea-700/5">
                         <div className="relative group">
                             <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden border-2 border-dashed border-tea-700/20 group-hover:border-tea-700/50 transition-colors">
-                                {formData.imageUrl ? (
-                                    <img src={formData.imageUrl} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-white/50 text-tea-400">
-                                        <Camera className="w-8 h-8 mb-2" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest">No Image</span>
-                                    </div>
-                                )}
+                                <ImageWithFallback
+                                    src={formData.imageUrl}
+                                    className="w-full h-full object-cover"
+                                    fallbackClassName="w-full h-full flex flex-col items-center justify-center bg-white/50 text-tea-400 p-6 opacity-50 grayscale shrink-0"
+                                />
                             </div>
                             <label className="absolute inset-0 flex items-center justify-center bg-tea-900/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer rounded-[2.5rem]">
                                 <input

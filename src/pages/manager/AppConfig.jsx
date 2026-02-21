@@ -21,6 +21,8 @@ import { uploadImage } from '../../lib/services';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const AppConfig = () => {
     const { user, type } = useAuth();
@@ -412,13 +414,12 @@ const AppConfig = () => {
                                         <Trash2 className="w-4 h-4" />
                                     </button>
                                     <div className="aspect-square bg-gray-100 mb-3 rounded-lg overflow-hidden relative">
-                                        {color.imageUrl ? (
-                                            <img src={color.imageUrl} alt={color.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <Droplets className="w-10 h-10 text-gray-300" />
-                                            </div>
-                                        )}
+                                        <ImageWithFallback
+                                            src={color.imageUrl}
+                                            alt={color.name}
+                                            className="w-full h-full object-cover"
+                                            fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20"
+                                        />
                                         <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                                             <input
                                                 type="file"
@@ -458,13 +459,12 @@ const AppConfig = () => {
                             <div className="card grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                                 <div className="space-y-4">
                                     <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden relative group">
-                                        {configs.homeBanner?.imageUrl ? (
-                                            <img src={configs.homeBanner.imageUrl} alt="Banner" className="w-full h-full object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <ImageIcon className="w-12 h-12 text-gray-300" />
-                                            </div>
-                                        )}
+                                        <ImageWithFallback
+                                            src={configs.homeBanner?.imageUrl}
+                                            alt="Banner"
+                                            className="w-full h-full object-cover"
+                                            fallbackClassName="w-full h-full flex items-center justify-center p-12 grayscale opacity-20"
+                                        />
                                         <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                                             <input
                                                 type="file"
@@ -553,13 +553,12 @@ const AppConfig = () => {
                         <div className="card space-y-6">
                             <div className="flex flex-col items-center pb-6 border-b border-gray-100">
                                 <div className="w-24 h-24 bg-gray-50 rounded-2xl overflow-hidden relative group border-2 border-dashed border-gray-200 mb-4">
-                                    {configs.salonInfo?.logoUrl ? (
-                                        <img src={configs.salonInfo.logoUrl} alt="Logo" className="w-full h-full object-contain" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center">
-                                            <ImageIcon className="w-8 h-8 text-gray-300" />
-                                        </div>
-                                    )}
+                                    <ImageWithFallback
+                                        src={configs.salonInfo?.logoUrl}
+                                        alt="Logo"
+                                        className="w-full h-full object-contain"
+                                        fallbackClassName="w-full h-full flex items-center justify-center p-6 grayscale opacity-20"
+                                    />
                                     <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                                         <input
                                             type="file"

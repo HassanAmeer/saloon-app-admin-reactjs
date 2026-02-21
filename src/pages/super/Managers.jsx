@@ -24,6 +24,7 @@ import {
 } from '../../lib/services';
 import { useNavigate } from 'react-router-dom';
 import { ManagersSkeleton } from '../../components/Skeleton';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Managers = () => {
     const navigate = useNavigate();
@@ -204,10 +205,13 @@ const Managers = () => {
                             <div className="p-8 space-y-6">
                                 <div className="flex justify-between items-start">
                                     <div className="flex gap-4">
-                                        <div className="w-16 h-16 rounded-2xl bg-tea-100 border border-tea-200 flex items-center justify-center text-2xl font-black text-tea-700 uppercase">
-                                            {manager.imageUrl ? (
-                                                <img src={manager.imageUrl} alt={manager.name} className="w-full h-full object-cover rounded-2xl" />
-                                            ) : manager.name?.charAt(0)}
+                                        <div className="w-16 h-16 rounded-2xl bg-tea-100 border border-tea-200 flex items-center justify-center text-2xl font-black text-tea-700 uppercase overflow-hidden">
+                                            <ImageWithFallback
+                                                src={manager.imageUrl}
+                                                alt={manager.name}
+                                                className="w-full h-full object-cover rounded-2xl"
+                                                fallbackClassName="w-full h-full flex items-center justify-center bg-tea-100 p-4 text-tea-700/50 grayscale opacity-40 shrink-0"
+                                            />
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">{manager.name}</h3>

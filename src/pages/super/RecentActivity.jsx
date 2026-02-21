@@ -14,6 +14,7 @@ import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/ser
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { RecentActivitySkeleton } from '../../components/Skeleton';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const RecentActivity = () => {
     const { type, user } = useAuth();
@@ -123,13 +124,13 @@ const RecentActivity = () => {
                                         <td className="px-4 py-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-xl bg-tea-900 border border-white/10 shadow-lg overflow-hidden shrink-0 transform group-hover:scale-105 transition-transform duration-500">
-                                                    {manager?.imageUrl ? (
-                                                        <img src={manager.imageUrl} alt={manager.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-tea-800 to-tea-950">
-                                                            <Building2 className="w-5 h-5 text-tea-200/50" />
-                                                        </div>
-                                                    )}
+                                                    <ImageWithFallback
+                                                        src={manager?.imageUrl}
+                                                        alt={manager?.name}
+                                                        className="w-full h-full object-cover"
+                                                        fallbackClassName="w-full h-full flex items-center justify-center bg-gradient-to-br from-tea-800 to-tea-950 p-3 text-white/50 shrink-0"
+                                                        FallbackComponent={User}
+                                                    />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <p className="text-[12px] font-black text-tea-950 uppercase tracking-tight leading-none">{manager?.name || 'Manager'}</p>
@@ -143,16 +144,13 @@ const RecentActivity = () => {
                                         <td className="px-4 py-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-xl bg-white border border-tea-100 shadow-sm overflow-hidden shrink-0 group-hover:shadow-md transition-all duration-500">
-                                                    {(() => {
-                                                        const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
-                                                        return stylist?.imageUrl ? (
-                                                            <img src={stylist.imageUrl} alt={sale.stylistName} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-tea-50 text-tea-800 font-black text-lg">
-                                                                {sale.stylistName?.charAt(0) || 'S'}
-                                                            </div>
-                                                        );
-                                                    })()}
+                                                    <ImageWithFallback
+                                                        src={stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName)?.imageUrl}
+                                                        alt={sale.stylistName}
+                                                        className="w-full h-full object-cover"
+                                                        fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 text-tea-300 p-2 shrink-0"
+                                                        FallbackComponent={User}
+                                                    />
                                                 </div>
                                                 <div className="space-y-1">
                                                     <p className="text-[12px] font-black text-tea-950 uppercase tracking-tight leading-none">{sale.stylistName || 'Expert Stylist'}</p>
@@ -169,9 +167,12 @@ const RecentActivity = () => {
                                             <div className="flex flex-wrap gap-1.5 max-w-[200px]">
                                                 {sale.products?.map((p, idx) => (
                                                     <div key={idx} className="flex items-center gap-1.5 p-1 bg-white border border-tea-100 shadow-xs rounded-lg">
-                                                        {p.imageUrl && (
-                                                            <img src={p.imageUrl} alt={p.productName} className="w-5 h-5 rounded object-cover" />
-                                                        )}
+                                                        <ImageWithFallback
+                                                            src={p.imageUrl}
+                                                            alt={p.productName}
+                                                            className="w-5 h-5 rounded object-cover"
+                                                            fallbackClassName="w-5 h-5 rounded object-contain filter bg-tea-50"
+                                                        />
                                                         <span className="text-[9px] font-black text-tea-800 uppercase tracking-tight">
                                                             {p.productName} <span className="text-tea-400">×{p.quantity}</span>
                                                         </span>
@@ -184,9 +185,9 @@ const RecentActivity = () => {
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-4">
+                                        <td className="px-2 py-4">
                                             <div className="flex items-center gap-3">
-                                                <Calendar className="w-4 h-4 text-tea-700" />
+                                                <Calendar className="text-tea-700" />
                                                 <div className="space-y-1">
                                                     <p className="text-[11px] font-black text-tea-950 uppercase tracking-tighter leading-none">
                                                         {new Date(sale.date || sale.createdAt?.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

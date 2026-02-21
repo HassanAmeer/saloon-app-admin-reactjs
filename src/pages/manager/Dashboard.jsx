@@ -35,6 +35,8 @@ import {
 import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
+import { DashboardSkeleton } from '../../components/Skeleton';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Dashboard = ({ forceSalonId }) => {
     const { user, type } = useAuth();
@@ -136,14 +138,7 @@ const Dashboard = ({ forceSalonId }) => {
     }, [sales]);
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 text-tea-700 animate-spin" />
-                    <p className="text-tea-500 font-black uppercase tracking-[0.2em] text-[10px]">Synchronizing Intelligence</p>
-                </div>
-            </div>
-        );
+        return <DashboardSkeleton />;
     }
 
     if (type === 'salonmanager' && !salonId) {
@@ -347,8 +342,13 @@ const Dashboard = ({ forceSalonId }) => {
                             {lastSoldProducts.map((product, index) => (
                                 <div key={`${product.productName}-${index}`} className="flex items-center gap-4 group cursor-pointer">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl bg-tea-50 border border-tea-100 flex items-center justify-center text-tea-600">
-                                            <Package className="w-6 h-6" />
+                                        <div className="w-12 h-12 rounded-2xl bg-tea-50 border border-tea-100 flex items-center justify-center text-tea-300 overflow-hidden shadow-inner">
+                                            <ImageWithFallback
+                                                src={product.imageUrl || product.image}
+                                                alt={product.productName}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 p-2 opacity-40 grayscale"
+                                            />
                                         </div>
                                     </div>
                                     <div className="flex-1">

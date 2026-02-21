@@ -5,6 +5,7 @@ import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
 import { db } from '../../lib/firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const LoginManager = () => {
     const [email, setEmail] = useState('');
@@ -67,8 +68,8 @@ const LoginManager = () => {
             <div className="max-w-md w-full relative z-10">
                 {/* Logo Section */}
                 <div className="flex items-center gap-2 text-center mb-10 group">
-                    <div className="inline-flex items-center justify-center w-24 h-24 mb-6 group-hover:scale-110 group-hover:rotate-180 transition-all duration-100">
-                        <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
+                    <div className="inline-flex items-center justify-center w-24 h-24 mb-6 group-hover:scale-110 group-hover:rotate-180 transition-all duration-100 shrink-0">
+                        <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-4xl font-black text-tea-900 mb-2 tracking-tight">
                         Salon Manager <span className="text-tea-700">Admin</span>

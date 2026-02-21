@@ -36,6 +36,7 @@ import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/ser
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardSkeleton } from '../../components/Skeleton';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Dashboard = ({ forceSalonId }) => {
     const { user, type } = useAuth();
@@ -368,22 +369,13 @@ const Dashboard = ({ forceSalonId }) => {
                             {lastSoldProducts.map((product, index) => (
                                 <div key={`${product.productName}-${index}`} className="flex items-center gap-4 group cursor-pointer">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl bg-tea-50 border border-tea-100/50 flex items-center justify-center text-tea-300 overflow-hidden shadow-inner">
-                                            {product.imageUrl || product.image ? (
-                                                <img
-                                                    src={product.imageUrl || product.image}
-                                                    alt={product.productName}
-                                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                                    onLoad={(e) => e.target.classList.add('opacity-100')}
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                        e.target.nextSibling.style.display = 'flex';
-                                                    }}
-                                                />
-                                            ) : null}
-                                            <div className="flex items-center justify-center w-full h-full bg-tea-50" style={{ display: (product.imageUrl || product.image) ? 'none' : 'flex' }}>
-                                                <Package className="w-5 h-5 opacity-40" />
-                                            </div>
+                                        <div className="w-12 h-12 rounded-xl bg-tea-50 border border-tea-100/50 flex items-center justify-center text-tea-300 overflow-hidden shadow-inner">
+                                            <ImageWithFallback
+                                                src={product.imageUrl || product.image}
+                                                alt={product.productName}
+                                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                                fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50"
+                                            />
                                         </div>
                                     </div>
                                     <div className="flex-1">

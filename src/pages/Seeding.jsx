@@ -9,6 +9,7 @@ import {
     Loader2,
     Activity
 } from 'lucide-react';
+import ImageWithFallback from '../components/ImageWithFallback';
 import { initializeData } from '../lib/services';
 import * as mockData from '../data-migration/mockData';
 
@@ -49,8 +50,8 @@ const Seeding = () => {
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
                     <div className="p-8 border-b border-gray-50 bg-gradient-to-r from-tea-700 to-tea-800">
                         <div className="flex items-center gap-4 text-white">
-                            <div className="w-12 h-12 flex items-center justify-center overflow-hidden">
-                                <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
+                            <div className="w-12 h-12 flex items-center justify-center overflow-hidden shrink-0">
+                                <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <h1 className="text-2xl font-bold">Database Migration</h1>

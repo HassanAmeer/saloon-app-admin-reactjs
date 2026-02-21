@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
 import { useAuth } from '../contexts/AuthContext';
+import ImageWithFallback from '../components/ImageWithFallback';
 
 const AIRecommendations = () => {
     const [recommendations, setRecommendations] = useState([]);
@@ -278,7 +279,7 @@ const AIRecommendations = () => {
             {filteredRecommendations.length === 0 && (
                 <div className="col-span-full card flex flex-col items-center justify-center py-20 text-center">
                     <div className="w-56 h-56 mb-6 opacity-80">
-                        <img src="/empty.png" alt="No recommendations" className="w-full h-full object-contain filter grayscale" />
+                        <ImageWithFallback src="/empty.png" alt="No recommendations" className="w-full h-full object-contain filter grayscale" />
                     </div>
                     <h3 className="text-xl font-bold text-tea-800 mb-2">No Recommendations Yet</h3>
                     <p className="text-gray-600 max-w-sm mx-auto">
@@ -381,13 +382,23 @@ const AIRecommendations = () => {
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <div className="aspect-square rounded-lg overflow-hidden border border-tea-200">
-                                                        <img src={selectedRec.hairAnalysis.images.before} alt="Before" className="w-full h-full object-cover" />
+                                                        <ImageWithFallback
+                                                            src={selectedRec.hairAnalysis.images.before}
+                                                            alt="Before"
+                                                            className="w-full h-full object-cover"
+                                                            fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20"
+                                                        />
                                                     </div>
                                                     <p className="text-center text-xs font-bold text-gray-500">BEFORE</p>
                                                 </div>
                                                 <div className="space-y-2">
                                                     <div className="aspect-square rounded-lg overflow-hidden border border-tea-200">
-                                                        <img src={selectedRec.hairAnalysis.images.after} alt="After" className="w-full h-full object-cover" />
+                                                        <ImageWithFallback
+                                                            src={selectedRec.hairAnalysis.images.after}
+                                                            alt="After"
+                                                            className="w-full h-full object-cover"
+                                                            fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20"
+                                                        />
                                                     </div>
                                                     <p className="text-center text-xs font-bold text-tea-700">AFTER</p>
                                                 </div>

@@ -10,6 +10,7 @@ import { subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 
 import { useSearchParams } from 'react-router-dom';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Sales = () => {
     const { user } = useAuth();
@@ -69,27 +70,27 @@ const Sales = () => {
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="space-y-1">
-                    <div className="h-10 w-64 skeleton rounded-lg" />
-                    <div className="h-4 w-48 skeleton rounded-lg" />
+                    <div className="h-10 w-64 skeleton shimmer rounded-lg" />
+                    <div className="h-4 w-48 skeleton shimmer rounded-lg" />
                 </div>
 
-                <div className="card h-16 skeleton rounded-xl" />
+                <div className="card h-16 skeleton shimmer rounded-xl" />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="card h-32 skeleton rounded-xl" />
+                        <div key={i} className="card h-32 skeleton shimmer rounded-xl" />
                     ))}
                 </div>
 
                 <div className="card overflow-hidden">
-                    <div className="h-12 border-b border-gray-100 skeleton" />
+                    <div className="h-12 border-b border-gray-100 skeleton shimmer" />
                     <div className="space-y-4 p-4">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                             <div key={i} className="flex gap-4 items-center">
-                                <div className="w-32 h-8 skeleton rounded" />
-                                <div className="flex-1 h-8 skeleton rounded" />
-                                <div className="w-48 h-8 skeleton rounded" />
-                                <div className="w-32 h-8 skeleton rounded" />
+                                <div className="w-32 h-8 skeleton shimmer rounded" />
+                                <div className="flex-1 h-8 skeleton shimmer rounded" />
+                                <div className="w-48 h-8 skeleton shimmer rounded" />
+                                <div className="w-32 h-8 skeleton shimmer rounded" />
                             </div>
                         ))}
                     </div>
@@ -258,7 +259,7 @@ const Sales = () => {
                 {filteredSales.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                         <div className="w-48 h-48 mb-6 opacity-80">
-                            <img src="/empty.png" alt="No sales" className="w-full h-full object-contain filter grayscale" />
+                            <ImageWithFallback src="/empty.png" alt="No sales" className="w-full h-full object-contain filter grayscale" />
                         </div>
                         <h3 className="text-xl font-bold text-tea-800 mb-2">No Sales Found</h3>
                         <p className="text-gray-600 max-w-sm mx-auto">

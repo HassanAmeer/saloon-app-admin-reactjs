@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { updateDocument, uploadImage, getDocument } from '../../lib/services';
 import { ProfileSkeleton } from '../../components/Skeleton';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Profile = () => {
     const { user, setUser } = useAuth();
@@ -158,13 +159,12 @@ const Profile = () => {
                     <div className="card text-center space-y-6">
                         <div className="relative inline-block">
                             <div className="w-40 h-40 rounded-3xl bg-tea-100 border-4 border-white shadow-xl overflow-hidden group">
-                                {previewUrl ? (
-                                    <img src={previewUrl} alt="Avatar" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-tea-300">
-                                        <User className="w-20 h-20" />
-                                    </div>
-                                )}
+                                <ImageWithFallback
+                                    src={previewUrl}
+                                    alt="Avatar"
+                                    className="w-full h-full object-cover"
+                                    fallbackClassName="w-full h-full flex items-center justify-center p-8 grayscale opacity-20 shrink-0"
+                                />
                                 <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                                     <Camera className="w-8 h-8 text-white" />
                                     <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />

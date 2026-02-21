@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Clients = () => {
     const [clients, setClients] = useState([]);
@@ -59,29 +60,29 @@ const Clients = () => {
             <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="space-y-1">
-                        <div className="h-10 w-64 skeleton rounded-lg" />
-                        <div className="h-4 w-96 skeleton rounded-lg" />
+                        <div className="h-10 w-64 skeleton shimmer rounded-lg" />
+                        <div className="h-4 w-96 skeleton shimmer rounded-lg" />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1 space-y-4">
-                        <div className="h-12 w-full skeleton rounded-lg" />
+                        <div className="h-12 w-full skeleton shimmer rounded-lg" />
                         <div className="space-y-2">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="h-20 w-full skeleton rounded-xl" />
+                                <div key={i} className="h-20 w-full skeleton shimmer rounded-xl" />
                             ))}
                         </div>
                     </div>
                     <div className="lg:col-span-2 space-y-6">
-                        <div className="card h-48 skeleton rounded-xl" />
+                        <div className="card h-48 skeleton shimmer rounded-xl" />
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="card h-32 skeleton rounded-xl" />
-                            <div className="card h-32 skeleton rounded-xl" />
+                            <div className="card h-32 skeleton shimmer rounded-xl" />
+                            <div className="card h-32 skeleton shimmer rounded-xl" />
                         </div>
                         <div className="space-y-4">
-                            <div className="h-8 w-48 skeleton rounded-lg" />
-                            <div className="card h-40 skeleton rounded-xl" />
+                            <div className="h-8 w-48 skeleton shimmer rounded-lg" />
+                            <div className="card h-40 skeleton shimmer rounded-xl" />
                         </div>
                     </div>
                 </div>
@@ -122,9 +123,15 @@ const Clients = () => {
                                     : 'bg-white border-gray-100 hover:border-tea-200 text-gray-900 shadow-sm'
                                     }`}
                             >
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${selectedClient?.id === client.id ? 'bg-white/20' : 'bg-tea-100'
+                                <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${selectedClient?.id === client.id ? 'bg-white/20' : 'bg-tea-100'
                                     }`}>
-                                    <User className={`w-6 h-6 ${selectedClient?.id === client.id ? 'text-white' : 'text-tea-700'}`} />
+                                    <ImageWithFallback
+                                        src={client.imageUrl}
+                                        alt={client.name}
+                                        className="w-full h-full object-cover"
+                                        fallbackClassName={`w-full h-full flex items-center justify-center p-2 opacity-50 grayscale ${selectedClient?.id === client.id ? 'invert text-white' : 'text-tea-700'
+                                            }`}
+                                    />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-bold truncate">{client.name}</p>
@@ -145,8 +152,13 @@ const Clients = () => {
                             {/* Profile Card */}
                             <div className="card bg-white">
                                 <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                                    <div className="w-24 h-24 bg-tea-100 rounded-full flex items-center justify-center">
-                                        <User className="w-12 h-12 text-tea-700" />
+                                    <div className="w-24 h-24 bg-tea-100 rounded-full overflow-hidden flex items-center justify-center">
+                                        <ImageWithFallback
+                                            src={selectedClient.imageUrl}
+                                            alt={selectedClient.name}
+                                            className="w-full h-full object-cover"
+                                            fallbackClassName="w-full h-full flex items-center justify-center p-5 opacity-40 grayscale"
+                                        />
                                     </div>
                                     <div className="flex-1 space-y-2">
                                         <h2 className="text-2xl font-bold text-tea-800">{selectedClient.name}</h2>

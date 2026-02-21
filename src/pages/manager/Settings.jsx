@@ -25,6 +25,7 @@ import { db } from '../../lib/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../../lib/services';
 import { cn } from '../../lib/utils';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -148,11 +149,12 @@ const Settings = () => {
                 <div className="absolute inset-0 p-8 lg:p-12 flex flex-col md:flex-row items-center md:items-center gap-8">
                     <div className="relative shrink-0 group/logo">
                         <div className="w-32 h-32 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden flex items-center justify-center transition-transform duration-500 group-hover/logo:scale-105">
-                            {formData.logoUrl ? (
-                                <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-contain p-4" />
-                            ) : (
-                                <Building2 className="w-12 h-12 text-white/40" />
-                            )}
+                            <ImageWithFallback
+                                src={formData.logoUrl}
+                                alt="Logo"
+                                className="w-full h-full object-contain p-4"
+                                fallbackClassName="w-full h-full flex items-center justify-center p-8 opacity-40 grayscale invert"
+                            />
                             <label className="absolute inset-0 bg-black/60 opacity-0 group-hover/logo:opacity-100 flex flex-col items-center justify-center transition-all cursor-pointer">
                                 <Camera className="w-6 h-6 text-white mb-1" />
                                 <span className="text-[7px] font-black text-white uppercase tracking-widest">Update Logo</span>

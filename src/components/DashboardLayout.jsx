@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../lib/utils';
+import ImageWithFallback from './ImageWithFallback';
 
 const DashboardLayout = () => {
     const { user, type, logout } = useAuth();
@@ -88,7 +89,7 @@ const DashboardLayout = () => {
             {/* Mobile Header */}
             <div className="lg:hidden backdrop-blur-md bg-white/80 border-b border-tea-700/10 px-4 py-4 flex items-center justify-between sticky top-0 z-50">
                 <div className="flex items-center gap-2">
-                    <img src="/logo.png" alt="salon Logo" className="w-8 h-8 object-contain" />
+                    <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-8 h-8 object-contain shrink-0" />
                     <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">salon Admin</h1>
                 </div>
                 <button
@@ -110,8 +111,8 @@ const DashboardLayout = () => {
                     {/* Logo Section */}
                     <div className="px-8 py-8">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 glass-card flex items-center justify-center p-2 rounded-xl group-hover:scale-110 transition-transform">
-                                <img src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
+                            <div className="w-12 h-12 glass-card flex items-center justify-center p-2 rounded-xl group-hover:scale-110 transition-transform shrink-0">
+                                <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-tea-900 tracking-tight">salon</h1>
@@ -166,12 +167,13 @@ const DashboardLayout = () => {
                     <div className="p-6 mt-auto">
                         <div className="p-4 glass-card border-none bg-tea-50/50 rounded-2xl">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-tea-500 to-tea-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-tea-700/20 overflow-hidden border-2 border-white transition-transform group-hover:scale-105">
-                                    {displayUser?.imageUrl ? (
-                                        <img src={displayUser.imageUrl} alt="User" className="w-full h-full object-cover" />
-                                    ) : (
-                                        displayUser?.name?.charAt(0) || displayUser?.email?.charAt(0).toUpperCase()
-                                    )}
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-tea-500 to-tea-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-tea-700/20 overflow-hidden border-2 border-white transition-transform group-hover:scale-105 shrink-0">
+                                    <ImageWithFallback
+                                        src={displayUser?.imageUrl}
+                                        alt="User"
+                                        className="w-full h-full object-cover"
+                                        fallbackClassName="w-full h-full flex items-center justify-center bg-gradient-to-tr from-tea-500 to-tea-700 p-2 text-white/50 grayscale opacity-50 shrink-0"
+                                    />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[11px] font-black text-tea-900 uppercase tracking-tight truncate">

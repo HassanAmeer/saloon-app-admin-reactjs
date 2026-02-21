@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const RecentActivity = () => {
     const { type, user } = useAuth();
@@ -106,13 +107,13 @@ const RecentActivity = () => {
                                         <td className="p-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-2xl bg-tea-900 border border-white/20 shadow-xl overflow-hidden shrink-0">
-                                                    {manager?.imageUrl ? (
-                                                        <img src={manager.imageUrl} alt={manager.name} className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center">
-                                                            <Building2 className="w-6 h-6 text-white" />
-                                                        </div>
-                                                    )}
+                                                    <ImageWithFallback
+                                                        src={manager?.imageUrl}
+                                                        alt={manager?.name}
+                                                        className="w-full h-full object-cover"
+                                                        fallbackClassName="w-full h-full flex items-center justify-center bg-tea-900 p-3 text-white/50 shrink-0"
+                                                        FallbackComponent={User}
+                                                    />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-tea-900 uppercase tracking-tight">{salon?.name || 'Unknown Salon'}</p>
@@ -123,16 +124,13 @@ const RecentActivity = () => {
                                         <td className="p-6">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-12 h-12 rounded-2xl bg-white border border-tea-100 shadow-sm overflow-hidden shrink-0">
-                                                    {(() => {
-                                                        const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
-                                                        return stylist?.imageUrl ? (
-                                                            <img src={stylist.imageUrl} alt={sale.stylistName} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-tea-50 text-tea-700 font-black text-lg">
-                                                                {sale.stylistName?.charAt(0) || 'S'}
-                                                            </div>
-                                                        );
-                                                    })()}
+                                                    <ImageWithFallback
+                                                        src={stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName)?.imageUrl}
+                                                        alt={sale.stylistName}
+                                                        className="w-full h-full object-cover"
+                                                        fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 text-tea-300 p-2 shrink-0"
+                                                        FallbackComponent={User}
+                                                    />
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-black text-tea-950 uppercase tracking-tight">{sale.stylistName || 'House Stylist'}</p>

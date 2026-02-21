@@ -17,7 +17,8 @@ import {
     uploadImage
 } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import ImageWithFallback from '../../components/ImageWithFallback';
 
 const Products = () => {
     const { user } = useAuth();
@@ -215,15 +216,11 @@ const Products = () => {
                     <div key={product.id} className="card hover:shadow-lg transition-shadow duration-200">
                         {/* Product Image */}
                         <div className="w-full h-48 scale-110 bg-gray-50 rounded-lg mb-2 flex items-center justify-center overflow-hidden border border-gray-100 p-1">
-                            <img
-                                src={product.imageUrl || '/empty.png'}
+                            <ImageWithFallback
+                                src={product.imageUrl}
                                 alt={product.name}
-                                className={product.imageUrl ? "w-full h-full object-cover" : "w-4/5 h-4/5 object-contain opacity-20 filter grayscale rounded-lg"}
-                                onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = '/empty.png';
-                                    e.target.className = "w-4/5 h-4/5 object-contain opacity-20 filter grayscale";
-                                }}
+                                className="w-full h-full object-cover"
+                                fallbackClassName="w-4/5 h-4/5 object-contain opacity-20 filter grayscale rounded-lg shrink-0"
                             />
                         </div>
 
@@ -314,7 +311,7 @@ const Products = () => {
             {filteredProducts.length === 0 && (
                 <div className="card flex flex-col items-center justify-center py-20 text-center">
                     <div className="w-64 h-64 mb-6 opacity-80">
-                        <img src="/empty.png" alt="No products" className="w-full h-full object-contain filter grayscale" />
+                        <ImageWithFallback src="/empty.png" alt="No products" className="w-full h-full object-contain filter grayscale" />
                     </div>
                     <h3 className="text-xl font-bold text-tea-800 mb-2">No Products Found</h3>
                     <p className="text-gray-600 max-w-sm">
@@ -395,8 +392,8 @@ const ProductModal = ({ mode, product, onClose, onSave }) => {
                         {/* Image Upload */}
                         <div className="flex flex-col items-center p-4 border-2 border-dashed border-gray-200 rounded-lg bg-gray-50">
                             {previewUrl ? (
-                                <div className="relative w-32 h-32 mb-2">
-                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover rounded-lg" />
+                                <div className="relative w-32 h-32 mb-2 rounded-lg overflow-hidden border border-tea-100">
+                                    <ImageWithFallback src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                                     <button
                                         type="button"
                                         onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
