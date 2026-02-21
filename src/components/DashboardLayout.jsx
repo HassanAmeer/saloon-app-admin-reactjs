@@ -34,7 +34,7 @@ const DashboardLayout = () => {
     const querySalonId = searchParams.get('salonId');
 
     // Determine if we are in impersonation mode
-    const isImpersonating = type === 'superadmin' && (querySalonId || location.pathname.startsWith('/manager'));
+    const isImpersonating = type === 'superadmin' && querySalonId;
 
     useEffect(() => {
         if (!isImpersonating || !querySalonId) {

@@ -12,6 +12,11 @@ const ImageWithFallback = ({
     const [imgSrc, setImgSrc] = useState(src || (FallbackComponent ? null : fallbackSrc));
     const [isError, setIsError] = useState(!src);
 
+    React.useEffect(() => {
+        setImgSrc(src || (FallbackComponent ? null : fallbackSrc));
+        setIsError(!src);
+    }, [src, FallbackComponent, fallbackSrc]);
+
     const handleError = () => {
         if (!isError) {
             setImgSrc(FallbackComponent ? null : fallbackSrc);
