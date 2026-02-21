@@ -5,7 +5,6 @@ import {
     User,
     Calendar,
     ChevronRight,
-    Loader2,
     MapPin,
     Droplets,
     History,
@@ -14,6 +13,7 @@ import {
 import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { Skeleton } from '../../components/Skeleton';
 
 const Clients = () => {
     const [clients, setClients] = useState([]);
@@ -56,33 +56,44 @@ const Clients = () => {
 
     if (loading) {
         return (
-
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="h-10 w-64 skeleton shimmer rounded-lg" />
-                        <div className="h-4 w-96 skeleton shimmer rounded-lg" />
+            <div className="space-y-10 animate-in fade-in duration-500">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-64 lg:w-96" />
+                        <Skeleton className="h-4 w-48" />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1 space-y-4">
-                        <div className="h-12 w-full skeleton shimmer rounded-lg" />
-                        <div className="space-y-2">
+                        <Skeleton className="h-14 w-full rounded-2xl" />
+                        <div className="space-y-4">
                             {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="h-20 w-full skeleton shimmer rounded-xl" />
+                                <Skeleton key={i} className="h-24 w-full rounded-2xl" />
                             ))}
                         </div>
                     </div>
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="card h-48 skeleton shimmer rounded-xl" />
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="card h-32 skeleton shimmer rounded-xl" />
-                            <div className="card h-32 skeleton shimmer rounded-xl" />
+                    <div className="lg:col-span-2 space-y-8">
+                        <div className="glass-card p-10 space-y-6">
+                            <div className="flex items-center gap-6">
+                                <Skeleton className="w-24 h-24 rounded-3xl" />
+                                <div className="space-y-3 flex-1">
+                                    <Skeleton className="h-8 w-48" />
+                                    <Skeleton className="h-4 w-64" />
+                                </div>
+                            </div>
                         </div>
-                        <div className="space-y-4">
-                            <div className="h-8 w-48 skeleton shimmer rounded-lg" />
-                            <div className="card h-40 skeleton shimmer rounded-xl" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Skeleton className="h-32 w-full rounded-3xl" />
+                            <Skeleton className="h-32 w-full rounded-3xl" />
+                        </div>
+                        <div className="glass-card p-8 space-y-6">
+                            <Skeleton className="h-8 w-48" />
+                            <div className="space-y-4">
+                                {[1, 2, 3].map(i => (
+                                    <Skeleton key={i} className="h-20 w-full rounded-2xl" />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>

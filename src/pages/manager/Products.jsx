@@ -19,6 +19,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { Skeleton } from '../../components/Skeleton';
 
 const Products = () => {
     const { user } = useAuth();
@@ -122,34 +123,30 @@ const Products = () => {
 
     if (loading) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="space-y-1">
-                        <div className="h-10 w-64 skeleton rounded-lg" />
-                        <div className="h-4 w-48 skeleton rounded-lg" />
+            <div className="space-y-10 animate-in fade-in duration-500">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-64 lg:w-96" />
+                        <Skeleton className="h-4 w-48" />
                     </div>
-                    <div className="h-10 w-40 skeleton rounded-lg" />
+                    <Skeleton className="h-12 w-48 rounded-xl" />
                 </div>
 
-                <div className="card h-16 skeleton rounded-xl" />
+                <div className="glass-card p-4">
+                    <Skeleton className="h-14 w-full rounded-2xl" />
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="card space-y-4">
-                            <div className="h-48 skeleton rounded-lg" />
-                            <div className="space-y-2">
-                                <div className="h-6 w-3/4 skeleton rounded" />
-                                <div className="h-4 w-1/2 skeleton rounded" />
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <div className="h-6 w-1/4 skeleton rounded" />
-                                <div className="h-6 w-1/4 skeleton rounded" />
-                            </div>
-                            <div className="h-12 w-full skeleton rounded" />
-                            <div className="flex gap-2">
-                                <div className="h-8 flex-1 skeleton rounded" />
-                                <div className="h-8 w-10 skeleton rounded" />
-                                <div className="h-8 w-10 skeleton rounded" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div key={i} className="glass-card p-2 space-y-4">
+                            <Skeleton className="h-48 w-full rounded-xl" />
+                            <div className="p-4 space-y-3">
+                                <Skeleton className="h-6 w-3/4" />
+                                <Skeleton className="h-4 w-1/4" />
+                                <div className="pt-4 flex gap-2">
+                                    <Skeleton className="h-10 flex-1 rounded-xl" />
+                                    <Skeleton className="h-10 w-10 rounded-xl" />
+                                </div>
                             </div>
                         </div>
                     ))}

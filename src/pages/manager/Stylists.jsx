@@ -8,7 +8,6 @@ import {
     UserX,
     Check,
     X,
-    Loader2,
     Users,
     TrendingUp,
     Package,
@@ -40,8 +39,9 @@ import {
     Area
 } from 'recharts';
 
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { ManagersSkeleton } from '../../components/Skeleton';
 
 const Stylists = () => {
     const { user } = useAuth();
@@ -103,7 +103,7 @@ const Stylists = () => {
         }
     };
 
-    if (loading) return <div className="flex items-center justify-center min-h-[400px]"><Loader2 className="w-10 h-10 text-tea-700 animate-spin" /></div>;
+    if (loading) return <ManagersSkeleton />;
 
     if (viewingDetail && selectedStylist) {
         return <StylistDetail stylist={selectedStylist} onBack={() => setViewingDetail(false)} />;

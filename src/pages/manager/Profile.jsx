@@ -23,12 +23,13 @@ import { updateDocument, uploadImage, subscribeToCollection, getDocument, subscr
 import { cn } from '../../lib/utils';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { ProfileSkeleton } from '../../components/Skeleton';
 
 const Profile = () => {
     const { user, setUser, type } = useAuth();
     const [searchParams] = useSearchParams();
     const { showToast } = useToast();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [salonData, setSalonData] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
 
@@ -66,7 +67,10 @@ const Profile = () => {
                 }
             }
 
-            if (!targetUser?.id) return;
+            if (!targetUser?.id) {
+                setLoading(false);
+                return;
+            }
 
             try {
                 const fullUserData = await getDocument(collectionName, targetUser.id);
@@ -95,6 +99,8 @@ const Profile = () => {
                 }
             } catch (error) {
                 console.error("Error fetching full user data:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -189,6 +195,8 @@ const Profile = () => {
             setLoading(false);
         }
     };
+
+    if (loading) return <ProfileSkeleton />;
 
     return (
         <div className="max-w-5xl mx-auto pb-20 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">

@@ -12,6 +12,7 @@ import {
 import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { RecentActivitySkeleton } from '../../components/Skeleton';
 
 const RecentActivity = () => {
     const { type, user } = useAuth();
@@ -60,6 +61,8 @@ const RecentActivity = () => {
             act.id?.toLowerCase().includes(searchTerm.toLowerCase())
         )
         .sort((a, b) => new Date(b.date || b.createdAt?.toDate()) - new Date(a.date || a.createdAt?.toDate()));
+
+    if (loading) return <RecentActivitySkeleton />;
 
     return (
         <div className="space-y-10 animate-in fade-in duration-700">

@@ -3,14 +3,14 @@ import {
     Calendar,
     DollarSign,
     Package,
-    TrendingUp,
-    Loader2
+    TrendingUp
 } from 'lucide-react';
 import { subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 
 import { useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { Skeleton, TableSkeleton } from '../../components/Skeleton';
 
 const Sales = () => {
     const { user } = useAuth();
@@ -68,33 +68,32 @@ const Sales = () => {
 
     if (loading) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="space-y-1">
-                    <div className="h-10 w-64 skeleton shimmer rounded-lg" />
-                    <div className="h-4 w-48 skeleton shimmer rounded-lg" />
+            <div className="space-y-10 animate-in fade-in duration-500">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                    <div className="space-y-4">
+                        <Skeleton className="h-12 w-64 lg:w-96" />
+                        <Skeleton className="h-4 w-48" />
+                    </div>
                 </div>
 
-                <div className="card h-16 skeleton shimmer rounded-xl" />
+                <div className="glass-card p-4">
+                    <Skeleton className="h-14 w-full rounded-2xl" />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {[1, 2, 3, 4].map((i) => (
-                        <div key={i} className="card h-32 skeleton shimmer rounded-xl" />
+                        <div key={i} className="stat-card">
+                            <div className="flex items-start justify-between mb-4">
+                                <Skeleton className="w-10 h-10 rounded-xl" />
+                                <Skeleton className="w-16 h-5 rounded-full" />
+                            </div>
+                            <Skeleton className="h-9 w-24 mb-2" />
+                            <Skeleton className="h-3 w-32" />
+                        </div>
                     ))}
                 </div>
 
-                <div className="card overflow-hidden">
-                    <div className="h-12 border-b border-gray-100 skeleton shimmer" />
-                    <div className="space-y-4 p-4">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                            <div key={i} className="flex gap-4 items-center">
-                                <div className="w-32 h-8 skeleton shimmer rounded" />
-                                <div className="flex-1 h-8 skeleton shimmer rounded" />
-                                <div className="w-48 h-8 skeleton shimmer rounded" />
-                                <div className="w-32 h-8 skeleton shimmer rounded" />
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <TableSkeleton />
             </div>
         );
     }

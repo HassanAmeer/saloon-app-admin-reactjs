@@ -26,6 +26,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../../lib/services';
 import { cn } from '../../lib/utils';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { ProfileSkeleton } from '../../components/Skeleton';
 
 import { useSearchParams } from 'react-router-dom';
 
@@ -126,17 +127,7 @@ const Settings = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                <div className="relative">
-                    <div className="w-16 h-16 border-4 border-tea-100 border-t-tea-600 rounded-full animate-spin" />
-                    <SettingsIcon className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 text-tea-600" />
-                </div>
-                <p className="text-tea-800 font-black uppercase tracking-[0.2em] text-[10px] animate-pulse">Synchronizing Platform</p>
-            </div>
-        );
-    }
+    if (loading) return <ProfileSkeleton />;
 
     return (
         <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700">
