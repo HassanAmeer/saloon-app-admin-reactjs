@@ -35,6 +35,7 @@ import {
 import { subscribeToCollection, subscribeToCollectionGroup } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
+import { DashboardSkeleton } from '../../components/Skeleton';
 
 const Dashboard = ({ forceSalonId }) => {
     const { user, type } = useAuth();
@@ -163,14 +164,7 @@ const Dashboard = ({ forceSalonId }) => {
 
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-12 h-12 text-tea-700 animate-spin" />
-                    <p className="text-tea-500 font-black uppercase tracking-[0.2em] text-[10px]">Synchronizing Intelligence</p>
-                </div>
-            </div>
-        );
+        return <DashboardSkeleton />;
     }
 
     if (type === 'salonmanager' && !salonId) {

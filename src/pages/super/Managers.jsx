@@ -23,6 +23,7 @@ import {
     deleteDocument
 } from '../../lib/services';
 import { useNavigate } from 'react-router-dom';
+import { TableSkeleton } from '../../components/Skeleton';
 
 const Managers = () => {
     const navigate = useNavigate();
@@ -168,11 +169,7 @@ const Managers = () => {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-10 h-10 text-tea-600 animate-spin" />
-            </div>
-        );
+        return <TableSkeleton rows={4} cols={5} />;
     }
 
     return (

@@ -15,10 +15,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { updateDocument, uploadImage, getDocument } from '../../lib/services';
+import { ProfileSkeleton } from '../../components/Skeleton';
 
 const Profile = () => {
     const { user, setUser } = useAuth();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [success, setSuccess] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
@@ -60,6 +61,8 @@ const Profile = () => {
                 }
             } catch (error) {
                 console.error("Error fetching full user data:", error);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -137,6 +140,10 @@ const Profile = () => {
             setLoading(false);
         }
     };
+
+    if (loading) {
+        return <ProfileSkeleton />;
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
