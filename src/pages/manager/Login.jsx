@@ -39,8 +39,11 @@ const LoginManager = () => {
                 console.log("Manager document found:", doc.data());
                 const userData = {
                     id: doc.id,
-                    ...doc.data(),
-                    role: 'manager'
+                    name: doc.data().name,
+                    email: doc.data().email,
+                    imageUrl: doc.data().imageUrl || '',
+                    type: 'salonmanager',
+                    salonId: doc.data().salonId || null
                 };
 
                 login(userData);

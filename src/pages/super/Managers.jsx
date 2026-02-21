@@ -95,7 +95,7 @@ const Managers = () => {
             if (modalMode === 'add') {
                 const managerRes = await createDocument('salon_managers', {
                     ...data.manager,
-                    role: 'manager',
+                    type: 'salonmanager',
                     status: 'Active',
                     createdAt: new Date()
                 });

@@ -23,7 +23,7 @@ import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 
 const AppConfig = () => {
-    const { user, role } = useAuth();
+    const { user, type } = useAuth();
     const [configs, setConfigs] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -32,12 +32,12 @@ const AppConfig = () => {
     // Subscribe to app configuration
     useEffect(() => {
         const fetchConfig = async () => {
-            if (!user?.salonId && role !== 'super') {
+            if (!user?.salonId && type !== 'superadmin') {
                 setLoading(false);
                 return;
             }
             try {
-                const configRef = role === 'super'
+                const configRef = type === 'superadmin'
                     ? doc(db, 'settings', 'platform_config')
                     : doc(db, `salons/${user.salonId}/settings`, 'app_config');
                 const configSnap = await getDoc(configRef);
@@ -81,13 +81,13 @@ const AppConfig = () => {
         };
 
         fetchConfig();
-    }, [user?.salonId]);
+    }, [user?.salonId, type]);
 
     const handleSave = async () => {
-        if (!user?.salonId && role !== 'super') return;
+        if (!user?.salonId && type !== 'superadmin') return;
         setIsSaving(true);
         try {
-            const configRef = role === 'super'
+            const configRef = type === 'superadmin'
                 ? doc(db, 'settings', 'platform_config')
                 : doc(db, `salons/${user.salonId}/settings`, 'app_config');
             await setDoc(configRef, configs);

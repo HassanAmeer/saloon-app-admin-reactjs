@@ -2,12 +2,13 @@
 
 // Mock data for Phase 1 - Static UI
 
+// super_admin_setting: have on one document id is : settings
 export const mockSuperAdmin = {
     id: "settings",
     email: "admin@gmail.com",
     password: "12345678",
     name: "Super Admin",
-    role: "super",
+    type: "superadmin",
     address: "lahore",
     bio: "",
     phone: "3012345678",
@@ -25,7 +26,7 @@ export const mockSalonManagers = [
         skills: "Management, Styling, Customer Service",
         status: "Active",
         salonId: "salon-1",
-        role: "manager",
+        type: "salonmanager",
         imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop"
     },
     {
@@ -37,7 +38,7 @@ export const mockSalonManagers = [
         bio: "Operations specialist focused on premium client experiences.",
         status: "Active",
         salonId: "salon-1",
-        role: "manager",
+        type: "salonmanager",
         imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop"
     },
     {
@@ -49,7 +50,7 @@ export const mockSalonManagers = [
         bio: "Creative director with a focus on sustainable beauty practices.",
         status: "Active",
         salonId: "salon-1",
-        role: "manager",
+        type: "salonmanager",
         imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop"
     }
 ];

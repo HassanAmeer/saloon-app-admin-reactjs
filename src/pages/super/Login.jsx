@@ -40,8 +40,10 @@ const LoginSuper = () => {
                     console.log("Credentials matched successfully.");
                     const userData = {
                         id: docSnap.id,
-                        ...data,
-                        role: 'super'
+                        name: data.name,
+                        email: data.email,
+                        imageUrl: data.imageUrl || '',
+                        type: 'superadmin'
                     };
 
                     login(userData);

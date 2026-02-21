@@ -37,7 +37,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 
 const Dashboard = ({ forceSalonId }) => {
-    const { user, role } = useAuth();
+    const { user, type } = useAuth();
     const [searchParams] = useSearchParams();
     const [period, setPeriod] = useState('month');
     const [sales, setSales] = useState([]);
@@ -49,7 +49,7 @@ const Dashboard = ({ forceSalonId }) => {
 
     const querySalonId = searchParams.get('salonId');
     const salonId = forceSalonId || querySalonId || user?.salonId;
-    const isImpersonating = role === 'super' && querySalonId;
+    const isImpersonating = type === 'superadmin' && querySalonId;
 
     // Subscribe to all collections scoped by salonId
     useEffect(() => {
@@ -65,7 +65,7 @@ const Dashboard = ({ forceSalonId }) => {
                 subscribeToCollectionGroup('Ai recommendations', setRecommendations, [{ field: 'salonId', operator: '==', value: salonId }])
             ];
             timeout = setTimeout(() => setLoading(false), 1000);
-        } else if (role === 'super') {
+        } else if (type === 'superadmin') {
             // Aggregate view for Super Admin (all salons)
             unsubs = [
                 subscribeToCollectionGroup('sales', setSales),
@@ -84,7 +84,7 @@ const Dashboard = ({ forceSalonId }) => {
             unsubs.forEach(unsub => unsub?.());
             if (timeout) clearTimeout(timeout);
         };
-    }, [salonId, role]);
+    }, [salonId, type]);
 
     // Derived Statistics
     const dashboardStats = useMemo(() => {
@@ -146,7 +146,7 @@ const Dashboard = ({ forceSalonId }) => {
         );
     }
 
-    if (role === 'manager' && !salonId) {
+    if (type === 'salonmanager' && !salonId) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="glass-card p-10 text-center space-y-4 max-w-md">
@@ -209,7 +209,7 @@ const Dashboard = ({ forceSalonId }) => {
 
             {/* Key Performance Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {role === 'super' && !salonId ? (
+                {type === 'superadmin' && !salonId ? (
                     <>
                         <MetricCard
                             label="salon Managers"

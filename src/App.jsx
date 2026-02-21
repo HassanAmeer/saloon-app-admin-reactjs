@@ -41,7 +41,7 @@ const AppRoutes = () => {
                     !isAuthenticated ? (
                         <LoginManager />
                     ) : (
-                        <Navigate to={user?.role === 'super' ? '/super/dashboard' : '/manager/dashboard'} replace />
+                        <Navigate to={user?.type === 'superadmin' ? '/super/dashboard' : '/manager/dashboard'} replace />
                     )
                 }
             />
@@ -54,7 +54,7 @@ const AppRoutes = () => {
                         !isAuthenticated ? (
                             <LoginSuper />
                         ) : (
-                            user?.role === 'manager' ? (
+                            user?.type === 'salonmanager' ? (
                                 <Navigate to="/manager/dashboard" replace />
                             ) : (
                                 <Navigate to="/super/dashboard" replace />
@@ -64,7 +64,7 @@ const AppRoutes = () => {
                 />
                 <Route
                     element={
-                        <ProtectedRoute requiredRole="super">
+                        <ProtectedRoute requiredType="superadmin">
                             <DashboardLayout />
                         </ProtectedRoute>
                     }
@@ -82,7 +82,7 @@ const AppRoutes = () => {
             <Route
                 path="/manager"
                 element={
-                    <ProtectedRoute requiredRole="manager">
+                    <ProtectedRoute requiredType="salonmanager">
                         <DashboardLayout />
                     </ProtectedRoute>
                 }

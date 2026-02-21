@@ -86,8 +86,13 @@ const Profile = () => {
             await updateDocument('super_admin_setting', 'settings', updateData);
 
             // Update local state
-            const updatedUser = { ...user, ...updateData };
-            delete updatedUser.password;
+            const updatedUser = {
+                id: 'settings',
+                name: updateData.name,
+                email: updateData.email,
+                imageUrl: updateData.imageUrl,
+                type: 'superadmin'
+            };
             setUser(updatedUser);
             localStorage.setItem('salon_user', JSON.stringify(updatedUser));
 

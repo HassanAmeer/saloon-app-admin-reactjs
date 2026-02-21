@@ -13,7 +13,7 @@ import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/ser
 import { useAuth } from '../../contexts/AuthContext';
 
 const RecentActivity = () => {
-    const { role, user } = useAuth();
+    const { type, user } = useAuth();
     const [activities, setActivities] = useState([]);
     const [managers, setManagers] = useState([]);
     const [salons, setSalons] = useState([]);
@@ -24,7 +24,7 @@ const RecentActivity = () => {
     useEffect(() => {
         let unsubs = [];
 
-        if (role === 'super') {
+        if (type === 'superadmin') {
             unsubs = [
                 subscribeToCollectionGroup('sales', setActivities),
                 subscribeToCollection('salon_managers', setManagers),
@@ -50,7 +50,7 @@ const RecentActivity = () => {
             unsubs.forEach(unsub => unsub?.());
             if (timeout) clearTimeout(timeout);
         };
-    }, [role, user?.salonId]);
+    }, [type, user?.salonId]);
 
     const filteredActivities = activities
         .filter(act =>

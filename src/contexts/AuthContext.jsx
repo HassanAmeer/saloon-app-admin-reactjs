@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
     const value = {
         user,
         setUser,
-        role: user?.role,
+        type: user?.type,
         isAuthenticated,
         loading,
         login,

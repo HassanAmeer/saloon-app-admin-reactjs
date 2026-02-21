@@ -23,7 +23,7 @@ import { updateDocument, uploadImage, subscribeToCollection } from '../../lib/se
 import { cn } from '../../lib/utils';
 
 const Profile = () => {
-    const { user, setUser, role } = useAuth();
+    const { user, setUser, type } = useAuth();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [salonData, setSalonData] = useState(null);
@@ -56,7 +56,7 @@ const Profile = () => {
             });
             setPreviewUrl(user.imageUrl || null);
 
-            if (role === 'manager' && user.salonId) {
+            if (type === 'salonmanager' && user.salonId) {
                 const unsub = subscribeToCollection('salons', (salons) => {
                     const mySalon = salons.find(s => s.id === user.salonId);
                     if (mySalon) setSalonData(mySalon);
@@ -64,7 +64,7 @@ const Profile = () => {
                 return () => unsub();
             }
         }
-    }, [user, role]);
+    }, [user, type]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -81,7 +81,7 @@ const Profile = () => {
         try {
             let imageUrl = formData.imageUrl;
             if (selectedFile) {
-                const folder = role === 'super' ? 'super_admins' : 'managers';
+                const folder = type === 'superadmin' ? 'super_admin' : 'managers';
                 const uploadedUrl = await uploadImage(selectedFile, `avatars/${folder}_${user.id}_${Date.now()}`);
                 if (uploadedUrl) {
                     imageUrl = uploadedUrl;
@@ -102,10 +102,17 @@ const Profile = () => {
                 updateData.password = formData.password;
             }
 
-            const collectionName = role === 'super' ? 'super_admins' : 'salon_managers';
+            const collectionName = user.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
             await updateDocument(collectionName, user.id, updateData);
 
-            const updatedUser = { ...user, ...updateData };
+            const updatedUser = {
+                id: user.id,
+                name: updateData.name,
+                email: updateData.email,
+                imageUrl: updateData.imageUrl,
+                type: 'salonmanager',
+                salonId: user.salonId
+            };
             setUser(updatedUser);
             localStorage.setItem('salon_user', JSON.stringify(updatedUser));
 
@@ -158,9 +165,9 @@ const Profile = () => {
                     <div className="flex flex-wrap justify-center md:justify-start gap-4">
                         <div className="px-5 py-2 rounded-2xl bg-tea-900 text-tea-50 text-[10px] font-black uppercase tracking-[0.15em] flex items-center gap-2 shadow-lg shadow-tea-900/20">
                             <ShieldCheck className="w-3.5 h-3.5" />
-                            {role === 'super' ? 'Platform Authority' : 'Salon Executive'}
+                            {type === 'superadmin' ? 'Platform Authority' : 'Salon Executive'}
                         </div>
-                        {role === 'manager' && salonData && (
+                        {type === 'salonmanager' && salonData && (
                             <div className="px-5 py-2 rounded-2xl bg-white border border-tea-100 text-tea-700 text-[10px] font-black uppercase tracking-[0.15em] flex items-center gap-2 shadow-sm">
                                 <Building2 className="w-3.5 h-3.5" />
                                 {salonData.name}
@@ -208,7 +215,7 @@ const Profile = () => {
                         </div>
 
                         {/* Brand Field (Conditional) */}
-                        {role === 'manager' && (
+                        {type === 'salonmanager' && (
                             <div className="space-y-3">
                                 <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Salon Brand</label>
                                 <input
@@ -221,7 +228,7 @@ const Profile = () => {
                         )}
 
                         {/* Address Field */}
-                        <div className={cn("space-y-3", role === 'super' ? "col-span-1" : "col-span-1")}>
+                        <div className={cn("space-y-3", type === 'superadmin' ? "col-span-1" : "col-span-1")}>
                             <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Professional Address</label>
                             <input
                                 className="input-field bg-white/60 h-14"
@@ -253,7 +260,7 @@ const Profile = () => {
                         </div>
 
                         {/* Bio Field (Conditional) */}
-                        {role === 'manager' && (
+                        {type === 'salonmanager' && (
                             <div className="space-y-3 col-span-full pt-4">
                                 <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Executive Narrative</label>
                                 <textarea

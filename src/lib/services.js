@@ -125,7 +125,7 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
 
         // 1. Seed Global Super Admins
         onProgress({ status: 'seeding', label: 'Super Admins', count: 1 });
-        await setDoc(doc(db, 'super_admin_setting', mockSuperAdmin.id), { ...mockSuperAdmin, role: 'super', createdAt: serverTimestamp() });
+        await setDoc(doc(db, 'super_admin_setting', mockSuperAdmin.id), { ...mockSuperAdmin, createdAt: serverTimestamp() });
 
         // 2. Seed Global Salon Managers (for login reference)
         onProgress({ status: 'seeding', label: 'Salon Managers', current: 0, total: mockSalonManagers.length });

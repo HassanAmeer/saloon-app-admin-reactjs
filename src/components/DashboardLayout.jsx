@@ -18,7 +18,7 @@ import { useState } from 'react';
 import { cn } from '../lib/utils';
 
 const DashboardLayout = () => {
-    const { user, role, logout } = useAuth();
+    const { user, type, logout } = useAuth();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -45,7 +45,7 @@ const DashboardLayout = () => {
         { path: '/super/profile', icon: Users, label: 'My Profile' },
     ];
 
-    const navItems = role === 'super' ? superNavItems : managerNavItems;
+    const navItems = type === 'superadmin' ? superNavItems : managerNavItems;
 
     return (
         <div className="min-h-screen bg-tea-50/30 flex flex-col lg:flex-row">
@@ -80,7 +80,7 @@ const DashboardLayout = () => {
                             <div>
                                 <h1 className="text-xl font-bold text-tea-900 tracking-tight">salon</h1>
                                 <p className="text-xs font-medium text-tea-500 uppercase tracking-widest">
-                                    {role === 'super' ? 'Super Admin' : 'Manager'}
+                                    {type === 'superadmin' ? 'Super Admin' : 'Manager'}
                                 </p>
                             </div>
                         </div>
