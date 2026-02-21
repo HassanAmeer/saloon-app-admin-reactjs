@@ -64,9 +64,9 @@ const DashboardLayout = () => {
 
     const managerNavItems = [
         { path: '/manager/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/manager/activity', icon: Activity, label: 'Recent Activity' },
         { path: '/manager/stylists', icon: Users, label: 'Stylists' },
         { path: '/manager/products', icon: Package, label: 'Products' },
+        { path: '/manager/activity', icon: Activity, label: 'Recent Activity' },
         { path: '/manager/sales', icon: TrendingUp, label: 'Sales & Analytics' },
         { path: '/manager/app-config', icon: Settings, label: 'App Config' },
         { path: '/manager/profile', icon: Users, label: 'Profile' },
