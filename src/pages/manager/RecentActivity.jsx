@@ -126,7 +126,14 @@ const RecentActivity = () => {
                                 const salon = salons.find(s => s.id === sale.salonId);
                                 const manager = managers.find(m => m.salonId === sale.salonId);
                                 const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
-                                const saleDate = sale.date || sale.createdAt?.toDate();
+                                const parseDate = (d) => {
+                                    if (!d) return new Date();
+                                    if (d.toDate) return d.toDate(); // Firestore Timestamp
+                                    const dateObj = new Date(d);
+                                    return isNaN(dateObj.getTime()) ? new Date() : dateObj;
+                                };
+
+                                const saleDate = parseDate(sale.date || sale.createdAt);
                                 const amount = (sale.totalAmount || sale.total || 0).toFixed(2);
 
                                 if (isManager) {
@@ -177,12 +184,23 @@ const RecentActivity = () => {
                                             {/* Sold Products */}
                                             <td className="p-6">
                                                 {sale.products && sale.products.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                                                    <div className="flex flex-wrap gap-2 max-w-[220px]">
                                                         {sale.products.map((p, idx) => (
-                                                            <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-tea-100 rounded-lg text-[9px] font-black text-tea-700 uppercase tracking-widest shadow-sm">
-                                                                <Package className="w-2.5 h-2.5 text-tea-400" />
-                                                                {p.productName} <span className="text-tea-400">×{p.quantity}</span>
-                                                            </span>
+                                                            <div key={idx} className="flex items-center gap-2 p-1.5 bg-white border border-tea-100 rounded-xl shadow-sm min-w-[120px]">
+                                                                <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-tea-50">
+                                                                    <ImageWithFallback
+                                                                        src={p.imageUrl}
+                                                                        alt={p.productName}
+                                                                        className="w-full h-full object-cover"
+                                                                        fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 p-1"
+                                                                        FallbackComponent={Package}
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <p className="text-[9px] font-black text-tea-900 uppercase leading-none tracking-tight">{p.productName}</p>
+                                                                    <p className="text-[10px] font-black text-tea-400 mt-0.5">×{p.quantity}</p>
+                                                                </div>
+                                                            </div>
                                                         ))}
                                                     </div>
                                                 ) : (
@@ -256,16 +274,31 @@ const RecentActivity = () => {
                                             </div>
                                         </td>
                                         <td className="p-6">
-                                            <div className="flex flex-wrap gap-1.5 max-w-xs">
-                                                {sale.products?.map((p, idx) => (
-                                                    <span key={idx} className="px-3 py-1 bg-white border border-tea-100 rounded-lg text-[9px] font-black text-tea-700 uppercase tracking-widest shadow-sm">
-                                                        {p.productName} <span className="text-tea-400">×{p.quantity}</span>
-                                                    </span>
-                                                ))}
-                                                {(!sale.products || sale.products.length === 0) && (
-                                                    <span className="text-[10px] font-bold text-tea-400 italic">Consultation Only</span>
-                                                )}
-                                            </div>
+                                            {sale.products && sale.products.length > 0 ? (
+                                                <div className="flex items-center gap-2">
+                                                    <div className="flex -space-x-3">
+                                                        {sale.products.slice(0, 3).map((p, idx) => (
+                                                            <div key={idx} className="w-10 h-10 rounded-xl bg-white border-2 border-white shadow-md overflow-hidden ring-1 ring-tea-50">
+                                                                <ImageWithFallback
+                                                                    src={p.imageUrl}
+                                                                    alt={p.productName}
+                                                                    className="w-full h-full object-cover"
+                                                                    fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 p-2"
+                                                                    FallbackComponent={Package}
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest">
+                                                            {sale.products[0].productName}
+                                                            {sale.products.length > 1 && <span className="text-tea-400 ml-1">+ {sale.products.length - 1} more</span>}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-tea-400 italic">Consultation</span>
+                                            )}
                                         </td>
                                         <td className="p-6">
                                             <div className="flex items-center gap-2">

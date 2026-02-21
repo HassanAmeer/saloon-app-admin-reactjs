@@ -141,29 +141,39 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
             mockAIRecommendations,
             mockSuperAdmin,
             mockSalonManagers,
-            mockSalon,
+            mockSalons,
             mockConfig,
+            mockConfigs,
             mockClients
         } = mockData;
 
-        // 1. Seed Global Super Admins
-        onProgress({ status: 'seeding', label: 'Super Admins', count: 1 });
-        await setDoc(doc(db, 'super_admin_setting', mockSuperAdmin.id), { ...mockSuperAdmin, createdAt: serverTimestamp() });
+        // 1. Seed Global Super Admins (Protected Seed)
+        onProgress({ status: 'seeding', label: 'Super Admins' });
+        const adminRef = doc(db, 'super_admin_setting', mockSuperAdmin.id);
+        const adminSnap = await getDoc(adminRef);
+
+        if (adminSnap.exists()) {
+            // Only update essential fields to avoid wiping custom existing data like special bio/address
+            await setDoc(adminRef, { ...mockSuperAdmin, updatedAt: serverTimestamp() }, { merge: true });
+        } else {
+            await setDoc(adminRef, { ...mockSuperAdmin, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        }
+        onProgress({ status: 'success', label: 'Super Admins', count: 1 });
 
         // 2. Seed Global Salon Managers (for login reference)
-        onProgress({ status: 'seeding', label: 'Salon Managers', current: 0, total: mockSalonManagers.length });
-        let managerCount = 0;
+        onProgress({ status: 'seeding', label: 'Salon Managers' });
         for (const manager of mockSalonManagers) {
             await setDoc(doc(db, 'salon_managers', manager.id), { ...manager, createdAt: serverTimestamp() });
-            managerCount++;
-            onProgress({ status: 'seeding', label: 'Salon Managers', current: managerCount, total: mockSalonManagers.length });
         }
+        onProgress({ status: 'success', label: 'Salon Managers', count: mockSalonManagers.length });
 
         // 3. Seed Global Platform Config
+        onProgress({ status: 'seeding', label: 'Platform Config' });
         await setDoc(doc(db, 'settings', 'platform_config'), { ...mockConfig, updatedAt: serverTimestamp() });
+        onProgress({ status: 'success', label: 'Platform Config', count: 1 });
 
         // 4. Seed Nested Salon Structure
-        const salons = [mockSalon]; // In real scenario, loop through all salons
+        const salons = mockSalons || [];
         let salonIndex = 0;
         for (const salon of salons) {
             salonIndex++;
@@ -176,22 +186,29 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
             await setDoc(doc(db, `${salonPath}/settings`, 'profile'), { ...salon, updatedAt: serverTimestamp() });
 
             // B. App Config (salons/{id}/settings/app_config)
-            await setDoc(doc(db, `salons/${salon.id}/settings`, 'app_config'), { ...mockConfig, updatedAt: serverTimestamp() });
+            const salonConfig = (mockConfigs && mockConfigs[salon.id]) ? mockConfigs[salon.id] : mockConfig;
+            await setDoc(doc(db, `salons/${salon.id}/settings`, 'app_config'), { ...salonConfig, updatedAt: serverTimestamp() });
 
             // C. Products Subcollection
-            for (const product of mockProducts.filter(p => p.salonId === salon.id)) {
+            onProgress({ status: 'seeding', label: `Products: ${salon.name}` });
+            const salonProds = mockProducts.filter(p => p.salonId === salon.id);
+            for (const product of salonProds) {
                 await setDoc(doc(db, `salons/${salon.id}/products`, product.id), { ...product, createdAt: serverTimestamp() });
             }
+            onProgress({ status: 'success', label: `Products: ${salon.name}`, count: salonProds.length });
 
             // D. Sales Subcollection
-            onProgress({ status: 'seeding', label: 'Sales History', count: mockSales.length });
-            for (const sale of mockSales.filter(s => s.salonId === salon.id)) {
+            onProgress({ status: 'seeding', label: `Sales: ${salon.name}` });
+            const salonSales = mockSales.filter(s => s.salonId === salon.id);
+            for (const sale of salonSales) {
                 await setDoc(doc(db, `salons/${salon.id}/sales`, sale.id), { ...sale, createdAt: serverTimestamp() });
             }
+            onProgress({ status: 'success', label: `Sales: ${salon.name}`, count: salonSales.length });
 
             // E. Stylists & Nested Data
-            onProgress({ status: 'seeding', label: 'Specialists & Clients', count: mockStylists.length });
-            for (const stylist of mockStylists.filter(s => s.salonId === salon.id)) {
+            onProgress({ status: 'seeding', label: `Team: ${salon.name}` });
+            const salonStylists = mockStylists.filter(s => s.salonId === salon.id);
+            for (const stylist of salonStylists) {
                 const stylistPath = `${salonPath}/stylists/${stylist.id}`;
 
                 // Root stylist doc + profile sub-doc
@@ -199,7 +216,7 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
                 await setDoc(doc(db, `${stylistPath}/profile`, 'data'), { ...stylist, updatedAt: serverTimestamp() });
 
                 // Nested Clients under Stylist
-                const stylistClients = mockClients.filter(c => c.salonId === salon.id);
+                const stylistClients = mockClients.filter(c => c.stylistId === stylist.id);
                 for (const client of stylistClients) {
                     await setDoc(doc(db, `${stylistPath}/clients`, client.id), { ...client, createdAt: serverTimestamp() });
                 }
@@ -210,6 +227,7 @@ export const initializeData = async (mockData, onProgress = () => { }) => {
                     await setDoc(doc(db, `${stylistPath}/Ai recommendations`, rec.id), { ...rec, createdAt: serverTimestamp() });
                 }
             }
+            onProgress({ status: 'success', label: `Team: ${salon.name}`, count: salonStylists.length });
         }
 
         onProgress({ status: 'success', label: 'Database Initialization', count: 1 });

@@ -197,9 +197,27 @@ const Settings = () => {
         showToast("Initiating platform-wide purge...", "info");
 
         try {
-            const groupsToPurge = ['stylists', 'products', 'sales', 'Ai recommendations', 'clients'];
-            const rootsToPurge = ['salons', 'salon_managers'];
+            // Comprehensive list of all known and potential collections/groups
+            const groupsToPurge = [
+                'stylists',
+                'products',
+                'sales',
+                'Ai recommendations',
+                'clients',
+                'profile',
+                'settings',
+                'notifications',
+                'activity_logs',
+                'invitations'
+            ];
 
+            const rootsToPurge = [
+                'salons',
+                'salon_managers',
+                'settings' // root settings
+            ];
+
+            // 1. Purge all groups (subcollections everywhere)
             for (const item of groupsToPurge) {
                 const snap = await getDocs(collectionGroup(db, item));
                 if (snap.size > 0) {
@@ -209,6 +227,7 @@ const Settings = () => {
                 }
             }
 
+            // 2. Purge all root documents
             for (const item of rootsToPurge) {
                 const snap = await getDocs(collection(db, item));
                 if (snap.size > 0) {
@@ -218,19 +237,15 @@ const Settings = () => {
                 }
             }
 
-            showToast("Platform data purged successfully", "success");
-            // Refresh stats
-            const salonSnap = await getDocs(collection(db, 'salons'));
-            const managerSnap = await getDocs(collection(db, 'salon_managers'));
-            const stylistSnap = await getDocs(collectionGroup(db, 'stylists'));
-            const salesSnap = await getDocs(collectionGroup(db, 'sales'));
-
+            // 3. Reset local stats
             setStats({
-                salons: salonSnap.size.toLocaleString(),
-                managers: managerSnap.size.toLocaleString(),
-                stylists: stylistSnap.size.toLocaleString(),
-                sales: salesSnap.size.toLocaleString()
+                salons: '0',
+                managers: '0',
+                stylists: '0',
+                sales: '0'
             });
+
+            showToast("Platform purged: A-Z data wiped successfully", "success");
         } catch (error) {
             console.error(error);
             showToast("Cleanup failed", "error");
@@ -479,7 +494,7 @@ const Settings = () => {
                         className="px-8 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all shadow-xl shadow-rose-600/20 flex items-center gap-3 disabled:opacity-50"
                     >
                         {isPurging ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
-                        {isPurging ? 'Purging Systems...' : 'Delete All Data'}
+                        {isPurging ? 'Purging Platform...' : 'Purge All Platform Data'}
                     </button>
                 </div>
             </div>

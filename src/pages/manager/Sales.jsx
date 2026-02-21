@@ -265,8 +265,14 @@ const Sales = () => {
                         </thead>
                         <tbody className="divide-y divide-tea-700/5">
                             {filteredSales.map(sale => {
-                                const raw = sale.createdAt || sale.date;
-                                const saleDate = raw?.toDate ? raw.toDate() : new Date(raw);
+                                const parseDate = (d) => {
+                                    if (!d) return new Date();
+                                    if (d.toDate) return d.toDate(); // Firestore Timestamp
+                                    const dateObj = new Date(d);
+                                    return isNaN(dateObj.getTime()) ? new Date() : dateObj;
+                                };
+
+                                const saleDate = parseDate(sale.createdAt || sale.date);
                                 const qty = (sale.products || []).reduce((s, p) => s + (p.quantity || 1), 0);
                                 const amount = (sale.totalAmount || sale.total || 0);
                                 const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
@@ -332,14 +338,27 @@ const Sales = () => {
 
                                         {/* Products */}
                                         <td className="p-6">
-                                            <div className="flex flex-wrap gap-1.5 max-w-[220px]">
-                                                {(sale.products || []).length > 0 ? (sale.products || []).map((p, idx) => (
-                                                    <span key={idx} className="inline-flex items-center gap-1 px-2.5 py-1 bg-white border border-tea-100 rounded-lg text-[9px] font-black text-tea-700 uppercase tracking-widest shadow-sm">
-                                                        <Package className="w-2.5 h-2.5 text-tea-400" />
-                                                        {p.productName || p.name} <span className="text-tea-400">×{p.quantity || 1}</span>
-                                                    </span>
-                                                )) : (
-                                                    <span className="text-[10px] italic text-tea-400 font-bold">Service only</span>
+                                            <div className="flex flex-wrap gap-2 max-w-[220px]">
+                                                {sale.products && sale.products.length > 0 ? (
+                                                    sale.products.map((p, idx) => (
+                                                        <div key={idx} className="flex items-center gap-2 p-1.5 bg-white border border-tea-100 rounded-xl shadow-sm min-w-[120px]">
+                                                            <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0 border border-tea-50">
+                                                                <ImageWithFallback
+                                                                    src={p.imageUrl}
+                                                                    alt={p.productName || p.name}
+                                                                    className="w-full h-full object-cover"
+                                                                    fallbackClassName="w-full h-full flex items-center justify-center bg-tea-50 p-1"
+                                                                    FallbackComponent={Package}
+                                                                />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <p className="text-[9px] font-black text-tea-900 uppercase leading-none tracking-tight">{p.productName || p.name}</p>
+                                                                <p className="text-[10px] font-black text-tea-400 mt-0.5">×{p.quantity || 1}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-[10px] font-bold text-tea-400 italic">Service only</span>
                                                 )}
                                             </div>
                                         </td>

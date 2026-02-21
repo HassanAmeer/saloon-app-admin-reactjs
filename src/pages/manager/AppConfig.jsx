@@ -7,7 +7,6 @@ import {
     MessageSquare,
     Zap,
     Loader2,
-    MapPin,
     Droplets,
     Upload,
     Copy,
@@ -29,7 +28,6 @@ const TABS = [
     { id: 'hair', label: 'Hair Config', icon: Zap },
     { id: 'colors', label: 'Hair Colors', icon: Droplets },
     { id: 'home', label: 'App Layout', icon: LayoutGrid },
-    { id: 'salon', label: 'Salon Profile', icon: MapPin },
     { id: 'support', label: 'Support', icon: Settings },
     { id: 'business', label: 'Legal', icon: Copy },
 ];
@@ -227,7 +225,7 @@ const AppConfig = () => {
                                                 type="text"
                                                 value={q.question}
                                                 onChange={e => updateQuestion(q.id, 'question', e.target.value)}
-                                                className="input-field h-10"
+                                                className="input-field py-0 h-10"
                                                 placeholder="Enter question..."
                                             />
                                         </div>
@@ -236,7 +234,7 @@ const AppConfig = () => {
                                             <select
                                                 value={q.type}
                                                 onChange={e => updateQuestion(q.id, 'type', e.target.value)}
-                                                className="input-field h-10"
+                                                className="input-field py-0 h-10"
                                             >
                                                 <option value="dropdown">Dropdown</option>
                                                 <option value="multiselect">Multi-select</option>
@@ -249,7 +247,7 @@ const AppConfig = () => {
                                                 type="text"
                                                 value={q.options?.join(', ')}
                                                 onChange={e => updateQuestion(q.id, 'options', e.target.value.split(',').map(s => s.trim()))}
-                                                className="input-field h-10"
+                                                className="input-field py-0 h-10"
                                                 placeholder="Opt 1, Opt 2..."
                                                 disabled={q.type === 'text'}
                                             />
@@ -423,7 +421,7 @@ const AppConfig = () => {
                                                 const updated = configs.homeCategories.map((c, i) => i === idx ? { ...c, label: e.target.value } : c);
                                                 setConfigs({ ...configs, homeCategories: updated });
                                             }}
-                                            className="input-field h-10"
+                                            className="input-field py-0 h-10"
                                         />
                                     </FieldGroup>
                                     <div>
@@ -437,56 +435,7 @@ const AppConfig = () => {
                 </div>
             )}
 
-            {/* Salon Profile */}
-            {activeTab === 'salon' && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
-                    <SectionCard title="Salon Profile & Identity">
-                        <div className="flex flex-col items-center gap-4 pb-6 mb-6 border-b border-tea-100">
-                            <div className="relative group w-28 h-28 bg-tea-50 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl">
-                                <ImageWithFallback
-                                    src={configs.salonInfo?.logoUrl}
-                                    alt="Logo"
-                                    className="w-full h-full object-contain"
-                                    fallbackClassName="w-full h-full flex items-center justify-center p-6 opacity-20"
-                                />
-                                <label className="absolute inset-0 bg-tea-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center cursor-pointer gap-1">
-                                    <input
-                                        type="file"
-                                        className="hidden"
-                                        onChange={async e => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                                const url = await uploadImage(file, `salon/logo/${file.name}`);
-                                                setConfigs({ ...configs, salonInfo: { ...configs.salonInfo, logoUrl: url } });
-                                            }
-                                        }}
-                                    />
-                                    <Upload className="w-5 h-5 text-white" />
-                                    <span className="text-[9px] font-black text-white uppercase tracking-widest">Upload</span>
-                                </label>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-xs font-black text-tea-800 uppercase tracking-widest">Company Logo</p>
-                                <p className="text-[10px] text-tea-400 font-bold">Applies to app header and reports</p>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <FieldGroup label="Salon Name">
-                                <input type="text" value={configs.salonInfo?.name || ''} onChange={e => setConfigs({ ...configs, salonInfo: { ...configs.salonInfo, name: e.target.value } })} className="input-field" />
-                            </FieldGroup>
-                            <FieldGroup label="Primary Location">
-                                <input type="text" value={configs.salonInfo?.location || ''} onChange={e => setConfigs({ ...configs, salonInfo: { ...configs.salonInfo, location: e.target.value } })} className="input-field" />
-                            </FieldGroup>
-                            <FieldGroup label="Public Phone Number">
-                                <input type="text" value={configs.salonInfo?.phone || ''} onChange={e => setConfigs({ ...configs, salonInfo: { ...configs.salonInfo, phone: e.target.value } })} className="input-field" />
-                            </FieldGroup>
-                            <FieldGroup label="Owner / Manager Name">
-                                <input type="text" value={configs.salonInfo?.owner || ''} onChange={e => setConfigs({ ...configs, salonInfo: { ...configs.salonInfo, owner: e.target.value } })} className="input-field" />
-                            </FieldGroup>
-                        </div>
-                    </SectionCard>
-                </div>
-            )}
+
 
             {/* Support */}
             {activeTab === 'support' && (
