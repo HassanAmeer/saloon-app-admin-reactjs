@@ -18,6 +18,7 @@ import {
 } from '../../lib/services';
 import { useNavigate, useParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { ManagerFormSkeleton } from '../../components/Skeleton';
 
 const ManagerForm = ({ mode }) => {
     const { id } = useParams();
@@ -175,11 +176,7 @@ const ManagerForm = ({ mode }) => {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <Loader2 className="w-8 h-8 text-tea-600 animate-spin" />
-            </div>
-        );
+        return <ManagerFormSkeleton />;
     }
 
     return (

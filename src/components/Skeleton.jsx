@@ -325,3 +325,76 @@ export const ManagersSkeleton = () => {
         </div>
     );
 };
+
+export const ManagerFormSkeleton = () => {
+    return (
+        <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500 pb-20">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <Skeleton className="w-9 h-9 rounded-lg" />
+                    <div>
+                        <Skeleton className="h-9 w-64 mb-2" />
+                        <Skeleton className="h-4 w-96" />
+                    </div>
+                </div>
+            </div>
+
+            <div className="space-y-8">
+                <div className="glass-card p-8 space-y-8">
+                    <div className="flex items-center gap-4 border-b border-tea-100 pb-4">
+                        <Skeleton className="w-12 h-12 rounded-xl" />
+                        <Skeleton className="h-6 w-48" />
+                    </div>
+
+                    <div className="flex flex-col items-start gap-4 pb-4">
+                        <Skeleton className="w-32 h-32 rounded-[2.5rem]" />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[1, 2, 3, 4].map(i => (
+                            <div key={i} className="space-y-2">
+                                <Skeleton className="h-3 w-24" />
+                                <Skeleton className="h-10 w-full rounded-xl" />
+                            </div>
+                        ))}
+                        <div className="space-y-2 md:col-span-2">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-10 w-full rounded-xl" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-10 w-full rounded-xl" />
+                        </div>
+                        <div className="space-y-2 md:col-span-2">
+                            <Skeleton className="h-3 w-24" />
+                            <Skeleton className="h-[120px] w-full rounded-xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="glass-card p-8 space-y-8">
+                    <div className="flex items-center gap-4 border-b border-tea-100 pb-4">
+                        <Skeleton className="w-12 h-12 rounded-xl" />
+                        <Skeleton className="h-6 w-64" />
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6">
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-32" />
+                            <Skeleton className="h-10 w-full rounded-xl" />
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-32" />
+                            <Skeleton className="h-10 w-full rounded-xl" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end gap-4 pt-4">
+                    <Skeleton className="h-10 w-24 rounded-xl" />
+                    <Skeleton className="h-10 w-48 rounded-xl" />
+                </div>
+            </div>
+        </div>
+    );
+};
