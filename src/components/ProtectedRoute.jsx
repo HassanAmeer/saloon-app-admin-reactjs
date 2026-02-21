@@ -15,6 +15,10 @@ const ProtectedRoute = ({ children, requiredType }) => {
     }
 
     if (requiredType && user?.type !== requiredType) {
+        // Allow super admin to access manager routes (impersonation)
+        if (user?.type === 'superadmin' && requiredType === 'salonmanager') {
+            return children;
+        }
         // If wrong type, redirect to their appropriate home
         return <Navigate to={user?.type === 'superadmin' ? '/super/dashboard' : '/manager/dashboard'} replace />;
     }

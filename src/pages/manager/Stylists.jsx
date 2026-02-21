@@ -39,8 +39,11 @@ import {
     Area
 } from 'recharts';
 
+import { useSearchParams } from 'react-router-dom';
+
 const Stylists = () => {
     const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [stylists, setStylists] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -50,18 +53,21 @@ const Stylists = () => {
     const [selectedStylist, setSelectedStylist] = useState(null);
     const [viewingDetail, setViewingDetail] = useState(false);
 
+    const querySalonId = searchParams.get('salonId');
+    const salonId = querySalonId || user?.salonId;
+
     useEffect(() => {
-        if (!user?.salonId) {
+        if (!salonId) {
             setLoading(false);
             return;
         }
-        const unsubscribe = subscribeToCollection(`salons/${user.salonId}/stylists`, (data) => {
+        const unsubscribe = subscribeToCollection(`salons/${salonId}/stylists`, (data) => {
             setStylists(data);
             setLoading(false);
         }, [], { field: 'createdAt', direction: 'desc' });
 
         return () => unsubscribe();
-    }, [user?.salonId]);
+    }, [salonId]);
 
     const filteredStylists = stylists.filter(stylist => {
         const matchesSearch = stylist.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||

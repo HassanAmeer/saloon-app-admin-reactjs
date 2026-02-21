@@ -38,12 +38,9 @@ const LoginManager = () => {
                 const doc = querySnapshot.docs[0];
                 console.log("Manager document found:", doc.data());
                 const userData = {
+                    ...doc.data(),
                     id: doc.id,
-                    name: doc.data().name,
-                    email: doc.data().email,
-                    imageUrl: doc.data().imageUrl || '',
-                    type: 'salonmanager',
-                    salonId: doc.data().salonId || null
+                    type: 'salonmanager'
                 };
 
                 login(userData);

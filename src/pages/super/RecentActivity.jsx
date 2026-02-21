@@ -7,13 +7,16 @@ import {
     Search,
     Filter,
     Building2,
-    Users
+    Users,
+    LogIn
 } from 'lucide-react';
 import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const RecentActivity = () => {
     const { type, user } = useAuth();
+    const navigate = useNavigate();
     const [activities, setActivities] = useState([]);
     const [managers, setManagers] = useState([]);
     const [salons, setSalons] = useState([]);
@@ -71,14 +74,14 @@ const RecentActivity = () => {
                     <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">Live feed of global salon operations and service sessions</p>
                 </div>
 
-                <div className="relative w-full lg:w-96">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-tea-400" />
+                <div className="relative w-full lg:w-96 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-tea-400 group-focus-within:text-tea-800 transition-colors" />
                     <input
                         type="text"
                         placeholder="Search by stylist, client or session..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input-field pl-12 h-14 bg-white/50 backdrop-blur-md border-tea-700/5 focus:border-tea-700/20"
+                        className="w-full px-5 pl-12 h-14 bg-white border-2 border-tea-200/80 rounded-2xl focus:outline-none focus:ring-4 focus:ring-tea-700/5 focus:border-tea-700 transition-all duration-300 text-tea-950 font-medium placeholder:text-tea-300 shadow-md shadow-tea-900/5"
                     />
                 </div>
             </div>
@@ -88,113 +91,124 @@ const RecentActivity = () => {
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
-                            <tr className="border-b border-tea-700/5">
-                                <th className="text-left py-8 px-8 text-[11px] font-black text-tea-400 uppercase tracking-[0.25em]">Partner Institution</th>
-                                <th className="text-left py-8 px-8 text-[11px] font-black text-tea-400 uppercase tracking-[0.25em]">Personnel & Client</th>
-                                <th className="text-left py-8 px-8 text-[11px] font-black text-tea-400 uppercase tracking-[0.25em]">Services / Inventory</th>
-                                <th className="text-left py-8 px-8 text-[11px] font-black text-tea-400 uppercase tracking-[0.25em]">Temporal Mark</th>
-                                <th className="text-right py-8 px-8 text-[11px] font-black text-tea-400 uppercase tracking-[0.25em]">Valuation</th>
+                            <tr className="border-b-2 border-tea-700/10 bg-tea-50/20">
+                                <th className="text-left py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] border-r border-tea-700/10 whitespace-nowrap">#_ID</th>
+                                <th className="text-left py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] border-r border-tea-700/10 whitespace-nowrap">Manager</th>
+                                <th className="text-left py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] border-r border-tea-700/10 whitespace-nowrap">Stylist/Client</th>
+                                <th className="text-left py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] border-r border-tea-700/10 whitespace-nowrap">Products</th>
+                                <th className="text-left py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] border-r border-tea-700/10 whitespace-nowrap">Date</th>
+                                <th className="text-right py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] border-r border-tea-700/10 whitespace-nowrap">Amounts</th>
+                                <th className="text-center py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em] whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-tea-700/5">
+                        <tbody className="divide-y-4 divide-tea-700/5">
                             {filteredActivities.map((sale) => {
                                 const salon = salons.find(s => s.id === sale.salonId);
                                 const manager = managers.find(m => m.salonId === sale.salonId);
 
                                 return (
-                                    <tr key={sale.id} className="hover:bg-tea-50/50 transition-all duration-500 group">
-                                        <td className="py-8 px-8">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-14 h-14 rounded-2xl bg-tea-900 border border-white/10 shadow-2xl overflow-hidden shrink-0 transform group-hover:scale-110 transition-transform duration-500">
+
+                                    <tr key={sale.id} className="hover:bg-tea-50/80 transition-all duration-300 group">
+
+                                        <td className="px-4 py-4 text-center">
+                                            <div className="flex items-center gap-1.5 py-1 bg-tea-100/30 rounded-lg w-fit mt-1">
+                                                <p className="text-[10px] font-mono font-black text-tea-400 leading-none tracking-tighter"> {sale.id?.substring(0, 8)}</p>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-tea-900 border border-white/10 shadow-lg overflow-hidden shrink-0 transform group-hover:scale-105 transition-transform duration-500">
                                                     {manager?.imageUrl ? (
                                                         <img src={manager.imageUrl} alt={manager.name} className="w-full h-full object-cover" />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-tea-800 to-tea-950">
-                                                            <Building2 className="w-6 h-6 text-tea-200/50" />
+                                                            <Building2 className="w-5 h-5 text-tea-200/50" />
                                                         </div>
                                                     )}
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-[15px] font-black text-tea-950 uppercase tracking-tight leading-none">{salon?.name || 'Grand Salon'}</p>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="w-1 h-1 rounded-full bg-tea-300" />
-                                                        <p className="text-[10px] font-bold text-tea-500 uppercase tracking-widest leading-none">{manager?.name || 'Executive Lead'}</p>
+                                                    <p className="text-[12px] font-black text-tea-950 uppercase tracking-tight leading-none">{manager?.name || 'Manager'}</p>
+                                                    <p className="text-[9px] font-bold text-tea-500 uppercase tracking-widest leading-none">{salon?.name || 'Salon Brand'}</p>
+                                                    <div className="flex flex-col gap-1 mt-1 opacity-40">
+                                                        <p className="text-[9px] font-mono font-black text-tea-700 leading-none tracking-tighter">MGR: {manager?.id?.substring(0, 8)}</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-8 px-8">
-                                            <div className="flex items-center gap-5">
-                                                <div className="w-14 h-14 rounded-2xl bg-white border border-tea-100 shadow-sm overflow-hidden shrink-0 group-hover:shadow-lg transition-all duration-500">
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-xl bg-white border border-tea-100 shadow-sm overflow-hidden shrink-0 group-hover:shadow-md transition-all duration-500">
                                                     {(() => {
                                                         const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
                                                         return stylist?.imageUrl ? (
                                                             <img src={stylist.imageUrl} alt={sale.stylistName} className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <div className="w-full h-full flex items-center justify-center bg-tea-50 text-tea-800 font-black text-xl">
+                                                            <div className="w-full h-full flex items-center justify-center bg-tea-50 text-tea-800 font-black text-lg">
                                                                 {sale.stylistName?.charAt(0) || 'S'}
                                                             </div>
                                                         );
                                                     })()}
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-[15px] font-black text-tea-950 uppercase tracking-tight leading-none">{sale.stylistName || 'Expert Stylist'}</p>
-                                                    <div className="flex items-center gap-2 px-2 py-1 bg-tea-100/30 rounded-lg w-fit">
-                                                        <User className="w-3 h-3 text-tea-600" />
-                                                        <p className="text-[10px] font-black text-tea-600 uppercase tracking-widest leading-none">
+                                                    <p className="text-[12px] font-black text-tea-950 uppercase tracking-tight leading-none">{sale.stylistName || 'Expert Stylist'}</p>
+                                                    <div className="flex items-center gap-1.5 py-1 bg-tea-100/30 rounded-lg w-fit mt-1">
+                                                        <User className="w-2.5 h-2.5 text-tea-700" />
+                                                        <p className="text-[9px] font-black text-tea-700 uppercase tracking-widest leading-none">
                                                             {sale.clientName || 'Premium Client'}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-8 px-8">
-                                            <div className="flex flex-col gap-2 max-w-sm">
-                                                <div className="flex flex-wrap gap-2">
-                                                    {sale.products?.map((p, idx) => (
-                                                        <div key={idx} className="flex items-center gap-2 p-1.5 bg-white border border-tea-100 shadow-sm rounded-xl group/item hover:border-tea-700/20 transition-colors">
-                                                            {p.imageUrl && (
-                                                                <img src={p.imageUrl} alt={p.productName} className="w-7 h-7 rounded-lg object-cover" />
-                                                            )}
-                                                            <span className="px-1 text-[10px] font-black text-tea-800 uppercase tracking-tight">
-                                                                {p.productName} <span className="text-tea-400 font-bold ml-1">×{p.quantity}</span>
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                        <td className="px-4 py-4">
+                                            <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                                                {sale.products?.map((p, idx) => (
+                                                    <div key={idx} className="flex items-center gap-1.5 p-1 bg-white border border-tea-100 shadow-xs rounded-lg">
+                                                        {p.imageUrl && (
+                                                            <img src={p.imageUrl} alt={p.productName} className="w-5 h-5 rounded object-cover" />
+                                                        )}
+                                                        <span className="text-[9px] font-black text-tea-800 uppercase tracking-tight">
+                                                            {p.productName} <span className="text-tea-400">×{p.quantity}</span>
+                                                        </span>
+                                                    </div>
+                                                ))}
                                                 {(!sale.products || sale.products.length === 0) && (
-                                                    <div className="flex items-center gap-2 py-2 px-4 bg-tea-50 rounded-xl border border-dashed border-tea-200">
-                                                        <span className="text-[10px] font-black text-tea-400 uppercase tracking-widest">Consultation & Assessment</span>
+                                                    <div className="px-3 py-1 bg-tea-50/50 rounded-lg border border-dashed border-tea-200">
+                                                        <span className="text-[9px] font-black text-tea-400 uppercase tracking-widest">Consultation</span>
                                                     </div>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="py-8 px-8">
+                                        <td className="px-4 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-tea-50 flex items-center justify-center border border-tea-100">
-                                                    <Calendar className="w-4 h-4 text-tea-700" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-sm font-black text-tea-950 uppercase tracking-tighter leading-none">
+                                                <Calendar className="w-4 h-4 text-tea-700" />
+                                                <div className="space-y-1">
+                                                    <p className="text-[11px] font-black text-tea-950 uppercase tracking-tighter leading-none">
                                                         {new Date(sale.date || sale.createdAt?.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </p>
-                                                    <p className="text-[10px] font-bold text-tea-400 uppercase tracking-widest leading-none mt-1.5">
+                                                    <p className="text-[10px] font-black text-tea-400 uppercase tracking-widest leading-none">
                                                         {new Date(sale.date || sale.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </p>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-8 px-8 text-right">
+                                        <td className="px-4 py-4 text-right">
                                             <div className="space-y-1">
-                                                <p className="text-3xl font-black text-tea-900 tracking-tighter leading-none group-hover:text-tea-700 transition-colors">
-                                                    <span className="text-sm align-top mr-1 font-bold text-tea-400">$</span>
+                                                <p className="text-2xl font-black text-tea-900 tracking-tighter leading-none">
+                                                    <span className="text-xs align-top mr-0.5 font-bold text-tea-400">$</span>
                                                     {(sale.totalAmount || sale.total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </p>
-                                                <div className="flex items-center justify-end gap-1.5">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em]">Live Transaction</p>
-                                                </div>
+                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em]">Amount</p>
                                             </div>
+                                        </td>
+                                        <td className="px-4 py-4 text-center">
+                                            <button
+                                                onClick={() => navigate(`/manager/dashboard?salonId=${sale.salonId}`)}
+                                                className="px-6 py-3 bg-tea-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-tea-700 hover:scale-105 active:scale-95 transition-all shadow-md shadow-tea-900/10 flex items-center gap-2 mx-auto"
+                                            >
+                                                Login
+                                                <LogIn className="w-3 h-3" />
+                                            </button>
                                         </td>
                                     </tr>
                                 );

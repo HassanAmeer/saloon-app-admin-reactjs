@@ -14,7 +14,7 @@ import {
     Info
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { updateDocument, uploadImage } from '../../lib/services';
+import { updateDocument, uploadImage, getDocument } from '../../lib/services';
 
 const Profile = () => {
     const { user, setUser } = useAuth();
@@ -34,17 +34,50 @@ const Profile = () => {
     const [previewUrl, setPreviewUrl] = useState(user?.imageUrl || null);
 
     useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const fullUserData = await getDocument('super_admin_setting', 'settings');
+                if (fullUserData) {
+                    setFormData({
+                        name: fullUserData.name || '',
+                        email: fullUserData.email || '',
+                        password: '',
+                        imageUrl: fullUserData.imageUrl || '',
+                        phone: fullUserData.phone || '',
+                        address: fullUserData.address || '',
+                        bio: fullUserData.bio || ''
+                    });
+                    setPreviewUrl(fullUserData.imageUrl || null);
+
+                    // Also update context if it's different
+                    const updatedUser = {
+                        ...user,
+                        ...fullUserData,
+                        type: 'superadmin'
+                    };
+                    setUser(updatedUser);
+                    localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+                }
+            } catch (error) {
+                console.error("Error fetching full user data:", error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
+    useEffect(() => {
         if (user) {
-            setFormData({
-                name: user.name || '',
-                email: user.email || '',
-                password: '',
-                imageUrl: user.imageUrl || '',
-                phone: user.phone || '',
-                address: user.address || '',
-                bio: user.bio || ''
-            });
-            setPreviewUrl(user.imageUrl || null);
+            setFormData(prev => ({
+                ...prev,
+                name: user.name || prev.name,
+                email: user.email || prev.email,
+                imageUrl: user.imageUrl || prev.imageUrl,
+                phone: user.phone || prev.phone,
+                address: user.address || prev.address,
+                bio: user.bio || prev.bio
+            }));
+            if (user.imageUrl) setPreviewUrl(user.imageUrl);
         }
     }, [user]);
 
@@ -87,10 +120,9 @@ const Profile = () => {
 
             // Update local state
             const updatedUser = {
+                ...user,
+                ...updateData,
                 id: 'settings',
-                name: updateData.name,
-                email: updateData.email,
-                imageUrl: updateData.imageUrl,
                 type: 'superadmin'
             };
             setUser(updatedUser);

@@ -261,7 +261,7 @@ const Managers = () => {
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => navigate(`/super/dashboard?salonId=${salon?.id}`)}
+                                        onClick={() => navigate(`/manager/dashboard?salonId=${salon?.id}`)}
                                         className="btn-secondary py-2 text-[10px] font-black uppercase tracking-[0.2em] group"
                                     >
                                         Monitor Salon <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

@@ -39,10 +39,8 @@ const LoginSuper = () => {
                 if (data.email === email && data.password === password) {
                     console.log("Credentials matched successfully.");
                     const userData = {
+                        ...data,
                         id: docSnap.id,
-                        name: data.name,
-                        email: data.email,
-                        imageUrl: data.imageUrl || '',
                         type: 'superadmin'
                     };
 

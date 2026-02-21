@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
     LayoutDashboard,
@@ -12,7 +12,8 @@ import {
     Settings,
     X,
     Sparkles,
-    Activity
+    Activity,
+    Eye
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '../lib/utils';
@@ -20,7 +21,11 @@ import { cn } from '../lib/utils';
 const DashboardLayout = () => {
     const { user, type, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const [searchParams] = useSearchParams();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const querySalonId = searchParams.get('salonId');
 
     const handleLogout = () => {
         logout();
@@ -45,7 +50,10 @@ const DashboardLayout = () => {
         { path: '/super/profile', icon: Users, label: 'My Profile' },
     ];
 
-    const navItems = type === 'superadmin' ? superNavItems : managerNavItems;
+    // Determine if we are in impersonation mode
+    const isImpersonating = type === 'superadmin' && (querySalonId || location.pathname.startsWith('/manager'));
+
+    const navItems = isImpersonating ? managerNavItems : (type === 'superadmin' ? superNavItems : managerNavItems);
 
     return (
         <div className="min-h-screen bg-tea-50/30 flex flex-col lg:flex-row">
@@ -79,31 +87,51 @@ const DashboardLayout = () => {
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-tea-900 tracking-tight">salon</h1>
-                                <p className="text-xs font-medium text-tea-500 uppercase tracking-widest">
-                                    {type === 'superadmin' ? 'Super Admin' : 'Manager'}
+                                <p className="text-xs font-medium text-tea-500 uppercase tracking-widest leading-none mt-1">
+                                    {isImpersonating ? 'Manager View' : (type === 'superadmin' ? 'Super Admin' : 'Manager')}
                                 </p>
                             </div>
                         </div>
+                        {isImpersonating && (
+                            <div className="mt-6 p-3 bg-tea-900 text-white rounded-xl flex items-center justify-between group">
+                                <div className="flex items-center gap-2">
+                                    <Eye className="w-3.5 h-3.5 text-tea-400 animate-pulse" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest">Mirror Mode</span>
+                                </div>
+                                <button
+                                    onClick={() => navigate('/super/dashboard')}
+                                    className="text-[9px] font-black text-tea-400 hover:text-white uppercase tracking-tighter"
+                                >
+                                    Exit
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Navigation */}
                     <nav className="flex-1 px-4 space-y-1.5 overflow-y-auto custom-scrollbar">
-                        {navItems.map((item) => (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                onClick={() => setSidebarOpen(false)}
-                                className={({ isActive }) =>
-                                    cn(
-                                        "sidebar-link group",
-                                        isActive ? "sidebar-link-active" : ""
-                                    )
-                                }
-                            >
-                                <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110")} />
-                                <span className="font-medium">{item.label}</span>
-                            </NavLink>
-                        ))}
+                        {navItems.map((item) => {
+                            const pathWithQuery = isImpersonating && querySalonId
+                                ? `${item.path}?salonId=${querySalonId}`
+                                : item.path;
+
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={pathWithQuery}
+                                    onClick={() => setSidebarOpen(false)}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "sidebar-link group",
+                                            isActive ? "sidebar-link-active" : ""
+                                        )
+                                    }
+                                >
+                                    <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110")} />
+                                    <span className="font-medium">{item.label}</span>
+                                </NavLink>
+                            );
+                        })}
                     </nav>
 
                     {/* User Profile Area */}

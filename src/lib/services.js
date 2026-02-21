@@ -9,6 +9,7 @@ import {
     query,
     where,
     getDocs,
+    getDoc,
     orderBy,
     serverTimestamp,
     setDoc
@@ -73,6 +74,16 @@ export const updateDocument = async (collectionName, docId, data) => {
 export const deleteDocument = async (collectionName, docId) => {
     const docRef = doc(db, collectionName, docId);
     return await deleteDoc(docRef);
+};
+
+export const getDocument = async (collectionName, docId) => {
+    const docRef = doc(db, collectionName, docId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+    } else {
+        return null;
+    }
 };
 
 // Helper to convert File to Base64

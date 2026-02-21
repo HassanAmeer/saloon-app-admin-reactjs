@@ -19,7 +19,7 @@ import {
     Briefcase
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { updateDocument, uploadImage, subscribeToCollection } from '../../lib/services';
+import { updateDocument, uploadImage, subscribeToCollection, getDocument } from '../../lib/services';
 import { cn } from '../../lib/utils';
 
 const Profile = () => {
@@ -43,18 +43,54 @@ const Profile = () => {
     const [previewUrl, setPreviewUrl] = useState(user?.imageUrl || null);
 
     useEffect(() => {
+        const fetchUserData = async () => {
+            if (!user?.id) return;
+            try {
+                const collectionName = user.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
+                const fullUserData = await getDocument(collectionName, user.id);
+                if (fullUserData) {
+                    setFormData({
+                        name: fullUserData.name || '',
+                        email: fullUserData.email || '',
+                        password: fullUserData.password || '',
+                        imageUrl: fullUserData.imageUrl || '',
+                        phone: fullUserData.phone || '',
+                        bio: fullUserData.bio || '',
+                        brand: fullUserData.brand || '',
+                        address: fullUserData.address || ''
+                    });
+                    setPreviewUrl(fullUserData.imageUrl || null);
+
+                    // Also update context if it's different
+                    const updatedUser = {
+                        ...user,
+                        ...fullUserData,
+                    };
+                    setUser(updatedUser);
+                    localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+                }
+            } catch (error) {
+                console.error("Error fetching full user data:", error);
+            }
+        };
+
+        fetchUserData();
+    }, []);
+
+    useEffect(() => {
         if (user) {
-            setFormData({
-                name: user.name || '',
-                email: user.email || '',
-                password: user.password || '',
-                imageUrl: user.imageUrl || '',
-                phone: user.phone || '',
-                bio: user.bio || '',
-                brand: user.brand || '',
-                address: user.address || ''
-            });
-            setPreviewUrl(user.imageUrl || null);
+            setFormData(prev => ({
+                ...prev,
+                name: user.name || prev.name,
+                email: user.email || prev.email,
+                password: user.password || prev.password,
+                imageUrl: user.imageUrl || prev.imageUrl,
+                phone: user.phone || prev.phone,
+                bio: user.bio || prev.bio,
+                brand: user.brand || prev.brand,
+                address: user.address || prev.address
+            }));
+            if (user.imageUrl) setPreviewUrl(user.imageUrl);
 
             if (type === 'salonmanager' && user.salonId) {
                 const unsub = subscribeToCollection('salons', (salons) => {
@@ -106,12 +142,8 @@ const Profile = () => {
             await updateDocument(collectionName, user.id, updateData);
 
             const updatedUser = {
-                id: user.id,
-                name: updateData.name,
-                email: updateData.email,
-                imageUrl: updateData.imageUrl,
-                type: 'salonmanager',
-                salonId: user.salonId
+                ...user,
+                ...updateData,
             };
             setUser(updatedUser);
             localStorage.setItem('salon_user', JSON.stringify(updatedUser));

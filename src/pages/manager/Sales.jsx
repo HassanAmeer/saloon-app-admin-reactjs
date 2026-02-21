@@ -9,27 +9,32 @@ import {
 import { subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 
+import { useSearchParams } from 'react-router-dom';
+
 const Sales = () => {
+    const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [sales, setSales] = useState([]);
     const [stylists, setStylists] = useState([]);
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState('all');
     const [stylistFilter, setStylistFilter] = useState('all');
 
-    // Subscribe to sales and stylists
-    const { user } = useAuth();
+    const querySalonId = searchParams.get('salonId');
+    const salonId = querySalonId || user?.salonId;
+
     useEffect(() => {
-        if (!user?.salonId) {
+        if (!salonId) {
             setLoading(false);
             return;
         }
 
-        const unsubscribeSales = subscribeToCollection(`salons/${user.salonId}/sales`, (data) => {
+        const unsubscribeSales = subscribeToCollection(`salons/${salonId}/sales`, (data) => {
             setSales(data);
             setLoading(false);
         }, [], { field: 'createdAt', direction: 'desc' });
 
-        const unsubscribeStylists = subscribeToCollection(`salons/${user.salonId}/stylists`, (data) => {
+        const unsubscribeStylists = subscribeToCollection(`salons/${salonId}/stylists`, (data) => {
             setStylists(data);
         });
 
@@ -37,7 +42,7 @@ const Sales = () => {
             unsubscribeSales();
             unsubscribeStylists();
         };
-    }, [user?.salonId]);
+    }, [salonId]);
 
     const filteredSales = sales.filter(sale => {
         const saleDate = sale.createdAt?.toDate() || new Date(sale.date);

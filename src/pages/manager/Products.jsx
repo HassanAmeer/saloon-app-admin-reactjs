@@ -17,8 +17,11 @@ import {
     uploadImage
 } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 const Products = () => {
+    const { user } = useAuth();
+    const [searchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -30,10 +33,9 @@ const Products = () => {
 
     // Get unique categories from products
     const categories = ['all', ...new Set(products.map(p => p.category))];
-
-    // Subscribe to real-time updates
-    const { user } = useAuth();
-    const salonPath = user?.salonId ? `salons/${user.salonId}/products` : null;
+    const querySalonId = searchParams.get('salonId');
+    const salonId = querySalonId || user?.salonId;
+    const salonPath = salonId ? `salons/${salonId}/products` : null;
 
     useEffect(() => {
         if (!salonPath) {
