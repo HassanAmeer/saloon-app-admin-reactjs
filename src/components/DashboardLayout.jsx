@@ -1,5 +1,7 @@
 import { Outlet, NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { subscribeToDocument } from '../lib/services';
+import { useEffect } from 'react';
 import {
     LayoutDashboard,
     Users,
@@ -24,8 +26,35 @@ const DashboardLayout = () => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [impersonatedManager, setImpersonatedManager] = useState(null);
+    const [impersonatedSalon, setImpersonatedSalon] = useState(null);
 
     const querySalonId = searchParams.get('salonId');
+
+    // Determine if we are in impersonation mode
+    const isImpersonating = type === 'superadmin' && (querySalonId || location.pathname.startsWith('/manager'));
+
+    useEffect(() => {
+        if (!isImpersonating || !querySalonId) {
+            setImpersonatedManager(null);
+            setImpersonatedSalon(null);
+            return;
+        }
+
+        // 1. Subscribe to Salon
+        const unsubSalon = subscribeToDocument('salons', querySalonId, (salonData) => {
+            setImpersonatedSalon(salonData);
+            if (salonData?.managerId) {
+                // 2. Subscribe to Manager once we have managerId
+                const unsubManager = subscribeToDocument('salon_managers', salonData.managerId, (managerData) => {
+                    setImpersonatedManager(managerData);
+                });
+                return () => unsubManager();
+            }
+        });
+
+        return () => unsubSalon();
+    }, [isImpersonating, querySalonId]);
 
     const handleLogout = () => {
         logout();
@@ -50,10 +79,9 @@ const DashboardLayout = () => {
         { path: '/super/profile', icon: Users, label: 'My Profile' },
     ];
 
-    // Determine if we are in impersonation mode
-    const isImpersonating = type === 'superadmin' && (querySalonId || location.pathname.startsWith('/manager'));
-
     const navItems = isImpersonating ? managerNavItems : (type === 'superadmin' ? superNavItems : managerNavItems);
+
+    const displayUser = isImpersonating && impersonatedManager ? impersonatedManager : user;
 
     return (
         <div className="min-h-screen bg-tea-50/30 flex flex-col lg:flex-row">
@@ -138,18 +166,18 @@ const DashboardLayout = () => {
                     <div className="p-6 mt-auto">
                         <div className="p-4 glass-card border-none bg-tea-50/50 rounded-2xl">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-tea-500 to-tea-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-tea-700/20 overflow-hidden border-2 border-white">
-                                    {user?.imageUrl ? (
-                                        <img src={user.imageUrl} alt="User" className="w-full h-full object-cover" />
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-tea-500 to-tea-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-tea-700/20 overflow-hidden border-2 border-white transition-transform group-hover:scale-105">
+                                    {displayUser?.imageUrl ? (
+                                        <img src={displayUser.imageUrl} alt="User" className="w-full h-full object-cover" />
                                     ) : (
-                                        user?.name?.charAt(0) || user?.email?.charAt(0).toUpperCase()
+                                        displayUser?.name?.charAt(0) || displayUser?.email?.charAt(0).toUpperCase()
                                     )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-tea-900 truncate">
-                                        {user?.name || 'User'}
+                                    <p className="text-[11px] font-black text-tea-900 uppercase tracking-tight truncate">
+                                        {displayUser?.name || 'User'}
                                     </p>
-                                    <p className="text-xs text-tea-500 truncate">{user?.email}</p>
+                                    <p className="text-[9px] font-bold text-tea-400 uppercase tracking-widest truncate">{displayUser?.email}</p>
                                 </div>
                             </div>
                             <button

@@ -20,26 +20,30 @@ import {
 import { uploadImage } from '../../lib/services';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { useAuth } from '../../contexts/AuthContext';
+import { useSearchParams } from 'react-router-dom';
 
 const AppConfig = () => {
     const { user, type } = useAuth();
+    const [searchParams] = useSearchParams();
     const [configs, setConfigs] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('questionnaire');
+    const querySalonId = searchParams.get('salonId');
+    const isImpersonating = type === 'superadmin' && querySalonId;
+    const activeSalonId = querySalonId || user?.salonId;
 
     // Subscribe to app configuration
     useEffect(() => {
         const fetchConfig = async () => {
-            if (!user?.salonId && type !== 'superadmin') {
+            if (!activeSalonId && !isImpersonating && type !== 'superadmin') {
                 setLoading(false);
                 return;
             }
             try {
-                const configRef = type === 'superadmin'
+                const configRef = (type === 'superadmin' && !isImpersonating)
                     ? doc(db, 'settings', 'platform_config')
-                    : doc(db, `salons/${user.salonId}/settings`, 'app_config');
+                    : doc(db, `salons/${activeSalonId}/settings`, 'app_config');
                 const configSnap = await getDoc(configRef);
 
                 if (configSnap.exists()) {
@@ -81,15 +85,15 @@ const AppConfig = () => {
         };
 
         fetchConfig();
-    }, [user?.salonId, type]);
+    }, [activeSalonId, type, isImpersonating]);
 
     const handleSave = async () => {
-        if (!user?.salonId && type !== 'superadmin') return;
+        if (!activeSalonId && !isImpersonating && type !== 'superadmin') return;
         setIsSaving(true);
         try {
-            const configRef = type === 'superadmin'
+            const configRef = (type === 'superadmin' && !isImpersonating)
                 ? doc(db, 'settings', 'platform_config')
-                : doc(db, `salons/${user.salonId}/settings`, 'app_config');
+                : doc(db, `salons/${activeSalonId}/settings`, 'app_config');
             await setDoc(configRef, configs);
             alert('Settings saved successfully!');
         } catch (error) {

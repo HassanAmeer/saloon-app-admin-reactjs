@@ -36,6 +36,18 @@ export const subscribeToCollection = (collectionPath, callback, filters = [], so
     });
 };
 
+// Helper for real-time document updates
+export const subscribeToDocument = (collectionPath, docId, callback) => {
+    const docRef = doc(db, collectionPath, docId);
+    return onSnapshot(docRef, (snapshot) => {
+        if (snapshot.exists()) {
+            callback({ id: snapshot.id, ...snapshot.data() });
+        } else {
+            callback(null);
+        }
+    });
+};
+
 // Helper for collectionGroup updates (for deep nested data like recommendations)
 export const subscribeToCollectionGroup = (collectionId, callback, filters = [], sort = null) => {
     let q = query(collectionGroup(db, collectionId));

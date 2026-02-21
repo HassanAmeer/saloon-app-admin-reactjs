@@ -26,11 +26,18 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { uploadImage } from '../../lib/services';
 import { cn } from '../../lib/utils';
 
+import { useSearchParams } from 'react-router-dom';
+
 const Settings = () => {
-    const { user } = useAuth();
+    const { user, type } = useAuth();
+    const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [success, setSuccess] = useState(false);
+
+    const querySalonId = searchParams.get('salonId');
+    const isImpersonating = type === 'superadmin' && querySalonId;
+    const activeSalonId = querySalonId || user?.salonId;
 
     const [formData, setFormData] = useState({
         name: '',
@@ -48,12 +55,12 @@ const Settings = () => {
 
     useEffect(() => {
         const fetchSalonSettings = async () => {
-            if (!user?.salonId) {
+            if (!activeSalonId) {
                 setLoading(false);
                 return;
             }
             try {
-                const salonRef = doc(db, 'salons', user.salonId);
+                const salonRef = doc(db, 'salons', activeSalonId);
                 const salonSnap = await getDoc(salonRef);
                 if (salonSnap.exists()) {
                     const data = salonSnap.data();
@@ -79,16 +86,16 @@ const Settings = () => {
         };
 
         fetchSalonSettings();
-    }, [user?.salonId]);
+    }, [activeSalonId]);
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!user?.salonId) return;
+        if (!activeSalonId) return;
 
         setIsSaving(true);
         setSuccess(false);
         try {
-            const salonRef = doc(db, 'salons', user.salonId);
+            const salonRef = doc(db, 'salons', activeSalonId);
             await updateDoc(salonRef, {
                 ...formData,
                 updatedAt: new Date()
@@ -105,9 +112,9 @@ const Settings = () => {
 
     const handleLogoUpload = async (e) => {
         const file = e.target.files[0];
-        if (file && user?.salonId) {
+        if (file && activeSalonId) {
             try {
-                const url = await uploadImage(file, `salons/${user.salonId}/logo_${Date.now()}`);
+                const url = await uploadImage(file, `salons/${activeSalonId}/logo_${Date.now()}`);
                 if (url) {
                     setFormData(prev => ({ ...prev, logoUrl: url }));
                 }

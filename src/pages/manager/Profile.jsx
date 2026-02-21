@@ -19,35 +19,56 @@ import {
     Briefcase
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { updateDocument, uploadImage, subscribeToCollection, getDocument } from '../../lib/services';
+import { updateDocument, uploadImage, subscribeToCollection, getDocument, subscribeToDocument } from '../../lib/services';
 import { cn } from '../../lib/utils';
+import { useSearchParams } from 'react-router-dom';
 
 const Profile = () => {
     const { user, setUser, type } = useAuth();
+    const [searchParams] = useSearchParams();
     const { showToast } = useToast();
     const [loading, setLoading] = useState(false);
     const [salonData, setSalonData] = useState(null);
     const [showPassword, setShowPassword] = useState(false);
 
+    const querySalonId = searchParams.get('salonId');
+    const isImpersonating = type === 'superadmin' && querySalonId;
+
     const [formData, setFormData] = useState({
-        name: user?.name || '',
-        email: user?.email || '',
-        password: user?.password || '',
-        imageUrl: user?.imageUrl || '',
-        phone: user?.phone || '',
-        bio: user?.bio || '',
-        brand: user?.brand || '',
-        address: user?.address || ''
+        name: '',
+        email: '',
+        password: '',
+        imageUrl: '',
+        phone: '',
+        bio: '',
+        brand: '',
+        address: ''
     });
     const [selectedFile, setSelectedFile] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(user?.imageUrl || null);
+    const [previewUrl, setPreviewUrl] = useState(null);
 
     useEffect(() => {
         const fetchUserData = async () => {
-            if (!user?.id) return;
+            let targetUser = user;
+            let collectionName = targetUser?.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
+
+            if (isImpersonating) {
+                // Fetch the salon to get managerId
+                const salon = await getDocument('salons', querySalonId);
+                if (salon?.managerId) {
+                    const manager = await getDocument('salon_managers', salon.managerId);
+                    if (manager) {
+                        targetUser = manager;
+                        collectionName = 'salon_managers';
+                        setSalonData(salon);
+                    }
+                }
+            }
+
+            if (!targetUser?.id) return;
+
             try {
-                const collectionName = user.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
-                const fullUserData = await getDocument(collectionName, user.id);
+                const fullUserData = await getDocument(collectionName, targetUser.id);
                 if (fullUserData) {
                     setFormData({
                         name: fullUserData.name || '',
@@ -61,13 +82,15 @@ const Profile = () => {
                     });
                     setPreviewUrl(fullUserData.imageUrl || null);
 
-                    // Also update context if it's different
-                    const updatedUser = {
-                        ...user,
-                        ...fullUserData,
-                    };
-                    setUser(updatedUser);
-                    localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+                    if (!isImpersonating) {
+                        // Only update context if we're not impersonating
+                        const updatedUser = {
+                            ...user,
+                            ...fullUserData,
+                        };
+                        setUser(updatedUser);
+                        localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching full user data:", error);
@@ -75,10 +98,10 @@ const Profile = () => {
         };
 
         fetchUserData();
-    }, []);
+    }, [isImpersonating, querySalonId, user?.id]);
 
     useEffect(() => {
-        if (user) {
+        if (user && !isImpersonating) {
             setFormData(prev => ({
                 ...prev,
                 name: user.name || prev.name,
@@ -100,7 +123,7 @@ const Profile = () => {
                 return () => unsub();
             }
         }
-    }, [user, type]);
+    }, [user, type, isImpersonating]);
 
     const handleFileChange = (e) => {
         const file = e.target.files[0];
@@ -115,10 +138,18 @@ const Profile = () => {
         setLoading(true);
 
         try {
+            let targetId = user.id;
+            let targetCollection = user.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
+
+            if (isImpersonating && salonData?.managerId) {
+                targetId = salonData.managerId;
+                targetCollection = 'salon_managers';
+            }
+
             let imageUrl = formData.imageUrl;
             if (selectedFile) {
-                const folder = type === 'superadmin' ? 'super_admin' : 'managers';
-                const uploadedUrl = await uploadImage(selectedFile, `avatars/${folder}_${user.id}_${Date.now()}`);
+                const folder = targetCollection === 'super_admin_setting' ? 'super_admin' : 'managers';
+                const uploadedUrl = await uploadImage(selectedFile, `avatars/${folder}_${targetId}_${Date.now()}`);
                 if (uploadedUrl) {
                     imageUrl = uploadedUrl;
                 }
@@ -138,15 +169,16 @@ const Profile = () => {
                 updateData.password = formData.password;
             }
 
-            const collectionName = user.type === 'superadmin' ? 'super_admin_setting' : 'salon_managers';
-            await updateDocument(collectionName, user.id, updateData);
+            await updateDocument(targetCollection, targetId, updateData);
 
-            const updatedUser = {
-                ...user,
-                ...updateData,
-            };
-            setUser(updatedUser);
-            localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+            if (!isImpersonating) {
+                const updatedUser = {
+                    ...user,
+                    ...updateData,
+                };
+                setUser(updatedUser);
+                localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+            }
 
             showToast('Profile updated successfully', 'success');
         } catch (error) {
