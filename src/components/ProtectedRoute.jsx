@@ -1,7 +1,5 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import LoginManager from '../pages/manager/Login';
-import LoginSuper from '../pages/super/Login';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
     const { isAuthenticated, user, loading } = useAuth();
@@ -9,10 +7,11 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     if (loading) return null;
 
     if (!isAuthenticated) {
+        // If not authenticated, send to appropriate login based on requested role
         if (requiredRole === 'super') {
-            return <LoginSuper />;
+            return <Navigate to="/super" replace />;
         }
-        return <LoginManager />;
+        return <Navigate to="/" replace />;
     }
 
     if (requiredRole && user?.role !== requiredRole) {

@@ -3,11 +3,15 @@
 // Mock data for Phase 1 - Static UI
 
 export const mockSuperAdmin = {
-    id: "super-admin-1",
+    id: "settings",
     email: "admin@gmail.com",
     password: "12345678",
     name: "Super Admin",
     role: "super",
+    address: "lahore",
+    bio: "",
+    phone: "3012345678",
+    imageUrl: "https://link.thelocalrent.com/v?t=1771430742&tk=37160f2e00721d906831565829ae1de7",
 };
 
 export const mockSalonManagers = [
@@ -360,8 +364,8 @@ export const mockSales = [
         stylistName: "Emma Johnson",
         sessionId: "session-101",
         products: [
-            { productId: "prod-1", productName: "Hydrating Shampoo", quantity: 2, price: 24.99 },
-            { productId: "prod-3", productName: "Repair Hair Mask", quantity: 1, price: 45.00 },
+            { productId: "prod-1", productName: "Hydrating Shampoo", quantity: 2, price: 24.99, imageUrl: "https://images.unsplash.com/photo-1585232351009-aa87416fca90?w=300" },
+            { productId: "prod-3", productName: "Repair Hair Mask", quantity: 1, price: 45.00, imageUrl: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=300" },
         ],
         total: 94.98,
         totalAmount: 94.98,
@@ -375,8 +379,8 @@ export const mockSales = [
         stylistName: "Michael Chen",
         sessionId: "session-102",
         products: [
-            { productId: "prod-2", productName: "Volume Conditioner", quantity: 1, price: 28.50 },
-            { productId: "prod-4", productName: "Smoothing Serum", quantity: 1, price: 32.99 },
+            { productId: "prod-2", productName: "Volume Conditioner", quantity: 1, price: 28.50, imageUrl: "https://images.unsplash.com/photo-1552046122-03184de85e08?w=300" },
+            { productId: "prod-4", productName: "Smoothing Serum", quantity: 1, price: 32.99, imageUrl: "https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=300" },
         ],
         total: 61.49,
         totalAmount: 61.49,
@@ -390,7 +394,7 @@ export const mockSales = [
         stylistName: "David Martinez",
         sessionId: "session-103",
         products: [
-            { productId: "prod-8", productName: "Matte Hair Wax", quantity: 1, price: 22.00 },
+            { productId: "prod-8", productName: "Matte Hair Wax", quantity: 1, price: 22.00, imageUrl: "https://images.unsplash.com/photo-1554462411-c488950882e3?w=300" },
         ],
         total: 22.00,
         totalAmount: 22.00,

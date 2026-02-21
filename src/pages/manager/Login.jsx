@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
 const LoginManager = () => {
     const [email, setEmail] = useState('');
@@ -21,14 +23,36 @@ const LoginManager = () => {
         e.preventDefault();
         setLoading(true);
 
-        const result = await login(requestedRole, email, password);
+        try {
+            console.log("Attempting Manager Login for:", email);
+            const collectionRef = collection(db, 'salon_managers');
+            const q = query(
+                collectionRef,
+                where('email', '==', email),
+                where('password', '==', password),
+                limit(1)
+            );
+            const querySnapshot = await getDocs(q);
 
-        if (result.success) {
-            showToast('Login successful', 'success');
-            // Redirect to the appropriate dashboard
-            navigate('/manager/dashboard');
-        } else {
-            showToast(result.error, 'error');
+            if (!querySnapshot.empty) {
+                const doc = querySnapshot.docs[0];
+                console.log("Manager document found:", doc.data());
+                const userData = {
+                    id: doc.id,
+                    ...doc.data(),
+                    role: 'manager'
+                };
+
+                login(userData);
+                showToast('Login successful', 'success');
+                navigate('/manager/dashboard');
+            } else {
+                console.warn("No manager found with these credentials.");
+                showToast('Invalid email or password', 'error');
+            }
+        } catch (error) {
+            console.error("Login error during Firestore query:", error);
+            showToast('Connection error. Please try again.', 'error');
         }
 
         setLoading(false);

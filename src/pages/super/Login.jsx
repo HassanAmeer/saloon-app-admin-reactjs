@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { LogIn, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '../../contexts/ToastContext';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 
 const LoginSuper = () => {
     const [email, setEmail] = useState('');
@@ -21,14 +23,41 @@ const LoginSuper = () => {
         e.preventDefault();
         setLoading(true);
 
-        const result = await login(requestedRole, email, password);
+        try {
+            console.log("Attempting Super Admin Login for:", email);
+            // Fetch the single 'settings' document from the 'super_admin_setting' collection
+            const docRef = doc(db, 'super_admin_setting', 'settings');
+            console.log("Super Admin docRef:", docRef);
 
-        if (result.success) {
-            showToast('Login successful', 'success');
-            // Redirect to the appropriate dashboard
-            navigate('/super/dashboard');
-        } else {
-            showToast(result.error, 'error');
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                console.log("Super Admin settings document found:", data);
+
+                // Check if the credentials match
+                if (data.email === email && data.password === password) {
+                    console.log("Credentials matched successfully.");
+                    const userData = {
+                        id: docSnap.id,
+                        ...data,
+                        role: 'super'
+                    };
+
+                    login(userData);
+                    showToast('Login successful', 'success');
+                    navigate('/super/dashboard');
+                } else {
+                    console.warn("Credentials mismatch. Entered email:", email, "Stored email:", data.email);
+                    showToast('Invalid email or password', 'error');
+                }
+            } else {
+                console.error("Super admin settings document NOT found in Firestore!");
+                showToast('Authentication settings not found. Please run migration.', 'error');
+            }
+        } catch (error) {
+            console.error("Login error during Firestore query:", error);
+            showToast('Connection error. Please try again.', 'error');
         }
 
         setLoading(false);

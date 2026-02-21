@@ -6,7 +6,12 @@ import {
     Camera,
     Save,
     Loader2,
-    CheckCircle2
+    CheckCircle2,
+    Eye,
+    EyeOff,
+    Phone,
+    MapPin,
+    Info
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { updateDocument, uploadImage } from '../../lib/services';
@@ -15,11 +20,15 @@ const Profile = () => {
     const { user, setUser } = useAuth();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         name: user?.name || '',
         email: user?.email || '',
         password: '',
-        imageUrl: user?.imageUrl || ''
+        imageUrl: user?.imageUrl || '',
+        phone: user?.phone || '',
+        address: user?.address || '',
+        bio: user?.bio || ''
     });
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(user?.imageUrl || null);
@@ -30,7 +39,10 @@ const Profile = () => {
                 name: user.name || '',
                 email: user.email || '',
                 password: '',
-                imageUrl: user.imageUrl || ''
+                imageUrl: user.imageUrl || '',
+                phone: user.phone || '',
+                address: user.address || '',
+                bio: user.bio || ''
             });
             setPreviewUrl(user.imageUrl || null);
         }
@@ -61,14 +73,17 @@ const Profile = () => {
             const updateData = {
                 name: formData.name,
                 email: formData.email,
-                imageUrl: imageUrl
+                imageUrl: imageUrl,
+                phone: formData.phone,
+                address: formData.address,
+                bio: formData.bio
             };
 
             if (formData.password) {
                 updateData.password = formData.password;
             }
 
-            await updateDocument('super_admins', user.id, updateData);
+            await updateDocument('super_admin_setting', 'settings', updateData);
 
             // Update local state
             const updatedUser = { ...user, ...updateData };
@@ -147,17 +162,59 @@ const Profile = () => {
                                         required
                                     />
                                 </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                        <Phone className="w-3.5 h-3.5" /> Phone Number
+                                    </label>
+                                    <input
+                                        className="input-field"
+                                        value={formData.phone}
+                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                                        placeholder="+1 (000) 000-0000"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                        <MapPin className="w-3.5 h-3.5" /> Office Address
+                                    </label>
+                                    <input
+                                        className="input-field"
+                                        value={formData.address}
+                                        onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                        placeholder="123 Admin Way, Tech City"
+                                    />
+                                </div>
+                                <div className="space-y-2 col-span-full">
+                                    <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                        <Info className="w-3.5 h-3.5" /> Biography
+                                    </label>
+                                    <textarea
+                                        className="input-field min-h-[100px] py-4"
+                                        value={formData.bio}
+                                        onChange={e => setFormData({ ...formData, bio: e.target.value })}
+                                        placeholder="Tell us about your role and responsibilities..."
+                                    />
+                                </div>
                                 <div className="space-y-2 col-span-full">
                                     <label className="text-xs font-black text-tea-800 uppercase tracking-widest ml-1 flex items-center gap-2">
                                         <Lock className="w-3.5 h-3.5" /> Password
                                     </label>
-                                    <input
-                                        className="input-field"
-                                        type="password"
-                                        value={formData.password}
-                                        onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                        placeholder="Enter new password to update (leave blank to keep current)"
-                                    />
+                                    <div className="relative group">
+                                        <input
+                                            className="input-field pr-12 focus:border-tea-700 transition-all"
+                                            type={showPassword ? "text" : "password"}
+                                            value={formData.password}
+                                            onChange={e => setFormData({ ...formData, password: e.target.value })}
+                                            placeholder="Enter new password to update (leave blank to keep current)"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-tea-400 hover:text-tea-700 transition-colors"
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

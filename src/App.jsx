@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './components/DashboardLayout';
 
@@ -29,78 +29,87 @@ import APIDocumentation from './pages/APIDocumentation';
 
 import { ToastProvider } from './contexts/ToastContext';
 
+const AppRoutes = () => {
+    const { isAuthenticated, user } = useAuth();
+
+    return (
+        <Routes>
+            {/* Entry Points */}
+            <Route
+                path="/"
+                element={
+                    !isAuthenticated ? (
+                        <LoginManager />
+                    ) : (
+                        <Navigate to={user?.role === 'super' ? '/super/dashboard' : '/manager/dashboard'} replace />
+                    )
+                }
+            />
+
+            {/* Super Admin Routes */}
+            <Route path="/super">
+                <Route
+                    index
+                    element={
+                        !isAuthenticated ? (
+                            <LoginSuper />
+                        ) : (
+                            user?.role === 'manager' ? (
+                                <Navigate to="/manager/dashboard" replace />
+                            ) : (
+                                <Navigate to="/super/dashboard" replace />
+                            )
+                        )
+                    }
+                />
+                <Route
+                    element={
+                        <ProtectedRoute requiredRole="super">
+                            <DashboardLayout />
+                        </ProtectedRoute>
+                    }
+                >
+                    <Route path="dashboard" element={<DashboardSuper />} />
+                    <Route path="managers" element={<Managers />} />
+                    <Route path="profile" element={<ProfileSuper />} />
+                    <Route path="activity" element={<RecentActivitySuper />} />
+                </Route>
+            </Route>
+
+            <Route path="/seeding" element={<Seeding />} />
+
+            {/* Salon Manager Routes */}
+            <Route
+                path="/manager"
+                element={
+                    <ProtectedRoute requiredRole="manager">
+                        <DashboardLayout />
+                    </ProtectedRoute>
+                }
+            >
+                <Route path="dashboard" element={<DashboardManager />} />
+                <Route path="stylists" element={<Stylists />} />
+                <Route path="clients" element={<Clients />} />
+                <Route path="products" element={<Products />} />
+                <Route path="sales" element={<Sales />} />
+                <Route path="app-config" element={<AppConfig />} />
+                <Route path="profile" element={<ProfileManager />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="activity" element={<RecentActivityManager />} />
+            </Route>
+
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+    );
+};
+
 function App() {
     return (
         <AuthProvider>
             <ToastProvider>
                 <BrowserRouter>
-                    <Routes>
-                        {/* Role Detection Entry Points */}
-                        {/* Root / defaults to Salon Manager logic */}
-                        <Route
-                            path="/"
-                            element={
-                                <ProtectedRoute requiredRole="manager">
-                                    <Navigate to="/manager/dashboard" replace />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        {/* /super defaults to Super Admin logic */}
-                        <Route
-                            path="/super"
-                            element={
-                                <ProtectedRoute requiredRole="super">
-                                    <Navigate to="/super/dashboard" replace />
-                                </ProtectedRoute>
-                            }
-                        />
-
-                        {/* Separate Login Pages */}
-                        <Route path="/manager/login" element={<LoginManager forcedRole="manager" />} />
-                        <Route path="/super/login" element={<LoginSuper forcedRole="super" />} />
-                        <Route path="/login" element={<Navigate to="/manager/login" replace />} />
-
-                        <Route path="/seeding" element={<Seeding />} />
-
-                        {/* Super Admin Panel Sub-routes */}
-                        <Route
-                            path="/super"
-                            element={
-                                <ProtectedRoute requiredRole="super">
-                                    <DashboardLayout />
-                                </ProtectedRoute>
-                            }
-                        >
-                            <Route path="dashboard" element={<DashboardSuper />} />
-                            <Route path="managers" element={<Managers />} />
-                            <Route path="profile" element={<ProfileSuper />} />
-                            <Route path="activity" element={<RecentActivitySuper />} />
-                        </Route>
-
-                        {/* Salon Manager Panel Sub-routes */}
-                        <Route
-                            path="/manager"
-                            element={
-                                <ProtectedRoute requiredRole="manager">
-                                    <DashboardLayout />
-                                </ProtectedRoute>
-                            }
-                        >
-                            <Route path="dashboard" element={<DashboardManager />} />
-                            <Route path="stylists" element={<Stylists />} />
-                            <Route path="clients" element={<Clients />} />
-                            <Route path="products" element={<Products />} />
-                            <Route path="sales" element={<Sales />} />
-                            <Route path="app-config" element={<AppConfig />} />
-                            <Route path="profile" element={<ProfileManager />} />
-                            <Route path="settings" element={<Settings />} />
-                            <Route path="activity" element={<RecentActivityManager />} />
-                        </Route>
-
-                        {/* Catch all */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
+                    <AppRoutes />
                 </BrowserRouter>
             </ToastProvider>
         </AuthProvider>
@@ -108,3 +117,4 @@ function App() {
 }
 
 export default App;
+
