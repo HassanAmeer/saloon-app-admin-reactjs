@@ -46,12 +46,12 @@ const baseProducts = [
 
 // 5. Stylists (Static definitions, totals calculated later)
 const baseStylists = [
-    { id: "s1-1", name: "Emma Johnson", email: "emma@elegance.com", salonId: "salon-1", status: "Active", imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop", bio: "Expert colorist", skills: "Balayage, Color" },
-    { id: "s1-2", name: "Michael Chen", email: "michael@elegance.com", salonId: "salon-1", status: "Active", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop", bio: "Precision cutter", skills: "Short Hair, Fades" },
-    { id: "s1-3", name: "Sarah Williams", email: "sarah@elegance.com", salonId: "salon-1", status: "Active", imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop", bio: "Bridal specialist", skills: "Updos, Styling" },
-    { id: "s2-1", name: "David Martinez", email: "david@urban.com", salonId: "salon-2", status: "Active", imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3dbdf5bb3d?w=150&h=150&fit=crop", bio: "Urban stylist", skills: "Modern Cuts" },
-    { id: "s2-2", name: "Lisa Anderson", email: "lisa@urban.com", salonId: "salon-2", status: "Active", imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop", bio: "Texture expert", skills: "Perms, Curls" },
-    { id: "s2-3", name: "James Wilson", email: "james@urban.com", salonId: "salon-2", status: "Active", imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop", bio: "Trends specialist", skills: "Fashion Colors" }
+    { id: "s1-1", name: "Emma Johnson", email: "emma@elegance.com", password: "12345678", salonId: "salon-1", status: "Active", imageUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop", bio: "Expert colorist", skills: "Balayage, Color" },
+    { id: "s1-2", name: "Michael Chen", email: "michael@elegance.com", password: "12345678", salonId: "salon-1", status: "Active", imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop", bio: "Precision cutter", skills: "Short Hair, Fades" },
+    { id: "s1-3", name: "Sarah Williams", email: "sarah@elegance.com", password: "12345678", salonId: "salon-1", status: "Active", imageUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop", bio: "Bridal specialist", skills: "Updos, Styling" },
+    { id: "s2-1", name: "David Martinez", email: "david@urban.com", password: "12345678", salonId: "salon-2", status: "Active", imageUrl: "https://images.unsplash.com/photo-1492562080023-ab3dbdf5bb3d?w=150&h=150&fit=crop", bio: "Urban stylist", skills: "Modern Cuts" },
+    { id: "s2-2", name: "Lisa Anderson", email: "lisa@urban.com", password: "12345678", salonId: "salon-2", status: "Active", imageUrl: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop", bio: "Texture expert", skills: "Perms, Curls" },
+    { id: "s2-3", name: "James Wilson", email: "james@urban.com", password: "12345678", salonId: "salon-2", status: "Active", imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop", bio: "Trends specialist", skills: "Fashion Colors" }
 ];
 
 // Data Structures for tracking totals to ensure consistency

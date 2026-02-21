@@ -4,6 +4,7 @@ import {
     Search,
     Edit,
     Eye,
+    EyeOff,
     User,
     UserX,
     Check,
@@ -114,11 +115,11 @@ const Stylists = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-black text-tea-900 tracking-tight">Team <span className="text-tea-700">Stylists</span></h1>
-                    <p className="text-tea-500 font-bold text-xs uppercase tracking-widest leading-none">Manage specialist profiles and monitor performance</p>
+                    <p className="text-tea-500 font-bold text-xs uppercase tracking-widest leading-none">Manage Stylist profiles and monitor performance</p>
                 </div>
                 <button onClick={() => { setModalMode('add'); setSelectedStylist(null); setShowModal(true); }} className="btn-primary">
                     <Plus className="w-5 h-5" />
-                    <span>Register Specialist</span>
+                    <span>Register Stylist</span>
                 </button>
             </div>
 
@@ -402,13 +403,20 @@ const StylistModal = ({ mode, stylist, onClose, onSave }) => {
     return (
         <div className="fixed inset-0 bg-tea-900/40 backdrop-blur-md z-[100] flex items-center justify-center p-4">
             <div className="glass-card max-w-2xl w-full p-8 space-y-8 max-h-[90vh] overflow-y-auto custom-scrollbar border-tea-700/10 shadow-2xl">
-                <h2 className="text-3xl font-black text-tea-900 uppercase tracking-tighter">{mode === 'add' ? 'New' : 'Edit'} <span className="text-tea-700">Specialist</span></h2>
+                <h2 className="text-3xl font-black text-tea-900 uppercase tracking-tighter">{mode === 'add' ? 'New' : 'Edit'} <span className="text-tea-700">Stylist</span></h2>
                 <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <InputGroup label="Full Name" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} />
                         <InputGroup label="Email" type="email" value={formData.email} onChange={v => setFormData({ ...formData, email: v })} />
                         <InputGroup label="Phone" value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} />
-                        <InputGroup label="Password" type="password" value={formData.password} onChange={v => setFormData({ ...formData, password: v })} placeholder={mode === 'edit' ? 'Optional' : ''} />
+                        <InputGroup
+                            label="Password"
+                            type="password"
+                            value={formData.password}
+                            onChange={v => setFormData({ ...formData, password: v })}
+                            placeholder={mode === 'edit' ? 'Leave blank to keep current' : 'Min. 8 characters'}
+                            required={mode === 'add'}
+                        />
                     </div>
                     <div className="flex flex-col items-center gap-4 py-4 border-y border-tea-700/5">
                         <div className="relative group">
@@ -436,7 +444,7 @@ const StylistModal = ({ mode, stylist, onClose, onSave }) => {
                             </label>
                         </div>
                         <div className="text-center">
-                            <p className="text-[10px] font-black text-tea-700 uppercase tracking-widest leading-none">Specialist Portrait</p>
+                            <p className="text-[10px] font-black text-tea-700 uppercase tracking-widest leading-none">Stylist Portrait</p>
                             <p className="text-[9px] text-tea-400 mt-1 uppercase font-bold">Click to upload photo</p>
                         </div>
                     </div>
@@ -455,11 +463,34 @@ const StylistModal = ({ mode, stylist, onClose, onSave }) => {
     );
 };
 
-const InputGroup = ({ label, type = "text", value, onChange, placeholder }) => (
-    <div className="space-y-2">
-        <label className="text-[10px] font-black text-tea-700 uppercase tracking-widest ml-1">{label}</label>
-        <input type={type} value={value} onChange={e => onChange(e.target.value)} className="input-field bg-white/50" placeholder={placeholder} required={type !== 'password'} />
-    </div>
-);
+const InputGroup = ({ label, type = "text", value, onChange, placeholder, required = true }) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const isPassword = type === "password";
+
+    return (
+        <div className="space-y-2">
+            <label className="text-[10px] font-black text-tea-700 uppercase tracking-widest ml-1">{label}</label>
+            <div className="relative">
+                <input
+                    type={isPassword ? (showPassword ? "text" : "password") : type}
+                    value={value}
+                    onChange={e => onChange(e.target.value)}
+                    className="input-field bg-white/50 pr-12"
+                    placeholder={placeholder}
+                    required={required}
+                />
+                {isPassword && (
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-tea-400 hover:text-tea-700 transition-colors"
+                    >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
 export default Stylists;
