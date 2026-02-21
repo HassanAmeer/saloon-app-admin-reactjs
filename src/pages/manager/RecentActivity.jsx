@@ -171,7 +171,7 @@ const RecentActivity = () => {
                                         <td className="p-6 text-right">
                                             <div className="space-y-1">
                                                 <p className="text-xl font-black text-tea-900 tracking-tighter leading-none">${(sale.totalAmount || sale.total || 0).toFixed(2)}</p>
-                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em]">Transaction Verified</p>
+                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em]">Amount</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -187,7 +187,7 @@ const RecentActivity = () => {
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

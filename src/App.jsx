@@ -19,6 +19,7 @@ import RecentActivityManager from './pages/manager/RecentActivity';
 import LoginSuper from './pages/super/Login';
 import DashboardSuper from './pages/super/Dashboard';
 import Managers from './pages/super/Managers';
+import ManagerForm from './pages/super/ManagerForm';
 import ProfileSuper from './pages/super/Profile';
 import RecentActivitySuper from './pages/super/RecentActivity';
 
@@ -71,6 +72,8 @@ const AppRoutes = () => {
                 >
                     <Route path="dashboard" element={<DashboardSuper />} />
                     <Route path="managers" element={<Managers />} />
+                    <Route path="managers/new" element={<ManagerForm mode="add" />} />
+                    <Route path="managers/edit/:id" element={<ManagerForm mode="edit" />} />
                     <Route path="profile" element={<ProfileSuper />} />
                     <Route path="activity" element={<RecentActivitySuper />} />
                 </Route>

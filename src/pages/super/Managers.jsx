@@ -11,17 +11,18 @@ import {
     X,
     Loader2,
     Building2,
-    Mail,
-    Phone,
     ArrowRight,
     MapPin,
-    User
+    User,
+    Camera,
+    Upload
 } from 'lucide-react';
 import {
     subscribeToCollection,
     createDocument,
     updateDocument,
-    deleteDocument
+    deleteDocument,
+    uploadImage
 } from '../../lib/services';
 import { useNavigate } from 'react-router-dom';
 import { ManagersSkeleton } from '../../components/Skeleton';
@@ -34,10 +35,6 @@ const Managers = () => {
     const [salons, setSalons] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [showModal, setShowModal] = useState(false);
-    const [modalMode, setModalMode] = useState('add');
-    const [selectedManager, setSelectedManager] = useState(null);
-    const [selectedSalon, setSelectedSalon] = useState(null);
 
     useEffect(() => {
         const unsubs = [
@@ -58,18 +55,11 @@ const Managers = () => {
     );
 
     const handleAdd = () => {
-        setModalMode('add');
-        setSelectedManager(null);
-        setSelectedSalon(null);
-        setShowModal(true);
+        navigate('/super/managers/new');
     };
 
     const handleEdit = (manager) => {
-        setModalMode('edit');
-        const salon = salons.find(s => s.managerId === manager.id);
-        setSelectedManager(manager);
-        setSelectedSalon(salon);
-        setShowModal(true);
+        navigate(`/super/managers/edit/${manager.id}`);
     };
 
     const handleDelete = async (managerId) => {
@@ -93,82 +83,7 @@ const Managers = () => {
         }
     };
 
-    const handleSave = async (data) => {
-        try {
-            if (modalMode === 'add') {
-                const managerRes = await createDocument('salon_managers', {
-                    ...data.manager,
-                    type: 'salonmanager',
-                    status: 'Active',
-                    createdAt: new Date()
-                });
 
-                const newSalonId = managerRes.id;
-
-                // Important: Link manager to the salonId
-                await updateDocument('salon_managers', managerRes.id, {
-                    salonId: newSalonId
-                });
-
-                await createDocument('salons', {
-                    ...data.salon,
-                    id: newSalonId,
-                    managerId: managerRes.id,
-                    createdAt: new Date(),
-                    supportEmail: 'support@salon.com',
-                    supportPhone: '+0123456789'
-                });
-
-                const { mockConfig } = await import('../../data-migration/mockData');
-                await createDocument('settings', {
-                    ...mockConfig,
-                    salonId: newSalonId,
-                    id: `app_config_${newSalonId}`,
-                    supportEmail: 'support@salon.com',
-                    supportPhone: '+0123456789'
-                });
-
-                const defaultProducts = [
-                    {
-                        name: 'Argan Oil Elixir',
-                        brand: 'Luxe Hair',
-                        category: 'Treatment',
-                        description: 'Premium hydration and shine elixir',
-                        price: 45.00,
-                        salonId: newSalonId,
-                        active: true,
-                        imageUrl: 'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?w=300'
-                    },
-                    {
-                        name: 'Silver Bright Shampoo',
-                        brand: 'Pure Color',
-                        category: 'Shampoo',
-                        description: 'For platinum and silver hair maintenance',
-                        price: 32.00,
-                        salonId: newSalonId,
-                        active: true,
-                        imageUrl: 'https://images.unsplash.com/photo-1543946602-a0fce8117697?w=300'
-                    }
-                ];
-
-                for (const p of defaultProducts) {
-                    await createDocument('products', p);
-                }
-
-            } else {
-                await updateDocument('salon_managers', selectedManager.id, data.manager);
-                const salon = salons.find(s => s.managerId === selectedManager.id);
-                if (salon && data.salon) {
-                    await updateDocument('salons', salon.id, data.salon);
-                }
-            }
-            setShowModal(false);
-            showToast(modalMode === 'add' ? 'Partner onboarded successfully' : 'Partner updated successfully', 'success');
-        } catch (error) {
-            console.error("Error saving:", error);
-            showToast('Failed to save partner details', 'error');
-        }
-    };
 
     if (loading) {
         return <ManagersSkeleton />;
@@ -276,171 +191,10 @@ const Managers = () => {
                 })}
             </div>
 
-            {showModal && (
-                <ManagerModal
-                    mode={modalMode}
-                    manager={selectedManager}
-                    salon={selectedSalon}
-                    onClose={() => setShowModal(false)}
-                    onSave={handleSave}
-                />
-            )}
         </div>
     );
 };
 
-const ManagerModal = ({ mode, manager, salon, onClose, onSave }) => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [formData, setFormData] = useState({
-        manager: {
-            name: manager?.name || '',
-            email: manager?.email || '',
-            phone: manager?.phone || '',
-            bio: manager?.bio || '',
-            brand: manager?.brand || '',
-            address: manager?.address || '',
-            password: '',
-            ...manager
-        },
-        salon: {
-            name: salon?.name || '',
-            address: salon?.address || '',
-            phone: salon?.phone || ''
-        }
-    });
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onSave(formData);
-    };
-
-    return (
-        <div className="fixed inset-0 bg-tea-900/20 backdrop-blur-md flex items-center justify-center z-[100] p-4 font-sans">
-            <div className="glass-card max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col scale-in bg-white border-none shadow-2xl">
-                <div className="p-8 border-b border-tea-100 flex justify-between items-center bg-gradient-to-r from-tea-50 to-white">
-                    <h2 className="text-2xl font-black text-tea-900 tracking-tight uppercase">{mode === 'add' ? 'Partner Onboarding' : 'Edit Partner'}</h2>
-                    <button onClick={onClose} className="text-tea-400 hover:text-tea-700 transition-colors"><X className="w-6 h-6" /></button>
-                </div>
-                <form onSubmit={handleSubmit} className="p-8 overflow-y-auto no-scrollbar space-y-8">
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-tea-600 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <div className="w-1 h-3 bg-tea-600 rounded-full" /> Personal Credentials
-                        </h3>
-                        <div className="grid grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Full Name</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.manager.name}
-                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, name: e.target.value } })}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Email Address</label>
-                                <input
-                                    className="input-field"
-                                    type="email"
-                                    value={formData.manager.email}
-                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, email: e.target.value } })}
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Phone Number</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.manager.phone}
-                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, phone: e.target.value } })}
-                                    placeholder="Personal contact number"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Professional Brand</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.manager.brand}
-                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, brand: e.target.value } })}
-                                    placeholder="Personal/Agency Brand"
-                                />
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Personal Address</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.manager.address}
-                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, address: e.target.value } })}
-                                    placeholder="Manager's professional address"
-                                />
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Login Password</label>
-                                <div className="relative group/pass">
-                                    <input
-                                        className="input-field pr-12"
-                                        type={showPassword ? "text" : "password"}
-                                        value={formData.manager.password}
-                                        onChange={e => setFormData({ ...formData, manager: { ...formData.manager, password: e.target.value } })}
-                                        required={mode === 'add'}
-                                        placeholder={mode === 'edit' ? "Leave blank to keep current" : "Min. 6 characters"}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-tea-300 hover:text-tea-700 transition-colors"
-                                    >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="space-y-2 col-span-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Professional Bio</label>
-                                <textarea
-                                    className="input-field min-h-[80px] py-3"
-                                    value={formData.manager.bio}
-                                    onChange={e => setFormData({ ...formData, manager: { ...formData.manager, bio: e.target.value } })}
-                                    placeholder="Brief background or experience"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black text-tea-600 uppercase tracking-[0.2em] flex items-center gap-2">
-                            <div className="w-1 h-3 bg-tea-600 rounded-full" /> Salon Entity Registration
-                        </h3>
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Salon Brand Name</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.salon.name}
-                                    onChange={e => setFormData({ ...formData, salon: { ...formData.salon, name: e.target.value } })}
-                                    placeholder="e.g. Elegance Studio"
-                                    required
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-tea-800 uppercase tracking-widest ml-1">Physical Location</label>
-                                <input
-                                    className="input-field"
-                                    value={formData.salon.address}
-                                    onChange={e => setFormData({ ...formData, salon: { ...formData.salon, address: e.target.value } })}
-                                    placeholder="Full address here"
-                                    required
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 pt-4 sticky bottom-0 bg-white">
-                        <button type="button" onClick={onClose} className="flex-1 btn-secondary">Cancel</button>
-                        <button type="submit" className="flex-1 btn-primary">Complete Onboarding</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-};
 
 export default Managers;
