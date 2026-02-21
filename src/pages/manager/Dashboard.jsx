@@ -3,7 +3,6 @@ import {
     TrendingUp,
     Users,
     Package,
-    Sparkles,
     Loader2,
     BotIcon,
     ScanFaceIcon,
@@ -16,7 +15,8 @@ import {
     Activity,
     Eye,
     Building2,
-    User
+    User,
+    UserStarIcon
 } from 'lucide-react';
 import {
     BarChart,
@@ -336,7 +336,7 @@ const Dashboard = ({ forceSalonId }) => {
                             label="Total Stylists"
                             value={dashboardStats.totalStylists.toLocaleString()}
                             growth={dashboardStats.stylistGrowth}
-                            icon={ScanFaceIcon}
+                            icon={UserStarIcon}
                             color="tea"
                         />
                         <MetricCard

@@ -3,7 +3,7 @@ import {
     TrendingUp,
     Users,
     Package,
-    Sparkles,
+    Bot,
     Loader2,
     BotIcon,
     ScanFaceIcon,
@@ -282,7 +282,7 @@ const Dashboard = ({ forceSalonId }) => {
                             label="AI Engagements"
                             value={stats.totalScans.toLocaleString()}
                             growth={stats.scansGrowth}
-                            icon={Sparkles}
+                            icon={Bot}
                             color="amber"
                         />
                         <MetricCard

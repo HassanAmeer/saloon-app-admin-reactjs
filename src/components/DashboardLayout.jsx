@@ -13,7 +13,6 @@ import {
     Menu,
     Settings,
     X,
-    Sparkles,
     Activity,
     Eye,
     User
@@ -71,7 +70,6 @@ const DashboardLayout = () => {
         { path: '/manager/sales', icon: TrendingUp, label: 'Sales & Analytics' },
         { path: '/manager/app-config', icon: Settings, label: 'App Config' },
         { path: '/manager/profile', icon: Users, label: 'Profile' },
-        { path: '/manager/settings', icon: Settings, label: 'Settings' },
     ];
 
     const superNavItems = [

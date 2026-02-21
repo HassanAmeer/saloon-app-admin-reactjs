@@ -12,7 +12,6 @@ import Sales from './pages/manager/Sales';
 import Clients from './pages/manager/Clients';
 import AppConfig from './pages/manager/AppConfig';
 import ProfileManager from './pages/manager/Profile';
-import Settings from './pages/manager/Settings';
 import RecentActivityManager from './pages/manager/RecentActivity';
 
 // Super Admin Pages
@@ -97,7 +96,6 @@ const AppRoutes = () => {
                 <Route path="sales" element={<Sales />} />
                 <Route path="app-config" element={<AppConfig />} />
                 <Route path="profile" element={<ProfileManager />} />
-                <Route path="settings" element={<Settings />} />
                 <Route path="activity" element={<RecentActivityManager />} />
             </Route>
 

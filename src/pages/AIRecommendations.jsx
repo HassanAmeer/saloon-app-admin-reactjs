@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import {
-    Sparkles,
     Calendar,
     User,
     CheckCircle,

@@ -11,7 +11,7 @@ import {
     Users,
     TrendingUp,
     Package,
-    Sparkles,
+    Bot,
     Settings,
     ArrowUpRight,
     Camera,
@@ -20,7 +20,8 @@ import {
     Mail,
     Phone,
     Briefcase,
-    Calendar
+    Calendar,
+    Bot
 } from 'lucide-react';
 import {
     subscribeToCollection,
@@ -248,7 +249,7 @@ const StylistDetail = ({ stylist, onBack }) => {
                     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
                     { id: 'clients', label: 'Clients', icon: Users },
                     { id: 'sales', label: 'Sales', icon: Package },
-                    { id: 'ai', label: 'AI Recommendations', icon: Sparkles }
+                    { id: 'ai', label: 'AI Recommendations', icon: Bot }
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 pb-4 border-b-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab.id ? 'border-tea-700 text-tea-700' : 'border-transparent text-tea-400'}`}>
                         <tab.icon className="w-4 h-4" /> {tab.label}
@@ -341,14 +342,14 @@ const AIRecommendationsPanel = ({ recommendations }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {recommendations.length === 0 ? (
             <div className="col-span-2 py-20 text-center glass-card border-dashed border-tea-700/20">
-                <Sparkles className="w-12 h-12 text-tea-200 mx-auto mb-4" />
+                <Bot className="w-12 h-12 text-tea-200 mx-auto mb-4" />
                 <p className="text-[10px] font-black text-tea-400 uppercase tracking-[0.3em]">No Intelligence Collected Yet</p>
             </div>
         ) : (
             recommendations.map(rec => (
                 <div key={rec.id} className="glass-card p-6 flex gap-6 items-center border-l-4 border-tea-700">
                     <div className="w-12 h-12 rounded-xl bg-tea-100 flex items-center justify-center text-tea-700">
-                        <Sparkles className="w-6 h-6" />
+                        <Bot className="w-6 h-6" />
                     </div>
                     <div>
                         <div className="flex justify-between items-start mb-1">
