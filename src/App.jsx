@@ -21,6 +21,7 @@ import Managers from './pages/super/Managers';
 import ManagerForm from './pages/super/ManagerForm';
 import ProfileSuper from './pages/super/Profile';
 import RecentActivitySuper from './pages/super/RecentActivity';
+import SettingsSuper from './pages/super/Settings';
 
 // Shared/Other Pages
 import Seeding from './pages/Seeding';
@@ -75,6 +76,7 @@ const AppRoutes = () => {
                     <Route path="managers/edit/:id" element={<ManagerForm mode="edit" />} />
                     <Route path="profile" element={<ProfileSuper />} />
                     <Route path="activity" element={<RecentActivitySuper />} />
+                    <Route path="settings" element={<SettingsSuper />} />
                 </Route>
             </Route>
 

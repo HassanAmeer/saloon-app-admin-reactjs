@@ -77,6 +77,7 @@ const DashboardLayout = () => {
         { path: '/super/activity', icon: Activity, label: 'Recent Activity' },
         { path: '/super/managers', icon: Users, label: 'salon Managers' },
         { path: '/super/profile', icon: Users, label: 'My Profile' },
+        { path: '/super/settings', icon: Settings, label: 'Data Config' },
     ];
 
     const navItems = isImpersonating ? managerNavItems : (type === 'superadmin' ? superNavItems : managerNavItems);
