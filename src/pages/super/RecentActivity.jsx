@@ -13,7 +13,7 @@ import {
 import { subscribeToCollectionGroup, subscribeToCollection } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { TableSkeleton } from '../../components/Skeleton';
+import { RecentActivitySkeleton } from '../../components/Skeleton';
 
 const RecentActivity = () => {
     const { type, user } = useAuth();
@@ -65,7 +65,7 @@ const RecentActivity = () => {
         .sort((a, b) => new Date(b.date || b.createdAt?.toDate()) - new Date(a.date || a.createdAt?.toDate()));
 
     if (loading) {
-        return <TableSkeleton rows={6} cols={7} />;
+        return <RecentActivitySkeleton />;
     }
 
     return (

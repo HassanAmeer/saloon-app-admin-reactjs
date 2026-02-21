@@ -23,7 +23,7 @@ import {
     deleteDocument
 } from '../../lib/services';
 import { useNavigate } from 'react-router-dom';
-import { TableSkeleton } from '../../components/Skeleton';
+import { ManagersSkeleton } from '../../components/Skeleton';
 
 const Managers = () => {
     const navigate = useNavigate();
@@ -169,7 +169,7 @@ const Managers = () => {
     };
 
     if (loading) {
-        return <TableSkeleton rows={4} cols={5} />;
+        return <ManagersSkeleton />;
     }
 
     return (

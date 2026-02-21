@@ -169,3 +169,159 @@ export const ProfileSkeleton = () => {
         </div>
     );
 };
+
+export const RecentActivitySkeleton = () => {
+    return (
+        <div className="space-y-10 animate-in fade-in duration-500">
+            {/* Header Skeleton */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-64 lg:w-96" />
+                    <Skeleton className="h-3 w-48 mt-2" />
+                </div>
+                <div className="relative w-full lg:w-96">
+                    <Skeleton className="h-14 w-full rounded-2xl" />
+                </div>
+            </div>
+
+            {/* Table Skeleton */}
+            <div className="glass-card overflow-hidden border-none shadow-2xl shadow-tea-900/5 bg-white/40 backdrop-blur-xl rounded-[2rem]">
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                        <thead>
+                            <tr className="border-b-2 border-tea-700/10 bg-tea-50/20">
+                                {['#_ID', 'Manager', 'Stylist/Client', 'Products', 'Date', 'Amounts', 'Actions'].map((h, i) => (
+                                    <th key={i} className="text-left py-6 px-6 text-[10px] font-black text-tea-600 uppercase tracking-[0.25em]">
+                                        <Skeleton className="h-3 w-16" />
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y-4 divide-tea-700/5">
+                            {[1, 2, 3, 4, 5, 6].map((row) => (
+                                <tr key={row} className="bg-white/40">
+                                    <td className="px-6 py-6 text-center">
+                                        <Skeleton className="h-4 w-12 mx-auto rounded-lg" />
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <div className="flex items-center gap-4">
+                                            <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-3 w-24" />
+                                                <Skeleton className="h-2 w-16" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <div className="flex items-center gap-4">
+                                            <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-3 w-24" />
+                                                <div className="mt-1">
+                                                    <Skeleton className="h-4 w-20 rounded-lg" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <div className="flex flex-wrap gap-1.5 max-w-[200px]">
+                                            <Skeleton className="h-6 w-20 rounded-lg" />
+                                            <Skeleton className="h-6 w-16 rounded-lg" />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <div className="flex items-center gap-3">
+                                            <Skeleton className="w-4 h-4 rounded-full" />
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-3 w-20" />
+                                                <Skeleton className="h-2 w-12" />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6 text-right">
+                                        <div className="space-y-2 ml-auto">
+                                            <Skeleton className="h-6 w-20 ml-auto" />
+                                            <Skeleton className="h-2 w-12 ml-auto" />
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6">
+                                        <Skeleton className="h-10 w-24 mx-auto rounded-xl" />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export const ManagersSkeleton = () => {
+    return (
+        <div className="space-y-8 animate-in fade-in duration-500">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-12 w-64 lg:w-96" />
+                    <Skeleton className="h-4 w-48" />
+                </div>
+                <Skeleton className="h-12 w-56 rounded-xl" />
+            </div>
+
+            <div className="glass-card p-4 relative">
+                <Skeleton className="h-14 w-full rounded-2xl" />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="glass-card p-8 space-y-6">
+                        <div className="flex justify-between items-start">
+                            <div className="flex gap-4">
+                                <Skeleton className="w-16 h-16 rounded-2xl shrink-0" />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-6 w-32" />
+                                    <div className="flex gap-2">
+                                        <Skeleton className="h-4 w-16 rounded-full" />
+                                        <Skeleton className="h-4 w-40" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex gap-2">
+                                <Skeleton className="w-8 h-8 rounded-lg" />
+                                <Skeleton className="w-8 h-8 rounded-lg" />
+                            </div>
+                        </div>
+
+                        <div className="p-5 bg-tea-50/50 rounded-2xl border border-tea-100 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <Skeleton className="w-5 h-5 rounded-full" />
+                                <div className="space-y-1">
+                                    <Skeleton className="h-3 w-24" />
+                                    <Skeleton className="h-4 w-32" />
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Skeleton className="w-3.5 h-3.5 rounded-full" />
+                                <Skeleton className="h-3 w-48" />
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-4 border-t border-tea-100">
+                            <div className="flex gap-6">
+                                <div className="space-y-1 text-center">
+                                    <Skeleton className="h-4 w-8 mx-auto" />
+                                    <Skeleton className="h-2 w-12 mx-auto" />
+                                </div>
+                                <div className="space-y-1 text-center">
+                                    <Skeleton className="h-4 w-12 mx-auto" />
+                                    <Skeleton className="h-2 w-12 mx-auto" />
+                                </div>
+                            </div>
+                            <Skeleton className="h-10 w-32 rounded-xl" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
