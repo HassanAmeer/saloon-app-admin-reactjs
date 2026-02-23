@@ -107,9 +107,30 @@ const Dashboard = ({ forceSalonId }) => {
         const fSales = sales.filter(s => isWithinPeriod(s.date || s.createdAt));
         const fRecs = recommendations.filter(r => isWithinPeriod(r.date || r.createdAt));
 
-        // Stats
         const totalSales = fSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
         const productsSold = fSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
+
+        // Calculate growth by comparing current period with previous period
+        const periodMsMap = {
+            day: 24 * 60 * 60 * 1000,
+            week: 7 * 24 * 60 * 60 * 1000,
+            month: 30 * 24 * 60 * 60 * 1000,
+            year: 365 * 24 * 60 * 60 * 1000
+        };
+        const pMs = periodMsMap[period];
+        const prevPeriodStart = new Date(now.getTime() - (pMs * 2));
+        const prevPeriodEnd = new Date(now.getTime() - pMs);
+
+        const isWithinPrevPeriod = (dateVal) => {
+            if (!dateVal) return false;
+            const d = dateVal.toDate ? dateVal.toDate() : new Date(dateVal);
+            return d >= prevPeriodStart && d < prevPeriodEnd;
+        };
+
+        const prevSales = sales.filter(s => isWithinPrevPeriod(s.date || s.createdAt));
+        const prevTotalSales = prevSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+
+        const sGrowthVal = prevTotalSales === 0 ? (totalSales > 0 ? 100 : 0) : ((totalSales - prevTotalSales) / prevTotalSales) * 100;
 
         const dashboardStats = {
             totalSales,
@@ -118,29 +139,35 @@ const Dashboard = ({ forceSalonId }) => {
             totalStylists: stylists.length,
             totalClients: clients.length,
             totalManagers: managers.length,
-            salesGrowth: '+12.5%',
-            scansGrowth: '+8.2%',
-            clientsGrowth: '+5.4%',
-            managersGrowth: '+10.0%',
-            stylistGrowth: '+4.2%'
+            salesGrowth: (sGrowthVal >= 0 ? '+' : '') + sGrowthVal.toFixed(1) + '%',
+            scansGrowth: '+0.0%',
+            clientsGrowth: '+0.0%',
+            managersGrowth: '+0.0%',
+            stylistGrowth: '+0.0%'
         };
 
-        // Dynamic Chart Data (Simplified aggregation by date)
+        // Dynamic Chart Data
         const dateGroups = {};
         fSales.forEach(s => {
-            const d = s.date || s.createdAt?.toDate();
-            const dateStr = d instanceof Date ? d.toLocaleDateString('en-US', { weekday: 'short' }) : new Date(d).toLocaleDateString('en-US', { weekday: 'short' });
+            const raw = s.date || s.createdAt;
+            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            if (!d || isNaN(d.getTime())) return;
+            const dateStr = d.toLocaleDateString('en-US', { weekday: 'short' });
             dateGroups[dateStr] = (dateGroups[dateStr] || 0) + (s.totalAmount || s.total || 0);
         });
 
-        const labels = period === 'day' ? ['Morning', 'Afternoon', 'Evening'] :
+        const labels = period === 'day' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] : // Use weekdays for simpler demo
             period === 'week' ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] :
-                ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
         const chart = labels.map(label => ({
             name: label,
-            revenue: dateGroups[label] || (Math.random() * 5000 + 1000), // Fallback to semi-random for demo if no data
-            scans: Math.floor(Math.random() * 50 + 10)
+            revenue: dateGroups[label] || 0,
+            scans: fRecs.filter(r => {
+                const raw = r.date || r.createdAt;
+                const rd = raw?.toDate ? raw.toDate() : new Date(raw);
+                return rd && !isNaN(rd.getTime()) && rd.toLocaleDateString('en-US', { weekday: 'short' }) === label;
+            }).length
         }));
 
         const lastSoldProducts = fSales.flatMap(sale =>

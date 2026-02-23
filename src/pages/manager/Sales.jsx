@@ -88,6 +88,50 @@ const Sales = () => {
     const totalTransactions = filteredSales.length;
     const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
 
+    const growthMetrics = useMemo(() => {
+        const now = new Date();
+        const getPreviousPeriodRange = () => {
+            const start = new Date(now);
+            const end = new Date(now);
+            if (period === 'today') { start.setDate(now.getDate() - 1); end.setDate(now.getDate() - 1); }
+            else if (period === 'week') { start.setDate(now.getDate() - 14); end.setDate(now.getDate() - 7); }
+            else if (period === 'month') { start.setMonth(now.getMonth() - 1); end.setMonth(now.getMonth() - 1); }
+            else if (period === 'year') { start.setFullYear(now.getFullYear() - 1); end.setFullYear(now.getFullYear() - 1); }
+            else { start.setMonth(now.getMonth() - 1); end.setMonth(now.getMonth() - 1); } // Default to month
+            return { start, end };
+        };
+
+        const { start: pStart, end: pEnd } = getPreviousPeriodRange();
+        const prevSales = sales.filter(sale => {
+            const raw = sale.createdAt || sale.date;
+            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            if (isNaN(d)) return false;
+
+            if (period === 'today') return d.toDateString() === pStart.toDateString();
+            if (period === 'week') return d >= pStart && d < pEnd;
+            if (period === 'month') return d.getMonth() === pStart.getMonth() && d.getFullYear() === pStart.getFullYear();
+            if (period === 'year') return d.getFullYear() === pStart.getFullYear();
+            return d < pStart; // Simple fallback for 'all'
+        });
+
+        const prevRev = prevSales.reduce((s, sale) => s + (sale.totalAmount || sale.total || 0), 0);
+        const prevProd = prevSales.reduce((s, sale) => s + (sale.products || []).reduce((ps, p) => ps + (p.quantity || 1), 0), 0);
+        const prevTrans = prevSales.length;
+
+        const calcGrowth = (curr, prev) => {
+            if (prev === 0) return curr > 0 ? '+100%' : '+0.0%';
+            const g = ((curr - prev) / prev) * 100;
+            return (g >= 0 ? '+' : '') + g.toFixed(1) + '%';
+        };
+
+        return {
+            revGrowth: calcGrowth(totalRevenue, prevRev),
+            prodGrowth: calcGrowth(totalProducts, prevProd),
+            transGrowth: calcGrowth(totalTransactions, prevTrans),
+            avgGrowth: calcGrowth(avgTransaction, prevTrans > 0 ? prevRev / prevTrans : 0)
+        };
+    }, [sales, filteredSales, period, totalRevenue, totalProducts, totalTransactions, avgTransaction]);
+
     // Chart data — group filtered sales by day (last 14 days) or month
     const chartData = useMemo(() => {
         const now = new Date();
@@ -199,10 +243,10 @@ const Sales = () => {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} growth="+12.5%" icon={DollarSign} color="tea" />
-                <StatCard label="Products Sold" value={totalProducts.toString()} growth="+8.3%" icon={Package} color="emerald" />
-                <StatCard label="Transactions" value={totalTransactions.toString()} growth="+5.1%" icon={ReceiptText} color="amber" />
-                <StatCard label="Avg. Sale Value" value={`$${avgTransaction.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} growth="+3.7%" icon={TrendingUp} color="brown" />
+                <StatCard label="Total Revenue" value={`$${totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} growth={growthMetrics.revGrowth} icon={DollarSign} color="tea" />
+                <StatCard label="Products Sold" value={totalProducts.toString()} growth={growthMetrics.prodGrowth} icon={Package} color="emerald" />
+                <StatCard label="Transactions" value={totalTransactions.toString()} growth={growthMetrics.transGrowth} icon={ReceiptText} color="amber" />
+                <StatCard label="Avg. Sale Value" value={`$${avgTransaction.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} growth={growthMetrics.avgGrowth} icon={TrendingUp} color="brown" />
             </div>
 
             {/* Revenue Chart */}

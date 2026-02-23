@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import {
     subscribeToCollection,
+    subscribeToCollectionGroup,
     createDocument,
     updateDocument,
     deleteDocument,
@@ -36,10 +37,15 @@ const Managers = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
+    const [allStylists, setAllStylists] = useState([]);
+    const [allSales, setAllSales] = useState([]);
+
     useEffect(() => {
         const unsubs = [
             subscribeToCollection('salon_managers', setManagers),
-            subscribeToCollection('salons', setSalons)
+            subscribeToCollection('salons', setSalons),
+            subscribeToCollectionGroup('stylists', setAllStylists),
+            subscribeToCollectionGroup('sales', setAllSales)
         ];
 
         const timeout = setTimeout(() => setLoading(false), 1000);
@@ -170,11 +176,15 @@ const Managers = () => {
                                 <div className="flex items-center justify-between pt-4 border-t border-tea-100">
                                     <div className="flex gap-6">
                                         <div className="text-center">
-                                            <p className="text-sm font-black text-tea-900">--</p>
+                                            <p className="text-sm font-black text-tea-900">
+                                                {allStylists.filter(s => s.salonId === salon?.id).length}
+                                            </p>
                                             <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">Stylists</p>
                                         </div>
                                         <div className="text-center">
-                                            <p className="text-sm font-black text-tea-900">$0.00</p>
+                                            <p className="text-sm font-black text-tea-900">
+                                                ${allSales.filter(s => s.salonId === salon?.id).reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0).toLocaleString()}
+                                            </p>
                                             <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">Revenue</p>
                                         </div>
                                     </div>

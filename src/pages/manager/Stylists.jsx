@@ -231,15 +231,77 @@ const StylistDetail = ({ stylist, salonId, onBack }) => {
         return Array.from(clientsMap.values());
     }, [sales]);
 
-    const statsData = [
-        { name: 'Mon', sales: 400, clients: 24 },
-        { name: 'Tue', sales: 300, clients: 13 },
-        { name: 'Wed', sales: 500, clients: 98 },
-        { name: 'Thu', sales: 278, clients: 39 },
-        { name: 'Fri', sales: 189, clients: 48 },
-        { name: 'Sat', sales: 239, clients: 38 },
-        { name: 'Sun', sales: 349, clients: 43 },
-    ];
+    const { statsData, growthStats } = useMemo(() => {
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const chartBuckets = days.map(name => ({ name, sales: 0, clients: 0 }));
+        const dayClients = days.map(() => new Set());
+
+        sales.forEach(sale => {
+            const raw = sale.date || sale.createdAt;
+            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            if (!d || isNaN(d.getTime())) return;
+
+            let dayIndex = d.getDay() - 1; // Mon is 0
+            if (dayIndex === -1) dayIndex = 6; // Sun is 6
+
+            if (chartBuckets[dayIndex]) {
+                chartBuckets[dayIndex].sales += (sale.totalAmount || sale.total || 0);
+                const clientId = sale.clientId || sale.clientName;
+                if (clientId) dayClients[dayIndex].add(clientId);
+            }
+        });
+
+        chartBuckets.forEach((bucket, i) => {
+            bucket.clients = dayClients[i].size;
+        });
+
+        // Growth metrics
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+        let currSales = 0, prevSales = 0;
+        let currClients = new Set(), prevClients = new Set();
+
+        sales.forEach(sale => {
+            const raw = sale.date || sale.createdAt;
+            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            if (!d || isNaN(d.getTime())) return;
+
+            if (d >= sevenDaysAgo) {
+                currSales += (sale.totalAmount || sale.total || 0);
+                if (sale.clientId || sale.clientName) currClients.add(sale.clientId || sale.clientName);
+            } else if (d >= fourteenDaysAgo) {
+                prevSales += (sale.totalAmount || sale.total || 0);
+                if (sale.clientId || sale.clientName) prevClients.add(sale.clientId || sale.clientName);
+            }
+        });
+
+        const sGrowth = prevSales === 0 ? (currSales > 0 ? 100 : 0) : ((currSales - prevSales) / prevSales) * 100;
+        const cGrowth = prevClients.size === 0 ? (currClients.size > 0 ? 100 : 0) : ((currClients.size - prevClients.size) / prevClients.size) * 100;
+
+        // Dynamic Retention Calculation
+        // % of clients who have visited more than once in the entire history
+        const visitCounts = {};
+        sales.forEach(sale => {
+            const id = sale.clientId || sale.clientName;
+            if (id) visitCounts[id] = (visitCounts[id] || 0) + 1;
+        });
+
+        const totalDistinct = Object.keys(visitCounts).length;
+        const repeatClients = Object.values(visitCounts).filter(count => count > 1).length;
+        const retentionRate = totalDistinct === 0 ? 0 : (repeatClients / totalDistinct) * 100;
+
+        return {
+            statsData: chartBuckets,
+            growthStats: {
+                salesGrowth: sGrowth >= 0 ? `+${sGrowth.toFixed(1)}%` : `${sGrowth.toFixed(1)}%`,
+                clientGrowth: cGrowth >= 0 ? `+${cGrowth.toFixed(1)}%` : `${cGrowth.toFixed(1)}%`,
+                retention: `${retentionRate.toFixed(1)}%`,
+                yearly: (currSales * 52).toFixed(0)
+            }
+        };
+    }, [sales]);
 
     return (
         <div className="space-y-8 animate-in slide-in-from-right duration-500">
@@ -282,7 +344,7 @@ const StylistDetail = ({ stylist, salonId, onBack }) => {
             </div>
 
             <div className="min-h-[400px]">
-                {activeTab === 'analytics' && <AnalyticsPanel statsData={statsData} stylist={stylist} />}
+                {activeTab === 'analytics' && <AnalyticsPanel statsData={statsData} growthStats={growthStats} stylist={stylist} />}
                 {activeTab === 'clients' && <RecordsTable type="clients" data={clients} />}
                 {activeTab === 'sales' && <RecordsTable type="sales" data={sales} />}
                 {activeTab === 'ai' && <AIRecommendationsPanel recommendations={recommendations} />}
@@ -291,7 +353,7 @@ const StylistDetail = ({ stylist, salonId, onBack }) => {
     );
 };
 
-const AnalyticsPanel = ({ statsData, stylist }) => (
+const AnalyticsPanel = ({ statsData, growthStats, stylist }) => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 glass-card p-6">
             <h3 className="text-lg font-black text-tea-900 uppercase tracking-tight mb-8">Performance History</h3>
@@ -309,9 +371,9 @@ const AnalyticsPanel = ({ statsData, stylist }) => (
             </div>
         </div>
         <div className="space-y-6">
-            <StatCard label="Growth" value="+24%" growth="+5%" />
-            <StatCard label="Retention" value="92%" growth="+2%" />
-            <StatCard label="Yearly" value={`$${(stylist.totalSales * 1.2 || 0).toFixed(0)}`} growth="+15%" />
+            <StatCard label="Growth" value={growthStats.salesGrowth} growth={growthStats.salesGrowth} />
+            <StatCard label="Retention" value={growthStats.retention} growth={growthStats.clientGrowth} />
+            <StatCard label="Yearly" value={`$${Number(growthStats.yearly).toLocaleString()}`} growth={growthStats.salesGrowth} />
         </div>
     </div>
 );

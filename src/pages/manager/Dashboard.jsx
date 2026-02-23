@@ -123,6 +123,45 @@ const Dashboard = ({ forceSalonId }) => {
         const totalClients = stylists.reduce((sum, s) => sum + (s.clientsCount || 0), 0);
         const totalManagers = managers.length;
 
+        // Calculate growth by comparing current period with previous period
+        const now = new Date();
+        const getPreviousPeriodRange = () => {
+            const start = new Date(now);
+            const end = new Date(now);
+            if (period === 'day') {
+                start.setDate(now.getDate() - 1);
+                end.setDate(now.getDate() - 1);
+            } else if (period === 'week') {
+                start.setDate(now.getDate() - 14);
+                end.setDate(now.getDate() - 7);
+            } else if (period === 'month') {
+                start.setMonth(now.getMonth() - 1);
+                end.setMonth(now.getMonth() - 1);
+            } else if (period === 'year') {
+                start.setFullYear(now.getFullYear() - 1);
+                end.setFullYear(now.getFullYear() - 1);
+            }
+            return { start, end };
+        };
+
+        const { start: prevStart, end: prevEnd } = getPreviousPeriodRange();
+
+        const prevSales = sales.filter(sale => {
+            const raw = sale.date || sale.createdAt;
+            if (!raw) return false;
+            const saleDate = raw?.toDate ? raw.toDate() : new Date(raw);
+            if (isNaN(saleDate)) return false;
+
+            if (period === 'day') return saleDate.toDateString() === prevStart.toDateString();
+            if (period === 'week') return saleDate >= prevStart && saleDate < prevEnd;
+            if (period === 'month') return saleDate.getMonth() === prevStart.getMonth() && saleDate.getFullYear() === prevStart.getFullYear();
+            if (period === 'year') return saleDate.getFullYear() === prevStart.getFullYear();
+            return false;
+        });
+
+        const prevTotalSales = prevSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+        const salesGrowthValue = prevTotalSales === 0 ? (totalSales > 0 ? 100 : 0) : ((totalSales - prevTotalSales) / prevTotalSales) * 100;
+
         return {
             totalSales,
             productsSold,
@@ -130,13 +169,13 @@ const Dashboard = ({ forceSalonId }) => {
             totalStylists,
             totalClients,
             totalManagers,
-            salesGrowth: '+12.5%',
-            scansGrowth: '+8.2%',
-            clientsGrowth: '+5.4%',
-            managersGrowth: '+10.0%',
-            stylistGrowth: '+4.2%'
+            salesGrowth: (salesGrowthValue >= 0 ? '+' : '') + salesGrowthValue.toFixed(1) + '%',
+            scansGrowth: '+0.0%', // Scans growth would need previous period recommendations
+            clientsGrowth: '+0.0%',
+            managersGrowth: '+0.0%',
+            stylistGrowth: '+0.0%'
         };
-    }, [filteredSales, recommendations, stylists, managers]);
+    }, [filteredSales, recommendations, stylists, managers, sales, period]);
 
     const chartData = useMemo(() => {
         const now = new Date();
