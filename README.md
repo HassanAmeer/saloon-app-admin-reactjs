@@ -36,19 +36,15 @@ The Super Admin has global control over the entire platform. They can manage all
 - **Default Credentials:** `admin@gmail.com` / `12345678`
 
 #### **Super Admin Dashboard Preview:**
-````carousel
-![Super Admin Dashboard 1](demo/super1.png)
-<!-- slide -->
-![Super Admin Dashboard 2](demo/super2.png)
-<!-- slide -->
-![Super Admin Dashboard 3](demo/super3.png)
-<!-- slide -->
-![Super Admin Dashboard 4](demo/super4.png)
-<!-- slide -->
-![Super Admin Dashboard 5](demo/super5.png)
-<!-- slide -->
-![Super Admin Dashboard 6](demo/super6.png)
-````
+
+<div align="center">
+  <img src="demo/super1.png" width="45%" />
+  <img src="demo/super2.png" width="45%" />
+  <img src="demo/super3.png" width="45%" />
+  <img src="demo/super4.png" width="45%" />
+  <img src="demo/super5.png" width="45%" />
+  <img src="demo/super6.png" width="45%" />
+</div>
 
 ---
 
@@ -59,25 +55,18 @@ Each salon branch has its own manager who handles day-to-day operations specific
 - **Default Credentials:** `salon1@manager.com` / `12345678`
 
 #### **Salon Manager Dashboard Preview:**
-````carousel
-![Salon Manager 1](demo/salon1.png)
-<!-- slide -->
-![Salon Manager 2](demo/salon2.png)
-<!-- slide -->
-![Salon Manager 3](demo/salon3.png)
-<!-- slide -->
-![Salon Manager 4](demo/salon4.png)
-<!-- slide -->
-![Salon Manager 5](demo/salon5.png)
-<!-- slide -->
-![Salon Manager 6](demo/salon6.png)
-<!-- slide -->
-![Salon Manager 7](demo/salon7.png)
-<!-- slide -->
-![Salon Manager 8](demo/salon8.png)
-<!-- slide -->
-![Salon Manager 9](demo/salon9.png)
-````
+
+<div align="center">
+  <img src="demo/salon1.png" width="45%" />
+  <img src="demo/salon2.png" width="45%" />
+  <img src="demo/salon3.png" width="45%" />
+  <img src="demo/salon4.png" width="45%" />
+  <img src="demo/salon5.png" width="45%" />
+  <img src="demo/salon6.png" width="45%" />
+  <img src="demo/salon7.png" width="45%" />
+  <img src="demo/salon8.png" width="45%" />
+  <img src="demo/salon9.png" width="45%" />
+</div>
 
 ---
 
