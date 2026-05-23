@@ -43,6 +43,7 @@ import {
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
 import { ManagersSkeleton } from '../../components/Skeleton';
+import { themeColors } from '../../config';
 
 const Stylists = () => {
     const { user } = useAuth();
@@ -360,12 +361,12 @@ const AnalyticsPanel = ({ statsData, growthStats, stylist }) => (
             <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={statsData}>
-                        <defs><linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8B4513" stopOpacity={0.2} /><stop offset="95%" stopColor="#8B4513" stopOpacity={0} /></linearGradient></defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#8B451305" vertical={false} />
-                        <XAxis dataKey="name" stroke="#8b6f5c" fontSize={10} axisLine={false} tickLine={false} />
-                        <YAxis stroke="#8b6f5c" fontSize={10} axisLine={false} tickLine={false} />
+                        <defs><linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor={themeColors.primary} stopOpacity={0.2} /><stop offset="95%" stopColor={themeColors.primary} stopOpacity={0} /></linearGradient></defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={`${themeColors.primary}10`} vertical={false} />
+                        <XAxis dataKey="name" stroke={themeColors.textMuted} fontSize={10} axisLine={false} tickLine={false} />
+                        <YAxis stroke={themeColors.textMuted} fontSize={10} axisLine={false} tickLine={false} />
                         <Tooltip contentStyle={{ backgroundColor: '#fff', border: 'none', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                        <Area type="monotone" dataKey="sales" stroke="#8B4513" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
+                        <Area type="monotone" dataKey="sales" stroke={themeColors.primary} strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

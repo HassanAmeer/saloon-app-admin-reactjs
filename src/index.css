@@ -3,24 +3,21 @@
 @tailwind utilities;
 
 :root {
-    --primary: #8B4513;
-    --primary-glow: #c19a6b;
-    --secondary: #d2b48c;
-    --bg-dark: #faf8f5;
-    --card-bg: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(139, 69, 19, 0.15);
-    --text-main: #4a250b;
-    --text-muted: #8b6f5c;
+    --primary: #F89963;
+    --primary-glow: #FAA171;
+    --secondary: #FFF2EB;
+    --bg-dark: #FFFFFF;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(248, 153, 99, 0.15);
+    --text-main: #1A1A1A;
+    --text-muted: #666666;
 }
 
 @layer base {
     body {
-        @apply bg-[#faf8f5] text-tea-900 min-h-screen font-sans;
-        background-image:
-            radial-gradient(at 0% 0%, hsla(30, 30%, 95%, 1) 0, transparent 50%),
-            radial-gradient(at 50% 0%, hsla(20, 20%, 90%, 1) 0, transparent 50%),
-            radial-gradient(at 100% 0%, hsla(35, 40%, 92%, 1) 0, transparent 50%);
-        background-attachment: fixed;
+        background-color: var(--bg-dark);
+        color: var(--text-main);
+        @apply min-h-screen font-sans;
     }
 }
 
@@ -34,7 +31,7 @@
     }
 
     .btn-primary {
-        @apply bg-tea-700 hover:bg-tea-600 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 shadow-md shadow-tea-700/20 active:scale-95 flex items-center justify-center gap-2;
+        @apply bg-tea-700 hover:bg-tea-600 text-[#1A1A1A] font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 shadow-md shadow-tea-700/20 active:scale-95 flex items-center justify-center gap-2;
     }
 
     .btn-secondary {
@@ -50,7 +47,7 @@
     }
 
     .sidebar-link-active {
-        @apply flex items-center gap-3 px-4 py-3 bg-tea-700 text-white rounded-xl shadow-md shadow-tea-700/20;
+        @apply flex items-center gap-3 px-4 py-3 bg-tea-700 text-[#1A1A1A] rounded-xl shadow-md shadow-tea-700/20;
     }
 
     .stat-card {
@@ -97,7 +94,7 @@
 }
 
 ::-webkit-scrollbar-track {
-    @apply bg-[#faf8f5];
+    background-color: var(--bg-dark);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -143,6 +140,6 @@
 
 .animate-shimmer {
     animation: shimmer 2s infinite linear;
-    background: linear-gradient(to right, #f1ece5 8%, #e7dfd5 18%, #f1ece5 33%);
+    background: linear-gradient(to right, #f6f6f6 8%, #ededed 18%, #f6f6f6 33%);
     background-size: 1000px 100%;
 }

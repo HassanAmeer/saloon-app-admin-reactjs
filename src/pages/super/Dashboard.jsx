@@ -37,6 +37,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { DashboardSkeleton } from '../../components/Skeleton';
 import ImageWithFallback from '../../components/ImageWithFallback';
+import { themeColors } from '../../config';
 
 const Dashboard = ({ forceSalonId }) => {
     const { user, type } = useAuth();
@@ -348,14 +349,14 @@ const Dashboard = ({ forceSalonId }) => {
                             <AreaChart data={dynamicChartData}>
                                 <defs>
                                     <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#8B4513" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#8B4513" stopOpacity={0} />
+                                        <stop offset="5%" stopColor={themeColors.primary} stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor={themeColors.primary} stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#8B451310" vertical={false} />
+                                <CartesianGrid strokeDasharray="3 3" stroke={`${themeColors.primary}15`} vertical={false} />
                                 <XAxis
                                     dataKey="name"
-                                    stroke="#8b6f5c"
+                                    stroke={themeColors.textMuted}
                                     fontSize={10}
                                     fontWeight="900"
                                     axisLine={false}
@@ -363,7 +364,7 @@ const Dashboard = ({ forceSalonId }) => {
                                     dy={10}
                                 />
                                 <YAxis
-                                    stroke="#8b6f5c"
+                                    stroke={themeColors.textMuted}
                                     fontSize={10}
                                     fontWeight="900"
                                     axisLine={false}
@@ -371,13 +372,13 @@ const Dashboard = ({ forceSalonId }) => {
                                     dx={-10}
                                 />
                                 <Tooltip
-                                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #8B451310', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    itemStyle={{ color: '#4a250b', fontSize: '12px', fontWeight: '900' }}
+                                    contentStyle={{ backgroundColor: '#fff', border: `1px solid ${themeColors.primary}20`, borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    itemStyle={{ color: themeColors.textMain, fontSize: '12px', fontWeight: '900' }}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="revenue"
-                                    stroke="#8B4513"
+                                    stroke={themeColors.primary}
                                     strokeWidth={4}
                                     fillOpacity={1}
                                     fill="url(#revenueGradient)"

@@ -25,6 +25,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
 import { Skeleton, TableSkeleton } from '../../components/Skeleton';
+import { themeColors } from '../../config';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
@@ -268,19 +269,19 @@ const Sales = () => {
                         <AreaChart data={chartData}>
                             <defs>
                                 <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#8B4513" stopOpacity={0.2} />
-                                    <stop offset="95%" stopColor="#8B4513" stopOpacity={0} />
+                                    <stop offset="5%" stopColor={themeColors.primary} stopOpacity={0.2} />
+                                    <stop offset="95%" stopColor={themeColors.primary} stopOpacity={0} />
                                 </linearGradient>
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#8B451310" vertical={false} />
-                            <XAxis dataKey="name" stroke="#8b6f5c" fontSize={9} fontWeight="900" axisLine={false} tickLine={false} dy={10} />
-                            <YAxis stroke="#8b6f5c" fontSize={9} fontWeight="900" axisLine={false} tickLine={false} dx={-10} />
+                            <CartesianGrid strokeDasharray="3 3" stroke={`${themeColors.primary}15`} vertical={false} />
+                            <XAxis dataKey="name" stroke={themeColors.textMuted} fontSize={9} fontWeight="900" axisLine={false} tickLine={false} dy={10} />
+                            <YAxis stroke={themeColors.textMuted} fontSize={9} fontWeight="900" axisLine={false} tickLine={false} dx={-10} />
                             <Tooltip
-                                contentStyle={{ backgroundColor: '#fff', border: '1px solid #8B451310', borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                itemStyle={{ color: '#4a250b', fontSize: '12px', fontWeight: '900' }}
+                                contentStyle={{ backgroundColor: '#fff', border: `1px solid ${themeColors.primary}20`, borderRadius: '16px', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                itemStyle={{ color: themeColors.textMain, fontSize: '12px', fontWeight: '900' }}
                                 formatter={v => [`$${Number(v).toFixed(2)}`, 'Revenue']}
                             />
-                            <Area type="monotone" dataKey="revenue" stroke="#8B4513" strokeWidth={3} fillOpacity={1} fill="url(#salesGradient)" />
+                            <Area type="monotone" dataKey="revenue" stroke={themeColors.primary} strokeWidth={3} fillOpacity={1} fill="url(#salesGradient)" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
