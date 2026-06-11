@@ -115,7 +115,7 @@ const Stylists = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                    <h1 className="text-4xl font-black text-tea-900 tracking-tight">Team <span className="text-tea-700">Stylists</span></h1>
+                    <h1 className="text-4xl font-black text-tea-900 tracking-tight">Team <span className="text-tea-700">Members</span></h1>
                     <p className="text-tea-500 font-bold text-xs uppercase tracking-widest leading-none">Manage Stylist profiles and monitor performance</p>
                 </div>
                 <button onClick={() => { setModalMode('add'); setSelectedStylist(null); setShowModal(true); }} className="btn-primary">
@@ -389,7 +389,7 @@ const StatCard = ({ label, value, growth }) => (
 
 const RecordsTable = ({ type, data }) => (
     <div className="glass-card overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden lg:block overflow-x-auto">
             <table className="w-full">
                 <thead className="table-header">
                     <tr>
@@ -421,6 +421,33 @@ const RecordsTable = ({ type, data }) => (
                     )}
                 </tbody>
             </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="lg:hidden flex flex-col gap-4 p-4 bg-tea-50/20">
+            {data.length === 0 ? (
+                <div className="p-10 text-center text-tea-400 font-black uppercase tracking-[0.3em] text-[10px]">Synchronizing Records...</div>
+            ) : (
+                data.map(item => (
+                    <div key={item.id} className="glass-card p-4 space-y-4">
+                        <div className="flex items-center justify-between border-b border-tea-700/10 pb-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-tea-700 flex items-center justify-center font-black text-white text-[10px]">{item.name?.charAt(0) || 'U'}</div>
+                                <p className="text-sm font-black text-tea-900 uppercase tracking-tight">{item.name || item.id.substring(0, 8)}</p>
+                            </div>
+                            <div className="text-right font-black text-tea-700">
+                                {type === 'clients' ? <span className="badge badge-success">ACTIVE</span> : <span className="text-lg tracking-tighter">${(item.totalAmount || item.total || 0).toFixed(2)}</span>}
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-2">
+                            <div className="text-[10px] text-tea-500 font-black uppercase tracking-widest">{type === 'clients' ? item.email : item.products?.map(p => p.productName).join(', ')}</div>
+                        </div>
+                        <div className="flex items-center justify-between pt-3 border-t border-tea-700/5">
+                            <div className="text-[10px] text-tea-900 font-black uppercase tracking-widest">{type === 'clients' ? new Date(item.joinDate?.toDate?.() || item.joinDate).toLocaleDateString() : 'Qty: 1'}</div>
+                        </div>
+                    </div>
+                ))
+            )}
         </div>
     </div>
 );

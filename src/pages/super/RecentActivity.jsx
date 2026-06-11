@@ -94,7 +94,7 @@ const RecentActivity = () => {
 
             {/* Activity Table */}
             <div className="glass-card overflow-hidden border-none shadow-2xl shadow-tea-900/5 bg-white/40 backdrop-blur-xl rounded-[2rem]">
-                <div className="overflow-x-auto">
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-b-2 border-tea-700/10 bg-tea-50/20">
@@ -230,6 +230,65 @@ const RecentActivity = () => {
                                 <p className="text-tea-900 font-black uppercase tracking-[0.3em] text-sm">Silence in the Network</p>
                                 <p className="text-tea-400 font-bold text-[10px] uppercase tracking-widest">No transaction signals detected in this cluster</p>
                             </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile view */}
+                <div className="lg:hidden flex flex-col gap-4 p-4 bg-tea-50/20">
+                    {filteredActivities.map((sale) => {
+                        const salon = salons.find(s => s.id === sale.salonId);
+                        const manager = managers.find(m => m.salonId === sale.salonId);
+                        const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
+                        
+                        return (
+                            <div key={sale.id} className="glass-card p-4 space-y-4">
+                                <div className="flex items-center justify-between border-b border-tea-700/10 pb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-tea-900 overflow-hidden shrink-0">
+                                            <ImageWithFallback src={manager?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase tracking-tight">{salon?.name || 'Unknown Salon'}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{manager?.name || 'Manager'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">${(sale.totalAmount || sale.total || 0).toFixed(2)}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-xl bg-white border border-tea-100 overflow-hidden shrink-0">
+                                            <ImageWithFallback src={stylist?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-tea-950 uppercase tracking-tight">{sale.stylistName || 'Expert Stylist'}</p>
+                                            <p className="text-[8px] font-black text-tea-500 uppercase tracking-widest flex items-center gap-1"><User className="w-2.5 h-2.5"/> {sale.clientName || 'Premium Client'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-3 border-t border-tea-700/5">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-3.5 h-3.5 text-tea-400" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase">{new Date(sale.date || sale.createdAt?.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{new Date(sale.date || sale.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <button onClick={() => navigate(`/manager/dashboard?salonId=${sale.salonId}`)} className="px-4 py-2 bg-tea-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-tea-700 transition-all flex items-center gap-2">
+                                            Login <LogIn className="w-2.5 h-2.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {filteredActivities.length === 0 && !loading && (
+                        <div className="py-10 text-center space-y-4">
+                            <Activity className="w-8 h-8 text-tea-200 mx-auto" />
+                            <p className="text-tea-400 font-bold text-[10px] uppercase tracking-widest">No transaction signals</p>
                         </div>
                     )}
                 </div>

@@ -295,7 +295,7 @@ const Sales = () => {
                         <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">{filteredSales.length} transaction{filteredSales.length !== 1 ? 's' : ''}</p>
                     </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-tea-50/50">
                             <tr>
@@ -440,6 +440,84 @@ const Sales = () => {
                                 No records match your current filters. Try adjusting the date period or stylist selection.
                             </p>
                         </div>
+                    )}
+                </div>
+
+                {/* Mobile View */}
+                <div className="lg:hidden flex flex-col gap-4 p-4 bg-tea-50/20">
+                    {filteredSales.length === 0 ? (
+                        <div className="p-10 text-center space-y-4">
+                            <Layers className="w-10 h-10 text-tea-200 mx-auto" />
+                            <p className="text-tea-400 font-black uppercase tracking-widest text-[10px]">No Sales Found</p>
+                        </div>
+                    ) : (
+                        filteredSales.map(sale => {
+                            const parseDate = (d) => {
+                                if (!d) return new Date();
+                                if (d.toDate) return d.toDate(); // Firestore Timestamp
+                                const dateObj = new Date(d);
+                                return isNaN(dateObj.getTime()) ? new Date() : dateObj;
+                            };
+
+                            const saleDate = parseDate(sale.createdAt || sale.date);
+                            const qty = (sale.products || []).reduce((s, p) => s + (p.quantity || 1), 0);
+                            const amount = (sale.totalAmount || sale.total || 0);
+                            const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
+
+                            return (
+                                <div key={sale.id} className="glass-card p-4 space-y-4">
+                                    <div className="flex items-center justify-between border-b border-tea-700/10 pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-lg bg-tea-100 flex items-center justify-center shrink-0">
+                                                <Hash className="w-3 h-3 text-tea-500" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-tea-500 font-mono uppercase tracking-widest">
+                                                {sale.id?.substring(0, 8)}...
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">${amount.toFixed(2)}</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-xl bg-white border border-tea-100 shadow-sm overflow-hidden shrink-0">
+                                                <ImageWithFallback src={stylist?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-tea-900 uppercase tracking-tight">{sale.stylistName || 'House Stylist'}</p>
+                                                <p className="text-[9px] text-tea-500 uppercase font-black tracking-widest flex items-center gap-1"><User className="w-3 h-3"/> {sale.clientName || 'Walk-in'}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-center">
+                                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-tea-100 text-tea-700 text-[10px] font-black">
+                                                {qty}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between pt-3 border-t border-tea-700/5">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="w-3.5 h-3.5 text-tea-400 shrink-0" />
+                                            <div>
+                                                <p className="text-[10px] font-black text-tea-900 uppercase tracking-tighter">
+                                                    {saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </p>
+                                                <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">
+                                                    {saleDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right max-w-[120px]">
+                                            <p className="text-[9px] font-black text-tea-700 uppercase truncate">
+                                                {sale.products && sale.products.length > 0 ? sale.products.map(p => p.productName || p.name).join(', ') : 'Service Only'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
                     )}
                 </div>
             </div>

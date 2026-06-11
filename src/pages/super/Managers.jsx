@@ -99,7 +99,7 @@ const Managers = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="space-y-2">
-                    <h1 className="text-4xl font-black text-tea-900 tracking-tight">Salon <span className="text-tea-700">Managers</span></h1>
+                    <h1 className="text-4xl font-black text-tea-900 tracking-tight">Business <span className="text-tea-700">Owners</span></h1>
                     <p className="text-tea-500 font-medium tracking-wide">Manage platform partners and their salon entities</p>
                 </div>
                 <button onClick={handleAdd} className="btn-primary">

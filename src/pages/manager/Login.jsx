@@ -72,7 +72,7 @@ const LoginManager = () => {
                         <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-4xl font-black text-tea-900 mb-2 tracking-tight">
-                        Salon Manager <span className="text-tea-700">Admin</span>
+                        Business <span className="text-tea-700">Dashboard</span>
                     </h1>
                 </div>
 
@@ -80,7 +80,7 @@ const LoginManager = () => {
                 <div className="glass-card p-8 lg:p-10 border border-tea-700/5">
                     <div className="mb-8 text-center sm:text-left">
                         <h2 className="text-2xl font-black text-tea-900 mb-2 tracking-tight">Welcome Back</h2>
-                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Salon Manager account</p>
+                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Business Owner account</p>
                     </div>
 
 

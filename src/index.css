@@ -31,15 +31,15 @@
     }
 
     .btn-primary {
-        @apply bg-tea-700 hover:bg-tea-600 text-white font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 shadow-md shadow-tea-700/20 active:scale-95 flex items-center justify-center gap-2;
+        @apply bg-tea-700 hover:bg-tea-600 text-white font-semibold py-2 px-4 md:py-2.5 md:px-6 rounded-xl transition-all duration-300 shadow-md shadow-tea-700/20 active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base;
     }
 
     .btn-secondary {
-        @apply bg-tea-100/50 hover:bg-tea-200/50 text-tea-800 font-semibold py-2.5 px-6 rounded-xl transition-all duration-300 border border-tea-700/5 active:scale-95 flex items-center justify-center gap-2;
+        @apply bg-tea-100/50 hover:bg-tea-200/50 text-tea-800 font-semibold py-2 px-4 md:py-2.5 md:px-6 rounded-xl transition-all duration-300 border border-tea-700/5 active:scale-95 flex items-center justify-center gap-2 text-sm md:text-base;
     }
 
     .input-field {
-        @apply w-full px-4 py-3 bg-white border border-tea-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-tea-700/30 focus:border-tea-700 transition-all duration-200 text-tea-900 placeholder:text-tea-400 shadow-sm;
+        @apply w-full px-3 py-2 md:px-4 md:py-3 bg-white border border-tea-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-tea-700/30 focus:border-tea-700 transition-all duration-200 text-tea-900 placeholder:text-tea-400 shadow-sm text-sm md:text-base;
     }
 
     .sidebar-link {
@@ -51,7 +51,7 @@
     }
 
     .stat-card {
-        @apply glass-card p-6 flex flex-col gap-1 relative overflow-hidden;
+        @apply glass-card p-4 md:p-6 flex flex-col gap-1 relative overflow-hidden;
     }
 
     .stat-card::after {

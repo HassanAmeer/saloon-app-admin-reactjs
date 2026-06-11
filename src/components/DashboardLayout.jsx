@@ -63,21 +63,21 @@ const DashboardLayout = () => {
     };
 
     const managerNavItems = [
-        { path: '/manager/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { path: '/manager/stylists', icon: Users, label: 'Stylists' },
-        { path: '/manager/products', icon: Package, label: 'Products' },
+        { path: '/manager/dashboard', icon: LayoutDashboard, label: 'Business Snapshot' },
+        { path: '/manager/stylists', icon: Users, label: 'Team Members' },
+        { path: '/manager/products', icon: Package, label: 'Product Management' },
         { path: '/manager/activity', icon: Activity, label: 'Recent Activity' },
-        { path: '/manager/sales', icon: TrendingUp, label: 'Sales & Analytics' },
-        { path: '/manager/app-config', icon: Settings, label: 'App Config' },
-        { path: '/manager/profile', icon: Users, label: 'Profile' },
+        { path: '/manager/sales', icon: TrendingUp, label: 'Sales Tracking' },
+        { path: '/manager/app-config', icon: Settings, label: 'App Configuration' },
+        { path: '/manager/profile', icon: Users, label: 'My Profile' },
     ];
 
     const superNavItems = [
-        { path: '/super/dashboard', icon: LayoutDashboard, label: 'Super Dashboard' },
+        { path: '/super/dashboard', icon: LayoutDashboard, label: 'Platform Overview' },
         { path: '/super/activity', icon: Activity, label: 'Recent Activity' },
-        { path: '/super/managers', icon: Users, label: 'salon Managers' },
+        { path: '/super/managers', icon: Users, label: 'Business Owners' },
         { path: '/super/profile', icon: Users, label: 'My Profile' },
-        ...(user?.email === 'dev@gmail.com' ? [{ path: '/super/settings', icon: Settings, label: 'Data Config' }] : []),
+        ...(user?.email === 'dev@gmail.com' ? [{ path: '/super/settings', icon: Settings, label: 'Platform Settings' }] : []),
     ];
 
     const navItems = isImpersonating ? managerNavItems : (type === 'superadmin' ? superNavItems : managerNavItems);
@@ -90,7 +90,7 @@ const DashboardLayout = () => {
             <div className="lg:hidden backdrop-blur-md bg-white/80 border-b border-tea-700/10 px-4 py-4 flex items-center justify-between sticky top-0 z-50">
                 <div className="flex items-center gap-2">
                     <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-8 h-8 object-contain shrink-0" />
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">salon Admin</h1>
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">{type === 'superadmin' ? 'Platform Dashboard' : 'Business Dashboard'}</h1>
                 </div>
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -117,7 +117,7 @@ const DashboardLayout = () => {
                             <div>
                                 <h1 className="text-xl font-bold text-tea-900 tracking-tight">salon</h1>
                                 <p className="text-xs font-medium text-tea-500 uppercase tracking-widest leading-none mt-1">
-                                    {isImpersonating ? 'Manager View' : (type === 'superadmin' ? 'Super Admin' : 'Manager')}
+                                    {isImpersonating ? 'Manager View' : (type === 'superadmin' ? 'Platform Owner' : 'Business Owner')}
                                 </p>
                             </div>
                         </div>

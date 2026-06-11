@@ -133,8 +133,13 @@ const Dashboard = ({ forceSalonId }) => {
 
         const sGrowthVal = prevTotalSales === 0 ? (totalSales > 0 ? 100 : 0) : ((totalSales - prevTotalSales) / prevTotalSales) * 100;
 
+        const totalTransactions = fSales.length;
+        const avgSaleValue = totalTransactions > 0 ? (totalSales / totalTransactions) : 0;
+
         const dashboardStats = {
             totalSales,
+            totalTransactions,
+            avgSaleValue,
             productsSold,
             totalScans: fRecs.length,
             totalStylists: stylists.length,
@@ -233,7 +238,7 @@ const Dashboard = ({ forceSalonId }) => {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div className="space-y-2">
                     <h1 className="text-4xl lg:text-5xl font-black text-tea-900 tracking-tight leading-none group">
-                        {isImpersonating ? 'Salon' : 'Performance'} <span className="text-tea-700">Analytics</span>
+                        {isImpersonating ? 'Business' : 'Platform'} <span className="text-tea-700">Overview</span>
                     </h1>
                     <p className="text-tea-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-tea-700" />
@@ -259,69 +264,34 @@ const Dashboard = ({ forceSalonId }) => {
 
             {/* Key Performance Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {type === 'superadmin' && !salonId ? (
-                    <>
-                        <MetricCard
-                            label="salon Managers"
-                            value={stats.totalManagers.toLocaleString()}
-                            growth={stats.managersGrowth}
-                            icon={Building2}
-                            color="tea"
-                        />
-                        <MetricCard
-                            label="Total Stylists"
-                            value={stats.totalStylists.toLocaleString()}
-                            growth={stats.stylistGrowth}
-                            icon={ScanFaceIcon}
-                            color="emerald"
-                        />
-                        <MetricCard
-                            label="Total Clients"
-                            value={stats.totalClients.toLocaleString()}
-                            growth={stats.clientsGrowth}
-                            icon={Users}
-                            color="amber"
-                        />
-                        <MetricCard
-                            label="Products Sold"
-                            value={stats.productsSold.toLocaleString()}
-                            growth="+14.2%"
-                            icon={Package}
-                            color="brown"
-                        />
-                    </>
-                ) : (
-                    <>
-                        <MetricCard
-                            label="Gross Revenue"
-                            value={`$${stats.totalSales.toLocaleString()}`}
-                            growth={stats.salesGrowth}
-                            icon={DollarSign}
-                            color="tea"
-                        />
-                        <MetricCard
-                            label="Service Clients"
-                            value={stats.totalClients.toLocaleString()}
-                            growth={stats.clientsGrowth}
-                            icon={Users}
-                            color="emerald"
-                        />
-                        <MetricCard
-                            label="AI Engagements"
-                            value={stats.totalScans.toLocaleString()}
-                            growth={stats.scansGrowth}
-                            icon={Bot}
-                            color="amber"
-                        />
-                        <MetricCard
-                            label="Inventory Moved"
-                            value={stats.productsSold.toLocaleString()}
-                            growth="+14.2%"
-                            icon={Layers}
-                            color="brown"
-                        />
-                    </>
-                )}
+                <MetricCard
+                    label="Total Revenue"
+                    value={`$${stats.totalSales.toLocaleString()}`}
+                    growth={stats.salesGrowth}
+                    icon={DollarSign}
+                    color="tea"
+                />
+                <MetricCard
+                    label="Transactions"
+                    value={stats.totalTransactions.toLocaleString()}
+                    growth={stats.salesGrowth}
+                    icon={Activity}
+                    color="emerald"
+                />
+                <MetricCard
+                    label="Avg Sale Value"
+                    value={`$${stats.avgSaleValue.toFixed(2)}`}
+                    growth="+0.0%"
+                    icon={TrendingUp}
+                    color="amber"
+                />
+                <MetricCard
+                    label="Products Sold"
+                    value={stats.productsSold.toLocaleString()}
+                    growth="+14.2%"
+                    icon={Package}
+                    color="brown"
+                />
             </div>
 
             {/* Charts & Main Content */}
@@ -330,7 +300,7 @@ const Dashboard = ({ forceSalonId }) => {
                 <div className="xl:col-span-2 glass-card p-8">
                     <div className="flex items-center justify-between mb-10">
                         <div>
-                            <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Revenue Dynamics</h3>
+                            <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Revenue Growth</h3>
                             <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">Weekly financial oscillation</p>
                         </div>
                         <div className="flex gap-4">

@@ -390,10 +390,10 @@ const Settings = () => {
                     color="blue"
                 >
                     <div className="grid grid-cols-2 gap-4 h-full">
-                        <SystemStat label="Active Salons" value={stats.salons} icon={Building2} delay="0" />
-                        <SystemStat label="Global Managers" value={stats.managers} icon={Shield} delay="50" />
-                        <SystemStat label="Total Specialists" value={stats.stylists} icon={Users} delay="100" />
-                        <SystemStat label="Historical Sales" value={stats.sales} icon={TrendingUp} delay="150" />
+                        <SystemStat label="Active Businesses" value={stats.salons} icon={Building2} delay="0" />
+                        <SystemStat label="Business Owners" value={stats.managers} icon={Shield} delay="50" />
+                        <SystemStat label="Total Team Members" value={stats.stylists} icon={Users} delay="100" />
+                        <SystemStat label="Total Revenue" value={stats.sales} icon={TrendingUp} delay="150" />
                     </div>
                 </SectionCard>
             </div>

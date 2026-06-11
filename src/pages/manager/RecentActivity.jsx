@@ -97,7 +97,7 @@ const RecentActivity = () => {
 
             {/* Activity Table */}
             <div className="glass-card overflow-hidden border-none shadow-2xl shadow-tea-900/5">
-                <div className="overflow-x-auto">
+                <div className="hidden lg:block overflow-x-auto">
                     <table className="w-full">
                         <thead className="bg-tea-50/50">
                             <tr>
@@ -328,6 +328,116 @@ const RecentActivity = () => {
                         <div className="p-20 text-center space-y-4">
                             <Activity className="w-12 h-12 text-tea-100 mx-auto" />
                             <p className="text-tea-400 font-black uppercase tracking-widest text-xs">No activity records found</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Mobile view */}
+                <div className="lg:hidden flex flex-col gap-4 p-4 bg-tea-50/20">
+                    {filteredActivities.map((sale) => {
+                        const salon = salons.find(s => s.id === sale.salonId);
+                        const manager = managers.find(m => m.salonId === sale.salonId);
+                        const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
+                        const parseDate = (d) => {
+                            if (!d) return new Date();
+                            if (d.toDate) return d.toDate(); // Firestore Timestamp
+                            const dateObj = new Date(d);
+                            return isNaN(dateObj.getTime()) ? new Date() : dateObj;
+                        };
+
+                        const saleDate = parseDate(sale.date || sale.createdAt);
+                        const amount = (sale.totalAmount || sale.total || 0).toFixed(2);
+
+                        if (isManager) {
+                            return (
+                                <div key={sale.id} className="glass-card p-4 space-y-4">
+                                    <div className="flex items-center justify-between border-b border-tea-700/10 pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-lg bg-tea-100 flex items-center justify-center shrink-0">
+                                                <Hash className="w-3 h-3 text-tea-500" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-tea-500 uppercase tracking-widest font-mono">
+                                                {sale.id?.substring(0, 8)}...
+                                            </span>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">${amount}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-xl bg-white border border-tea-100 shadow-sm overflow-hidden shrink-0">
+                                                <ImageWithFallback src={stylist?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-tea-900 uppercase tracking-tight">{sale.stylistName || 'House Stylist'}</p>
+                                                <p className="text-[9px] text-tea-500 uppercase font-black tracking-widest flex items-center gap-1"><User className="w-3 h-3"/> {sale.clientName || 'General Client'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-3 border-t border-tea-700/5">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="w-3.5 h-3.5 text-tea-400" />
+                                            <div>
+                                                <p className="text-[10px] font-black text-tea-900 uppercase">{new Date(saleDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                                <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{new Date(saleDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-black text-tea-700 uppercase">{sale.products?.length || 0} Products</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        // Super admin mobile card
+                        return (
+                            <div key={sale.id} className="glass-card p-4 space-y-4">
+                                <div className="flex items-center justify-between border-b border-tea-700/10 pb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-tea-900 overflow-hidden shrink-0">
+                                            <ImageWithFallback src={manager?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase tracking-tight">{salon?.name || 'Unknown Salon'}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{manager?.name || 'Partner'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">${amount}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-xl bg-white border border-tea-100 overflow-hidden shrink-0">
+                                            <ImageWithFallback src={stylist?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-black text-tea-950 uppercase tracking-tight">{sale.stylistName || 'House Stylist'}</p>
+                                            <p className="text-[8px] font-black text-tea-500 uppercase tracking-widest flex items-center gap-1"><User className="w-2.5 h-2.5"/> {sale.clientName || 'General Client'}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-3 border-t border-tea-700/5">
+                                    <div className="flex items-center gap-2">
+                                        <Calendar className="w-3.5 h-3.5 text-tea-400" />
+                                        <div>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase">{new Date(saleDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{new Date(saleDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[10px] font-black text-tea-700 uppercase">{sale.products?.length || 0} Products</p>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                    {filteredActivities.length === 0 && !loading && (
+                        <div className="p-10 text-center space-y-4">
+                            <Activity className="w-10 h-10 text-tea-100 mx-auto" />
+                            <p className="text-tea-400 font-black uppercase tracking-widest text-[10px]">No activity</p>
                         </div>
                     )}
                 </div>

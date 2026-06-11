@@ -96,7 +96,7 @@ const LoginSuper = () => {
                         <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-full h-full object-contain" />
                     </div>
                     <h1 className="text-4xl font-black text-tea-900 mb-2 tracking-tight">
-                        Super <span className="text-tea-700">Admin</span>
+                        Platform <span className="text-tea-700">Owner</span>
                     </h1>
                 </div>
 
@@ -104,7 +104,7 @@ const LoginSuper = () => {
                 <div className="glass-card p-8 lg:p-10 border border-tea-700/5">
                     <div className="mb-8 text-center sm:text-left">
                         <h2 className="text-2xl font-black text-tea-900 mb-2 tracking-tight">Welcome Back</h2>
-                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Super Admin account</p>
+                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Platform Owner account</p>
                     </div>
 
 

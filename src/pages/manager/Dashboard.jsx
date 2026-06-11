@@ -118,6 +118,8 @@ const Dashboard = ({ forceSalonId }) => {
 
     const dashboardStats = useMemo(() => {
         const totalSales = filteredSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+        const totalTransactions = filteredSales.length;
+        const avgSaleValue = totalTransactions > 0 ? (totalSales / totalTransactions) : 0;
         const productsSold = filteredSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
         const totalScans = recommendations.length;
         const totalStylists = stylists.length;
@@ -165,6 +167,8 @@ const Dashboard = ({ forceSalonId }) => {
 
         return {
             totalSales,
+            totalTransactions,
+            avgSaleValue,
             productsSold,
             totalScans,
             totalStylists,
@@ -313,7 +317,7 @@ const Dashboard = ({ forceSalonId }) => {
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
                 <div className="space-y-2">
                     <h1 className="text-4xl lg:text-5xl font-black text-tea-900 tracking-tight leading-none group">
-                        {isImpersonating ? 'Salon' : 'Performance'} <span className="text-tea-700">Analytics</span>
+                        {isImpersonating ? 'Business' : 'Business'} <span className="text-tea-700">Snapshot</span>
                     </h1>
                     <p className="text-tea-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-tea-700" />
@@ -342,14 +346,14 @@ const Dashboard = ({ forceSalonId }) => {
                 {type === 'superadmin' && !salonId ? (
                     <>
                         <MetricCard
-                            label="salon Managers"
+                            label="Business Owners"
                             value={dashboardStats.totalManagers.toLocaleString()}
                             growth={dashboardStats.managersGrowth}
                             icon={Building2}
                             color="tea"
                         />
                         <MetricCard
-                            label="Total Stylists"
+                            label="Total Team Members"
                             value={dashboardStats.totalStylists.toLocaleString()}
                             growth={dashboardStats.stylistGrowth}
                             icon={ScanFaceIcon}
@@ -373,28 +377,28 @@ const Dashboard = ({ forceSalonId }) => {
                 ) : (
                     <>
                         <MetricCard
-                            label="Total Stylists"
-                            value={dashboardStats.totalStylists.toLocaleString()}
-                            growth={dashboardStats.stylistGrowth}
-                            icon={UserStarIcon}
+                            label="Total Revenue"
+                            value={`$${dashboardStats.totalSales.toLocaleString()}`}
+                            growth={dashboardStats.salesGrowth}
+                            icon={DollarSign}
                             color="tea"
                         />
                         <MetricCard
-                            label="Total Clients"
-                            value={dashboardStats.totalClients.toLocaleString()}
-                            growth={dashboardStats.clientsGrowth}
-                            icon={Users}
+                            label="Transactions"
+                            value={dashboardStats.totalTransactions.toLocaleString()}
+                            growth={dashboardStats.salesGrowth}
+                            icon={Activity}
                             color="emerald"
                         />
                         <MetricCard
-                            label="Total Scans"
-                            value={dashboardStats.totalScans.toLocaleString()}
-                            growth={dashboardStats.scansGrowth}
-                            icon={ScanFaceIcon}
+                            label="Avg Sale Value"
+                            value={`$${dashboardStats.avgSaleValue.toFixed(2)}`}
+                            growth="+0.0%"
+                            icon={TrendingUp}
                             color="amber"
                         />
                         <MetricCard
-                            label="Sold Products"
+                            label="Products Sold"
                             value={dashboardStats.productsSold.toLocaleString()}
                             growth="+14.2%"
                             icon={Package}
@@ -410,7 +414,7 @@ const Dashboard = ({ forceSalonId }) => {
                 <div className="xl:col-span-2 glass-card p-8">
                     <div className="flex items-center justify-between mb-10">
                         <div>
-                            <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Revenue Dynamics</h3>
+                            <h3 className="text-xl font-black text-tea-900 uppercase tracking-tight">Revenue Growth</h3>
                             <p className="text-tea-400 text-[10px] font-black uppercase tracking-widest mt-1">Weekly financial oscillation</p>
                         </div>
                         <div className="flex gap-4">
