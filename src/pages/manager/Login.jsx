@@ -128,7 +128,7 @@ const LoginManager = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full btn-primary py-4 text-lg mt-4 group"
+                            className="w-full btn-primary py-4 text-lg mt-4 group text-white"
                         >
                             {loading ? (
                                 <div className="flex items-center gap-2">

@@ -6,31 +6,31 @@
 // and uncomment the old theme block below.
 
 // ACTIVE COLOR THEME: MELON / WHITE / CHARCOAL (New Requested Theme)
-export const themeColors = {
-  // Primary accents (Buttons, Highlights)
-  primary: '#F89963',       // Melon
-  primaryGlow: '#FAA171',   // Melon Glow
-  primaryHover: '#E27E49',  // Slightly darker melon for hover states
+// export const themeColors = {
+//   // Primary accents (Buttons, Highlights)
+//   primary: '#F89963',       // Melon
+//   primaryGlow: '#FAA171',   // Melon Glow
+//   primaryHover: '#E27E49',  // Slightly darker melon for hover states
 
-  // Background
-  background: '#FFFFFF',    // White
-  bgCard: 'rgba(255, 255, 255, 0.9)',
+//   // Background
+//   background: '#FFFFFF',    // White
+//   bgCard: 'rgba(255, 255, 255, 0.9)',
 
-  // Main Readability Text
-  textMain: '#1A1A1A',      // Dark Charcoal
-  textMuted: '#666666',
+//   // Main Readability Text
+//   textMain: '#1A1A1A',      // Dark Charcoal
+//   textMuted: '#666666',
 
-  // Light tints for highlight cards, badges, and border shades
-  accent50: '#FFFBF9',      // Very light warm/melon tint
-  accent100: '#FFF2EB',     // Light tint
-  accent200: '#FFE5D6',     // Light accent
-  accent300: '#FFD8C2',     // Accent border
-  accent400: '#FAA171',     // Medium accent
-};
+//   // Light tints for highlight cards, badges, and border shades
+//   accent50: '#FFFBF9',      // Very light warm/melon tint
+//   accent100: '#FFF2EB',     // Light tint
+//   accent200: '#FFE5D6',     // Light accent
+//   accent300: '#FFD8C2',     // Accent border
+//   accent400: '#FAA171',     // Medium accent
+// };
 
 // INACTIVE COLOR THEME: BROWN / TEA / CREAM (Old Theme)
 
-/*
+
 export const themeColors = {
   // Primary accents (Buttons, Highlights)
   primary: '#8B4513',       // Saddle Brown
@@ -52,5 +52,5 @@ export const themeColors = {
   accent300: '#d2b48c',
   accent400: '#c19a6b',
 };
-*/
+
 

