@@ -399,8 +399,8 @@ const buildStylistUpdatedTemplate = ({ stylistName, email, phone, salonName, sta
 // ----------------------------------------------------------------------
 // SMTP Email Dispatcher (Calls PHP / Hostinger cPanel SMTP Backend)
 // ----------------------------------------------------------------------
-const resolveEmailEndpoint = () => {
-    let base = (import.meta.env.VITE_EMAIL_API_URL || '').trim().replace(/\/+$/, '');
+const resolveEmailEndpoint = (overrideUrl) => {
+    let base = (overrideUrl || import.meta.env.VITE_EMAIL_API_URL || '').trim().replace(/\/+$/, '');
 
     // If in production and URL is empty or still pointing to localhost, auto-route to /php-smtp on the same domain
     if (import.meta.env.PROD && (!base || base.includes('localhost') || base.includes('127.0.0.1'))) {
@@ -409,6 +409,16 @@ const resolveEmailEndpoint = () => {
 
     if (!base) {
         base = 'http://localhost:5005';
+    }
+
+    // Auto-prepend https:// if domain provided without protocol (e.g. salonprofitbar.com)
+    if (!base.startsWith('http://') && !base.startsWith('https://') && !base.startsWith('/')) {
+        base = `https://${base}`;
+    }
+
+    // If pointing to base domain without /php-smtp, append it
+    if (base === 'https://salonprofitbar.com' || base === 'http://salonprofitbar.com') {
+        base = `${base}/php-smtp`;
     }
 
     if (base.endsWith('.php') || base.endsWith('/send-email')) {
