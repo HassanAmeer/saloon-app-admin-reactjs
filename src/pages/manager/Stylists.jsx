@@ -27,9 +27,12 @@ import {
     subscribeToCollection,
     createDocument,
     updateDocument,
-    uploadImage
+    uploadImage,
+    getDocument
 } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
+import { sendStylistCreatedEmail, sendStylistUpdatedEmail } from '../../lib/email';
 import {
     XAxis,
     YAxis,
@@ -47,8 +50,10 @@ import { themeColors } from '../../config';
 
 const Stylists = () => {
     const { user } = useAuth();
+    const { showToast } = useToast();
     const [searchParams] = useSearchParams();
     const [stylists, setStylists] = useState([]);
+    const [salonInfo, setSalonInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -65,6 +70,17 @@ const Stylists = () => {
             setLoading(false);
             return;
         }
+
+        const fetchSalon = async () => {
+            try {
+                const data = await getDocument('salons', salonId);
+                if (data) setSalonInfo(data);
+            } catch (err) {
+                console.error("Error fetching salon data:", err);
+            }
+        };
+        fetchSalon();
+
         const unsubscribe = subscribeToCollection(`salons/${salonId}/stylists`, (data) => {
             setStylists(data);
             setLoading(false);
@@ -82,26 +98,60 @@ const Stylists = () => {
 
     const handleSave = async (data) => {
         try {
-            const folderPath = `salons/${user.salonId}/stylists`;
+            const effectiveSalonId = salonId || user?.salonId;
+            const folderPath = `salons/${effectiveSalonId}/stylists`;
+            const currentSalonName = salonInfo?.name || user?.salonName || user?.name || 'Salon Profit Bar';
+
             if (modalMode === 'add') {
                 await createDocument(folderPath, {
                     ...data,
-                    salonId: user.salonId,
+                    salonId: effectiveSalonId,
                     totalSales: 0,
                     unitsSold: 0,
                     clientsCount: 0,
                     scansCount: 0,
                     createdAt: new Date()
                 });
+
+                try {
+                    await sendStylistCreatedEmail({
+                        email: data.email,
+                        name: data.name,
+                        password: data.password,
+                        phone: data.phone,
+                        salonName: currentSalonName,
+                        skills: data.skills
+                    });
+                } catch (emailErr) {
+                    console.error('Stylist creation email failed:', emailErr);
+                }
+
+                showToast('Stylist registered and notification email sent', 'success');
             } else {
                 const updateData = { ...data };
+                const passwordUpdated = Boolean(updateData.password);
                 if (!updateData.password) delete updateData.password;
                 await updateDocument(folderPath, selectedStylist.id, updateData);
+
+                try {
+                    await sendStylistUpdatedEmail({
+                        email: updateData.email || selectedStylist.email,
+                        name: updateData.name || selectedStylist.name,
+                        phone: updateData.phone || selectedStylist.phone,
+                        status: updateData.status || selectedStylist.status,
+                        salonName: currentSalonName,
+                        passwordUpdated
+                    });
+                } catch (emailErr) {
+                    console.error('Stylist update email failed:', emailErr);
+                }
+
+                showToast('Stylist updated and notification email sent', 'success');
             }
             setShowModal(false);
         } catch (error) {
             console.error(error);
-            alert("Error saving stylist");
+            showToast('Error saving stylist', 'error');
         }
     };
 

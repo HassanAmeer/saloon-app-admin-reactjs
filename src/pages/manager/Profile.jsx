@@ -17,6 +17,7 @@ import {
 } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { sendManagerUpdatedEmail } from '../../lib/email';
 import ImageWithFallback from '../../components/ImageWithFallback';
 import { ManagerFormSkeleton } from '../../components/Skeleton';
 
@@ -167,6 +168,19 @@ const Profile = () => {
                 const updatedUser = { ...user, ...managerPayload };
                 setUser(updatedUser);
                 localStorage.setItem('salon_user', JSON.stringify(updatedUser));
+            }
+
+            // Send notification email
+            try {
+                await sendManagerUpdatedEmail({
+                    email: finalData.manager.email,
+                    name: finalData.manager.name,
+                    salonName: finalData.salon?.name,
+                    phone: finalData.manager.phone,
+                    passwordUpdated: Boolean(finalData.manager.password)
+                });
+            } catch (emailErr) {
+                console.error('Profile update email failed:', emailErr);
             }
 
             showToast('Profile updated successfully', 'success');

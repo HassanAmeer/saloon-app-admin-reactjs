@@ -1,0 +1,9 @@
+{
+    "name": "saloon/php-smtp",
+    "description": "Standalone PHP SMTP backend service for Salon Profit Bar on Hostinger cPanel",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "phpmailer/phpmailer": "^6.9"
+    }
+}

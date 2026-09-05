@@ -16,6 +16,7 @@ import {
     updateDocument,
     uploadImage
 } from '../../lib/services';
+import { sendManagerCreatedEmail, sendManagerUpdatedEmail } from '../../lib/email';
 import { useNavigate, useParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
 import { ManagerFormSkeleton } from '../../components/Skeleton';
@@ -98,6 +99,8 @@ const ManagerForm = ({ mode }) => {
             }
 
             if (mode === 'add') {
+                const managerPassword = finalData.manager.password;
+
                 const managerRes = await createDocument('salon_managers', {
                     ...finalData.manager,
                     type: 'salonmanager',
@@ -155,13 +158,37 @@ const ManagerForm = ({ mode }) => {
                 for (const p of defaultProducts) {
                     await createDocument('products', p);
                 }
+
+                try {
+                    await sendManagerCreatedEmail({
+                        email: finalData.manager.email,
+                        name: finalData.manager.name,
+                        password: managerPassword,
+                        salonName: finalData.salon?.name
+                    });
+                } catch (emailErr) {
+                    console.error('Email sending failed:', emailErr);
+                }
             } else {
                 const updatePayload = { ...finalData.manager };
+                const passwordUpdated = Boolean(updatePayload.password);
                 if (!updatePayload.password) delete updatePayload.password;
 
                 await updateDocument('salon_managers', id, updatePayload);
                 if (salonId) {
                     await updateDocument('salons', salonId, finalData.salon);
+                }
+
+                try {
+                    await sendManagerUpdatedEmail({
+                        email: finalData.manager.email,
+                        name: finalData.manager.name,
+                        salonName: finalData.salon?.name,
+                        phone: finalData.manager.phone,
+                        passwordUpdated
+                    });
+                } catch (emailErr) {
+                    console.error('Manager update email failed:', emailErr);
                 }
             }
 

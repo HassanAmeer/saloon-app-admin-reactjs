@@ -1,0 +1,27 @@
+# ==============================================================================
+# Apache / Hostinger cPanel Configuration for php-smtp
+# ==============================================================================
+
+# Enable CORS Headers if mod_headers is enabled
+<IfModule mod_headers.c>
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "POST, GET, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+</IfModule>
+
+# URL Rewriting for Clean API Routes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Intercept OPTIONS preflight requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=204,L]
+
+    # If requested file or directory exists, serve directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Route all other API requests to index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
