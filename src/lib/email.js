@@ -490,7 +490,7 @@ const sendEmail = async ({ to, subject, html }) => {
 // ----------------------------------------------------------------------
 
 /**
- * 1. Send Email when Super Admin creates a Salon Manager
+ * 1. Send Email when Platform Owner creates a Salon Owner
  */
 export const sendManagerCreatedEmail = async ({ email, name, password, salonName, loginUrl }) => {
     const html = buildManagerCreatedTemplate({

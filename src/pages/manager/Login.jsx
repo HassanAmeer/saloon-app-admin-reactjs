@@ -18,14 +18,14 @@ const LoginManager = () => {
     const [searchParams] = useSearchParams();
     const { showToast } = useToast();
 
-    const requestedRole = 'manager';
+    const requestedRole = 'salonowner';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            console.log("Attempting Manager Login for:", email);
+            console.log("Attempting Salon Owner Login for:", email);
             const collectionRef = collection(db, 'salon_managers');
             const q = query(
                 collectionRef,
@@ -37,18 +37,18 @@ const LoginManager = () => {
 
             if (!querySnapshot.empty) {
                 const doc = querySnapshot.docs[0];
-                console.log("Manager document found:", doc.data());
+                console.log("Salon Owner document found:", doc.data());
                 const userData = {
                     ...doc.data(),
                     id: doc.id,
-                    type: 'salonmanager'
+                    type: 'salonowner'
                 };
 
                 login(userData);
                 showToast('Login successful', 'success');
                 navigate('/manager/dashboard');
             } else {
-                console.warn("No manager found with these credentials.");
+                console.warn("No salon owner found with these credentials.");
                 showToast('Invalid email or password', 'error');
             }
         } catch (error) {
@@ -60,10 +60,11 @@ const LoginManager = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-tea-50/20">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-tea-700/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brown-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Image */}
+            <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1560869713-7d0a29430803?w=1920&q=80")' }}>
+                <div className="absolute inset-0 bg-tea-900/60" />
+            </div>
 
             <div className="max-w-md w-full relative z-10">
                 {/* Logo Section */}
@@ -80,7 +81,7 @@ const LoginManager = () => {
                 <div className="glass-card p-8 lg:p-10 border border-tea-700/5">
                     <div className="mb-8 text-center sm:text-left">
                         <h2 className="text-2xl font-black text-tea-900 mb-2 tracking-tight">Welcome Back</h2>
-                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Business Owner account</p>
+                        <p className="text-tea-500 text-xs font-bold uppercase tracking-widest">Sign in to your Salon Owner account</p>
                     </div>
 
 

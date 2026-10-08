@@ -2,6 +2,11 @@
   RewriteEngine On
   RewriteBase /
   RewriteRule ^index\.html$ - [L]
+
+  # Allow php-smtp requests to pass directly to the PHP backend
+  RewriteCond %{REQUEST_URI} ^/php-smtp [NC]
+  RewriteRule ^ - [L]
+
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-l

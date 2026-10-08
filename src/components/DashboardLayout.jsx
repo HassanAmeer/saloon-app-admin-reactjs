@@ -1,7 +1,7 @@
 import { Outlet, NavLink, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { subscribeToDocument } from '../lib/services';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
     LayoutDashboard,
     Users,
@@ -15,25 +15,32 @@ import {
     X,
     Activity,
     Eye,
-    User
+    User,
+    Building2,
+    ChevronDown,
+    Check
 } from 'lucide-react';
-import { useState } from 'react';
 import { cn } from '../lib/utils';
 import ImageWithFallback from './ImageWithFallback';
 
 const DashboardLayout = () => {
-    const { user, type, logout } = useAuth();
+    const { user, type, logout, userSalons, effectiveSalonId, switchSalon } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [searchParams] = useSearchParams();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [impersonatedManager, setImpersonatedManager] = useState(null);
     const [impersonatedSalon, setImpersonatedSalon] = useState(null);
+    const [showSalonDropdown, setShowSalonDropdown] = useState(false);
 
     const querySalonId = searchParams.get('salonId');
 
     // Determine if we are in impersonation mode
-    const isImpersonating = type === 'superadmin' && querySalonId;
+    const isImpersonating = type === 'platformowner' && querySalonId;
+
+    // Get the effective salon name for display
+    const displaySalon = userSalons.find(s => s.id === effectiveSalonId);
+    const displaySalonName = displaySalon?.name || (isImpersonating ? impersonatedSalon?.name : null) || 'My Salon';
 
     useEffect(() => {
         if (!isImpersonating || !querySalonId) {
@@ -80,7 +87,7 @@ const DashboardLayout = () => {
         ...(user?.email === 'dev@gmail.com' ? [{ path: '/super/settings', icon: Settings, label: 'Platform Settings' }] : []),
     ];
 
-    const navItems = isImpersonating ? managerNavItems : (type === 'superadmin' ? superNavItems : managerNavItems);
+    const navItems = isImpersonating ? managerNavItems : (type === 'platformowner' ? superNavItems : managerNavItems);
 
     const displayUser = isImpersonating && impersonatedManager ? impersonatedManager : user;
 
@@ -90,7 +97,7 @@ const DashboardLayout = () => {
             <div className="lg:hidden backdrop-blur-md bg-white/80 border-b border-tea-700/10 px-4 py-4 flex items-center justify-between sticky top-0 z-50">
                 <div className="flex items-center gap-2">
                     <ImageWithFallback src="/logo.png" alt="salon Logo" className="w-8 h-8 object-contain shrink-0" />
-                    <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">{type === 'superadmin' ? 'Platform Dashboard' : 'Business Dashboard'}</h1>
+                    <h1 className="text-xl font-bold bg-gradient-to-r from-tea-600 to-tea-800 bg-clip-text text-transparent">{type === 'platformowner' ? 'Platform Dashboard' : 'Business Dashboard'}</h1>
                 </div>
                 <button
                     onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -117,7 +124,7 @@ const DashboardLayout = () => {
                             <div>
                                 <h1 className="text-xl font-bold text-tea-900 tracking-tight">salon</h1>
                                 <p className="text-xs font-medium text-tea-500 uppercase tracking-widest leading-none mt-1">
-                                    {isImpersonating ? 'Manager View' : (type === 'superadmin' ? 'Platform Owner' : 'Business Owner')}
+                                    {isImpersonating ? 'Manager View' : (type === 'platformowner' ? 'Platform Owner' : 'Salon Owner')}
                                 </p>
                             </div>
                         </div>
@@ -133,6 +140,54 @@ const DashboardLayout = () => {
                                 >
                                     Exit
                                 </button>
+                            </div>
+                        )}
+                        {/* Salon Selector for Salon Owners with multiple salons */}
+                        {type === 'salonowner' && userSalons.length > 1 && (
+                            <div className="mt-6">
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setShowSalonDropdown(!showSalonDropdown)}
+                                        className="w-full p-3 glass-card border border-tea-200 rounded-xl flex items-center justify-between hover:bg-tea-50 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <Building2 className="w-4 h-4 text-tea-600" />
+                                            <div className="text-left">
+                                                <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest truncate max-w-[140px]">
+                                                    {displaySalonName}
+                                                </p>
+                                                <p className="text-[8px] font-bold text-tea-400 uppercase tracking-widest">
+                                                    {userSalons.length} salons
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <ChevronDown className={cn("w-4 h-4 text-tea-400 transition-transform", showSalonDropdown && "rotate-180")} />
+                                    </button>
+                                    {showSalonDropdown && (
+                                        <div className="absolute top-full left-0 right-0 mt-2 glass-card border border-tea-200 rounded-xl overflow-hidden z-50 shadow-lg">
+                                            {userSalons.map((salon) => (
+                                                <button
+                                                    key={salon.id}
+                                                    onClick={() => switchSalon(salon.id)}
+                                                    className={cn(
+                                                        "w-full px-4 py-3 flex items-center justify-between hover:bg-tea-50 transition-colors",
+                                                        salon.id === effectiveSalonId && "bg-tea-50"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <Building2 className="w-4 h-4 text-tea-500" />
+                                                        <span className="text-xs font-black text-tea-900 uppercase tracking-tight truncate">
+                                                            {salon.name}
+                                                        </span>
+                                                    </div>
+                                                    {salon.id === effectiveSalonId && (
+                                                        <Check className="w-4 h-4 text-tea-600" />
+                                                    )}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>

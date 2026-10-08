@@ -120,7 +120,7 @@ const Sales = () => {
         const prevTrans = prevSales.length;
 
         const calcGrowth = (curr, prev) => {
-            if (prev === 0) return curr > 0 ? '+100%' : '+0.0%';
+            if (prev === 0) return curr > 0 ? '+100%' : 'No previous data';
             const g = ((curr - prev) / prev) * 100;
             return (g >= 0 ? '+' : '') + g.toFixed(1) + '%';
         };

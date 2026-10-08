@@ -28,7 +28,7 @@ const Profile = () => {
     const { showToast } = useToast();
 
     const querySalonId = searchParams.get('salonId');
-    const isImpersonating = type === 'superadmin' && !!querySalonId;
+    const isImpersonating = type === 'platformowner' && !!querySalonId;
 
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);

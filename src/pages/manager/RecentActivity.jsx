@@ -43,7 +43,7 @@ const RecentActivity = () => {
                     if (mySalon) setSalons([mySalon]);
                 })
             ];
-        } else if (type === 'superadmin') {
+        } else if (type === 'platformowner') {
             // Super admin global view — no specific salon
             unsubs = [
                 subscribeToCollectionGroup('sales', setActivities),

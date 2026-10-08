@@ -14,7 +14,8 @@ import {
     getDocument,
     createDocument,
     updateDocument,
-    uploadImage
+    uploadImage,
+    checkEmailExists
 } from '../../lib/services';
 import { sendManagerCreatedEmail, sendManagerUpdatedEmail } from '../../lib/email';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -99,11 +100,19 @@ const ManagerForm = ({ mode }) => {
             }
 
             if (mode === 'add') {
+                // Check if email already exists
+                const emailCheck = await checkEmailExists(finalData.manager.email);
+                if (emailCheck.exists) {
+                    showToast('This email is already connected to an account.', 'error');
+                    setIsSaving(false);
+                    return;
+                }
+
                 const managerPassword = finalData.manager.password;
 
                 const managerRes = await createDocument('salon_managers', {
                     ...finalData.manager,
-                    type: 'salonmanager',
+                    type: 'salonowner',
                     status: 'Active',
                     createdAt: new Date()
                 });
@@ -170,6 +179,16 @@ const ManagerForm = ({ mode }) => {
                     console.error('Email sending failed:', emailErr);
                 }
             } else {
+                // For edit mode, check email uniqueness excluding current manager
+                if (finalData.manager.email !== formData.manager.email) {
+                    const emailCheck = await checkEmailExists(finalData.manager.email, id);
+                    if (emailCheck.exists) {
+                        showToast('This email is already connected to an account.', 'error');
+                        setIsSaving(false);
+                        return;
+                    }
+                }
+
                 const updatePayload = { ...finalData.manager };
                 const passwordUpdated = Boolean(updatePayload.password);
                 if (!updatePayload.password) delete updatePayload.password;

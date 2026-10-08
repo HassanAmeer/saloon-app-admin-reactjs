@@ -375,6 +375,7 @@ const ProductModal = ({ mode, product, onClose, onSave }) => {
         name: '', brand: '', category: 'Shampoo', price: 0, sku: '',
         description: '', inventory: 0, active: true, imageUrl: '',
         tags: [], aiEnabled: true, preSelected: false,
+        usageInstructions: ''
     });
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -470,6 +471,10 @@ const ProductModal = ({ mode, product, onClose, onSave }) => {
 
                     <FieldGroup label="Professional Description">
                         <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="input-field min-h-[100px] py-4" rows="3" />
+                    </FieldGroup>
+
+                    <FieldGroup label="Usage Instructions">
+                        <textarea value={formData.usageInstructions} onChange={e => setFormData({ ...formData, usageInstructions: e.target.value })} className="input-field min-h-[80px] py-4" rows="2" placeholder="How to use this product..." />
                     </FieldGroup>
 
                     <div className="space-y-3">

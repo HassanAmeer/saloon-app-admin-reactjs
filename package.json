@@ -10,6 +10,7 @@
     "php:server": "php -S 0.0.0.0:5005 -t php-smtp php-smtp/index.php",
     "dev:php": "php -S 0.0.0.0:5005 -t php-smtp php-smtp/index.php & vite",
     "build": "vite build",
+    "build:zip": "vite build && (cd dist && zip -r ../dist.zip . -x \"../*\")",
     "lint": "eslint .",
     "preview": "vite preview"
   },

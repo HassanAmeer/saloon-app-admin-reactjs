@@ -21,14 +21,16 @@ import {
     Phone,
     Briefcase,
     Calendar,
-    Bot
+    Bot,
+    AlertCircle
 } from 'lucide-react';
 import {
     subscribeToCollection,
     createDocument,
     updateDocument,
     uploadImage,
-    getDocument
+    getDocument,
+    checkEmailExists
 } from '../../lib/services';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -102,6 +104,28 @@ const Stylists = () => {
             const folderPath = `salons/${effectiveSalonId}/stylists`;
             const currentSalonName = salonInfo?.name || user?.salonName || user?.name || 'Salon Profit Bar';
 
+            // Validate required fields
+            const validationErrors = [];
+            if (!data.name?.trim()) validationErrors.push('Full Name is required');
+            if (!data.email?.trim()) validationErrors.push('Email is required');
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) validationErrors.push('Invalid email format');
+            if (!data.phone?.trim()) validationErrors.push('Phone number is required');
+            if (modalMode === 'add' && !data.password?.trim()) validationErrors.push('Password is required');
+            else if (modalMode === 'add' && data.password && data.password.length < 8) validationErrors.push('Password must be at least 8 characters');
+
+            if (validationErrors.length > 0) {
+                showToast(validationErrors.join(', '), 'error');
+                return;
+            }
+
+            // Check email uniqueness
+            const excludeId = modalMode === 'edit' ? selectedStylist?.id : null;
+            const emailCheck = await checkEmailExists(data.email, excludeId);
+            if (emailCheck.exists) {
+                showToast('This email is already connected to an account.', 'error');
+                return;
+            }
+
             if (modalMode === 'add') {
                 await createDocument(folderPath, {
                     ...data,
@@ -126,7 +150,7 @@ const Stylists = () => {
                     console.error('Stylist creation email failed:', emailErr);
                 }
 
-                showToast('Stylist registered and notification email sent', 'success');
+                showToast('Stylist registered and invitation email sent', 'success');
             } else {
                 const updateData = { ...data };
                 const passwordUpdated = Boolean(updateData.password);
@@ -227,6 +251,26 @@ const Stylists = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Empty State */}
+            {filteredStylists.length === 0 && (
+                <div className="glass-card py-32 flex flex-col items-center justify-center text-center">
+                    <div className="w-20 h-20 rounded-3xl bg-tea-50 flex items-center justify-center mb-6">
+                        <Users className="w-10 h-10 text-tea-200" />
+                    </div>
+                    <h3 className="text-2xl font-black text-tea-900 uppercase tracking-tight mb-2">No team members yet</h3>
+                    <p className="text-tea-400 text-xs font-bold uppercase tracking-widest max-w-sm mb-6">
+                        Start building your salon team by registering your first stylist.
+                    </p>
+                    <button
+                        onClick={() => { setModalMode('add'); setSelectedStylist(null); setShowModal(true); }}
+                        className="btn-primary flex items-center gap-3 px-8 h-12 rounded-2xl"
+                    >
+                        <Plus className="w-5 h-5" />
+                        <span className="text-[11px] font-black uppercase tracking-widest">Register Stylist</span>
+                    </button>
+                </div>
+            )}
 
             {showModal && <StylistModal mode={modalMode} stylist={selectedStylist} onClose={() => setShowModal(false)} onSave={handleSave} />}
         </div>

@@ -29,6 +29,7 @@ import Developer from './pages/Developer';
 import APIDocumentation from './pages/APIDocumentation';
 
 import { ToastProvider } from './contexts/ToastContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const AppRoutes = () => {
     const { isAuthenticated, user } = useAuth();
@@ -42,12 +43,12 @@ const AppRoutes = () => {
                     !isAuthenticated ? (
                         <LoginManager />
                     ) : (
-                        <Navigate to={user?.type === 'superadmin' ? '/super/dashboard' : '/manager/dashboard'} replace />
+                        <Navigate to={user?.type === 'platformowner' ? '/super/dashboard' : '/manager/dashboard'} replace />
                     )
                 }
             />
 
-            {/* Super Admin Routes */}
+            {/* Platform Owner Routes */}
             <Route path="/super">
                 <Route
                     index
@@ -55,7 +56,7 @@ const AppRoutes = () => {
                         !isAuthenticated ? (
                             <LoginSuper />
                         ) : (
-                            user?.type === 'salonmanager' ? (
+                            user?.type === 'salonowner' ? (
                                 <Navigate to="/manager/dashboard" replace />
                             ) : (
                                 <Navigate to="/super/dashboard" replace />
@@ -65,7 +66,7 @@ const AppRoutes = () => {
                 />
                 <Route
                     element={
-                        <ProtectedRoute requiredType="superadmin">
+                        <ProtectedRoute requiredType="platformowner">
                             <DashboardLayout />
                         </ProtectedRoute>
                     }
@@ -82,11 +83,11 @@ const AppRoutes = () => {
 
             <Route path="/seeding" element={<Seeding />} />
 
-            {/* Salon Manager Routes */}
+            {/* Salon Owner Routes */}
             <Route
                 path="/manager"
                 element={
-                    <ProtectedRoute requiredType="salonmanager">
+                    <ProtectedRoute requiredType="salonowner">
                         <DashboardLayout />
                     </ProtectedRoute>
                 }
@@ -109,13 +110,15 @@ const AppRoutes = () => {
 
 function App() {
     return (
-        <AuthProvider>
-            <ToastProvider>
-                <BrowserRouter>
-                    <AppRoutes />
-                </BrowserRouter>
-            </ToastProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+            <AuthProvider>
+                <ToastProvider>
+                    <BrowserRouter>
+                        <AppRoutes />
+                    </BrowserRouter>
+                </ToastProvider>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 }
 

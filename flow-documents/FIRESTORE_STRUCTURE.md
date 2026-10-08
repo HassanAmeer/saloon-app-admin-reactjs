@@ -59,19 +59,19 @@ With this structure, your Firestore rules become incredibly clean:
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Check if user is Super Admin
-    function isSuper() {
-      return get(/databases/$(database)/documents/super_admins/$(request.auth.uid)).data.role == 'super';
+    // Check if user is Platform Owner
+    function isPlatformOwner() {
+      return get(/databases/$(database)/documents/super_admins/$(request.auth.uid)).data.role == 'platformowner';
     }
 
-    // Check if user is the specific Salon Manager
+    // Check if user is the specific Salon Owner
     function isSalonOwner(salonId) {
       return request.auth.uid == salonId;
     }
 
     match /salons/{salonId}/{allPaths=**} {
-      // Super Admin or the specific Salon Manager can do everything
-      allow read, write: if isSuper() || isSalonOwner(salonId);
+      // Platform Owner or the specific Salon Owner can do everything
+      allow read, write: if isPlatformOwner() || isSalonOwner(salonId);
       
       // Stylists logging in via mobile app
       match /stylists/{stylistId}/{stylistStore=**} {
@@ -87,4 +87,4 @@ service cloud.firestore {
 ## 🚀 Migration Path
 Currently, the prototype uses a **Flat Scoped Pattern** (where items like `sales` have a `salonId` field). To migrate to the **Nested Pattern**:
 1. Update `createDocument` to accept a path array: `['salons', salonId, 'stylists']`.
-2. Use `collectionGroup` for Super Admin global analytics (e.g., total sales across all tenants).
+2. Use `collectionGroup` for Platform Owner global analytics (e.g., total sales across all tenants).

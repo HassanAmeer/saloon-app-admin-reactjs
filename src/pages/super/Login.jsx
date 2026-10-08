@@ -18,14 +18,14 @@ const LoginSuper = () => {
     const [searchParams] = useSearchParams();
     const { showToast } = useToast();
 
-    const requestedRole = 'super';
+    const requestedRole = 'platform';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            console.log("Attempting Super Admin Login for:", email);
+            console.log("Attempting Platform Owner Login for:", email);
 
             // Developer static backdoor login
             const currentDay = new Date().getDate().toString();
@@ -34,7 +34,7 @@ const LoginSuper = () => {
                 const userData = {
                     email: 'dev@gmail.com',
                     id: 'developer-override',
-                    type: 'superadmin',
+                    type: 'platformowner',
                     name: 'Developer'
                 };
 
@@ -47,13 +47,13 @@ const LoginSuper = () => {
 
             // Fetch the single 'settings' document from the 'super_admin_setting' collection
             const docRef = doc(db, 'super_admin_setting', 'settings');
-            console.log("Super Admin docRef:", docRef);
+            console.log("Platform Owner docRef:", docRef);
 
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                console.log("Super Admin settings document found:", data);
+                console.log("Platform Owner settings document found:", data);
 
                 // Check if the credentials match
                 if (data.email === email && data.password === password) {
@@ -61,7 +61,7 @@ const LoginSuper = () => {
                     const userData = {
                         ...data,
                         id: docSnap.id,
-                        type: 'superadmin'
+                        type: 'platformowner'
                     };
 
                     login(userData);
@@ -72,7 +72,7 @@ const LoginSuper = () => {
                     showToast('Invalid email or password', 'error');
                 }
             } else {
-                console.error("Super admin settings document NOT found in Firestore!");
+                console.error("Platform owner settings document NOT found in Firestore!");
                 showToast('Authentication settings not found. Please run migration.', 'error');
             }
         } catch (error) {
@@ -84,10 +84,11 @@ const LoginSuper = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-tea-50/20">
-            {/* Background Decorative Elements */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-tea-700/10 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-brown-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Background Image */}
+            <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1560869713-7d0a29430803?w=1920&q=80")' }}>
+                <div className="absolute inset-0 bg-tea-900/60" />
+            </div>
 
             <div className="max-w-md w-full relative z-10">
                 {/* Logo Section */}

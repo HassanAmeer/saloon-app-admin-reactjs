@@ -55,7 +55,7 @@ const Profile = () => {
                     const updatedUser = {
                         ...user,
                         ...fullUserData,
-                        type: 'superadmin'
+                        type: 'platformowner'
                     };
                     setUser(updatedUser);
                     localStorage.setItem('salon_user', JSON.stringify(updatedUser));
@@ -127,7 +127,7 @@ const Profile = () => {
                 ...user,
                 ...updateData,
                 id: 'settings',
-                type: 'superadmin'
+                type: 'platformowner'
             };
             setUser(updatedUser);
             localStorage.setItem('salon_user', JSON.stringify(updatedUser));
@@ -174,7 +174,7 @@ const Profile = () => {
                         </div>
                         <div>
                             <h3 className="text-xl font-bold text-tea-900">{user?.name}</h3>
-                            <p className="text-sm text-tea-500 uppercase tracking-widest font-bold">Super Administrator</p>
+                            <p className="text-sm text-tea-500 uppercase tracking-widest font-bold">Platform Owner</p>
                         </div>
                     </div>
                 </div>

@@ -52,7 +52,7 @@ const Dashboard = ({ forceSalonId }) => {
 
     const querySalonId = searchParams.get('salonId');
     const salonId = forceSalonId || querySalonId || user?.salonId;
-    const isImpersonating = type === 'superadmin' && querySalonId;
+    const isImpersonating = type === 'platformowner' && querySalonId;
 
     // Subscribe to all collections scoped by salonId
     useEffect(() => {
@@ -68,8 +68,8 @@ const Dashboard = ({ forceSalonId }) => {
                 subscribeToCollectionGroup('Ai recommendations', setRecommendations, [{ field: 'salonId', operator: '==', value: salonId }])
             ];
             timeout = setTimeout(() => setLoading(false), 1000);
-        } else if (type === 'superadmin') {
-            // Aggregate view for Super Admin (all salons)
+        } else if (type === 'platformowner') {
+            // Aggregate view for Platform Owner (all salons)
             unsubs = [
                 subscribeToCollectionGroup('sales', setSales),
                 subscribeToCollectionGroup('stylists', setStylists),
@@ -79,7 +79,7 @@ const Dashboard = ({ forceSalonId }) => {
             ];
             timeout = setTimeout(() => setLoading(false), 1000);
         } else {
-            // For managers without a salonId, stop the loader so they can see the error
+            // For salon owners without a salonId, stop the loader so they can see the error
             setLoading(false);
         }
 
@@ -174,11 +174,12 @@ const Dashboard = ({ forceSalonId }) => {
             totalStylists,
             totalClients,
             totalManagers,
-            salesGrowth: (salesGrowthValue >= 0 ? '+' : '') + salesGrowthValue.toFixed(1) + '%',
-            scansGrowth: '+0.0%', // Scans growth would need previous period recommendations
-            clientsGrowth: '+0.0%',
-            managersGrowth: '+0.0%',
-            stylistGrowth: '+0.0%'
+            salesGrowth: salesGrowthValue === 0 && prevTotalSales === 0 ? 'No previous data' : (salesGrowthValue >= 0 ? '+' : '') + salesGrowthValue.toFixed(1) + '%',
+            scansGrowth: 'No previous data',
+            clientsGrowth: 'No previous data',
+            managersGrowth: 'No previous data',
+            stylistGrowth: 'No previous data',
+            productsGrowth: 'No previous data'
         };
     }, [filteredSales, recommendations, stylists, managers, sales, period]);
 
@@ -280,13 +281,13 @@ const Dashboard = ({ forceSalonId }) => {
         return <DashboardSkeleton />;
     }
 
-    if (type === 'salonmanager' && !salonId) {
+    if (type === 'salonowner' && !salonId) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="glass-card p-10 text-center space-y-4 max-w-md">
                     <Activity className="w-12 h-12 text-rose-500 mx-auto" />
                     <h2 className="text-2xl font-black text-tea-900 uppercase">Configuration Error</h2>
-                    <p className="text-tea-500 text-sm font-bold">Your manager account is not linked to any Salon ID. Please contact the Super Admin to resolve this.</p>
+                    <p className="text-tea-500 text-sm font-bold">Your salon owner account is not linked to any Salon ID. Please contact the Platform Owner to resolve this.</p>
                 </div>
             </div>
         );
@@ -301,7 +302,7 @@ const Dashboard = ({ forceSalonId }) => {
                             <Eye className="w-4 h-4 text-white" />
                         </div>
                         <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest leading-none">
-                            <span className="text-tea-700">Super Admin Mode:</span> Watching Salon ID {salonId.substring(0, 8)}...
+                            <span className="text-tea-700">Platform Owner Mode:</span> Watching Salon ID {salonId.substring(0, 8)}...
                         </p>
                     </div>
                     <button
@@ -343,7 +344,7 @@ const Dashboard = ({ forceSalonId }) => {
 
             {/* Key Performance Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {type === 'superadmin' && !salonId ? (
+                {type === 'platformowner' && !salonId ? (
                     <>
                         <MetricCard
                             label="Business Owners"
@@ -369,7 +370,7 @@ const Dashboard = ({ forceSalonId }) => {
                         <MetricCard
                             label="Products Sold"
                             value={dashboardStats.productsSold.toLocaleString()}
-                            growth="+14.2%"
+                            growth={dashboardStats.productsGrowth || 'No previous data'}
                             icon={Package}
                             color="brown"
                         />
@@ -393,14 +394,14 @@ const Dashboard = ({ forceSalonId }) => {
                         <MetricCard
                             label="Avg Sale Value"
                             value={`$${dashboardStats.avgSaleValue.toFixed(2)}`}
-                            growth="+0.0%"
+                            growth={dashboardStats.salesGrowth}
                             icon={TrendingUp}
                             color="amber"
                         />
                         <MetricCard
                             label="Products Sold"
                             value={dashboardStats.productsSold.toLocaleString()}
-                            growth="+14.2%"
+                            growth={dashboardStats.productsGrowth || 'No previous data'}
                             icon={Package}
                             color="brown"
                         />
@@ -538,7 +539,7 @@ const Dashboard = ({ forceSalonId }) => {
 // Internal Components
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
-const MetricCard = ({ label, value, growth, icon: Icon, color }) => {
+const MetricCard = ({ label, value, growth = '', icon: Icon, color }) => {
     const accents = {
         tea: 'text-tea-700 bg-tea-200/50',
         emerald: 'text-emerald-600 bg-emerald-100',
@@ -546,19 +547,24 @@ const MetricCard = ({ label, value, growth, icon: Icon, color }) => {
         brown: 'text-orange-900 bg-orange-100'
     };
 
+    const growthStr = String(growth || '');
+    const isPositive = growthStr.startsWith('+');
+
     return (
         <div className="stat-card group">
             <div className="flex items-start justify-between mb-4">
                 <div className={cn("p-2.5 rounded-xl transition-colors", accents[color])}>
-                    <Icon className="w-5 h-5" />
+                    {Icon && <Icon className="w-5 h-5" />}
                 </div>
-                <div className={cn(
-                    "flex items-center gap-1 text-[9px] font-black border px-2 py-0.5 rounded-full uppercase tracking-widest",
-                    growth.startsWith('+') ? "text-emerald-600 border-emerald-600/20 bg-emerald-50" : "text-rose-600 border-rose-600/20 bg-rose-50"
-                )}>
-                    {growth.startsWith('+') ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {growth}
-                </div>
+                {growthStr && (
+                    <div className={cn(
+                        "flex items-center gap-1 text-[9px] font-black border px-2 py-0.5 rounded-full uppercase tracking-widest",
+                        isPositive ? "text-emerald-600 border-emerald-600/20 bg-emerald-50" : "text-rose-600 border-rose-600/20 bg-rose-50"
+                    )}>
+                        {isPositive ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {growthStr}
+                    </div>
+                )}
             </div>
             <p className="text-3xl font-black text-tea-900 tracking-tighter group-hover:translate-x-1 transition-transform">{value}</p>
             <p className="text-[10px] font-black text-tea-500 uppercase tracking-[0.2em] mt-1">{label}</p>

@@ -5,7 +5,12 @@ import {
     CheckCircle,
     XCircle,
     Loader2,
-    BotIcon
+    BotIcon,
+    Image,
+    FileText,
+    Camera,
+    AlertTriangle,
+    Info
 } from 'lucide-react';
 import { subscribeToCollection, subscribeToCollectionGroup } from '../lib/services';
 import { useAuth } from '../contexts/AuthContext';
@@ -225,12 +230,28 @@ const AIRecommendations = () => {
                         {/* Hair Analysis */}
                         <div className="bg-tea-50 rounded-lg p-3 mb-4">
                             <p className="text-xs font-semibold text-tea-700 mb-1">Hair Analysis</p>
-                            <p className="text-sm text-gray-700">
-                                <span className="font-medium">Type:</span> {rec.hairAnalysis?.type}
-                            </p>
-                            <p className="text-sm text-gray-700">
-                                <span className="font-medium">Condition:</span> {rec.hairAnalysis?.condition}
-                            </p>
+                            {rec.hairAnalysis?.assessable ? (
+                                <>
+                                    <p className="text-sm text-gray-700">
+                                        <span className="font-medium">Type:</span> {rec.hairAnalysis?.type}
+                                    </p>
+                                    <p className="text-sm text-gray-700">
+                                        <span className="font-medium">Condition:</span> {rec.hairAnalysis?.condition}
+                                    </p>
+                                </>
+                            ) : (
+                                <p className="text-sm text-amber-600 font-medium flex items-center gap-1">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    Cannot assess from this photo
+                                </p>
+                            )}
+                            {rec.hairAnalysis?.confidence !== undefined && (
+                                <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <Info className="w-3 h-3" />
+                                    Confidence: {(rec.hairAnalysis.confidence * 100).toFixed(0)}%
+                                    {rec.hairAnalysis?.source && ` · Source: ${rec.hairAnalysis.source}`}
+                                </p>
+                            )}
                         </div>
 
                         {/* Suggested Products */}
@@ -247,6 +268,9 @@ const AIRecommendations = () => {
                                         <div className="flex-1">
                                             <p className="text-sm font-medium text-gray-900">{product.productName}</p>
                                             <p className="text-xs text-gray-600">Score: {(product.score * 100).toFixed(0)}%</p>
+                                            {product.reason && (
+                                                <p className="text-xs text-tea-600 mt-1">{product.reason}</p>
+                                            )}
                                         </div>
                                         {product.sold ? (
                                             <CheckCircle className="w-5 h-5 text-tea-700" />

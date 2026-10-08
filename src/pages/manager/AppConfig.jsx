@@ -41,14 +41,14 @@ const AppConfig = () => {
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState('questionnaire');
     const querySalonId = searchParams.get('salonId');
-    const isImpersonating = type === 'superadmin' && querySalonId;
+    const isImpersonating = type === 'platformowner' && querySalonId;
     const activeSalonId = querySalonId || user?.salonId;
 
     useEffect(() => {
         const fetchConfig = async () => {
-            if (!activeSalonId && !isImpersonating && type !== 'superadmin') { setLoading(false); return; }
+            if (!activeSalonId && !isImpersonating && type !== 'platformowner') { setLoading(false); return; }
             try {
-                const configRef = (type === 'superadmin' && !isImpersonating)
+                const configRef = (type === 'platformowner' && !isImpersonating)
                     ? doc(db, 'settings', 'platform_config')
                     : doc(db, `salons/${activeSalonId}/settings`, 'app_config');
                 const configSnap = await getDoc(configRef);
@@ -90,10 +90,10 @@ const AppConfig = () => {
     }, [activeSalonId, type, isImpersonating]);
 
     const handleSave = async () => {
-        if (!activeSalonId && !isImpersonating && type !== 'superadmin') return;
+        if (!activeSalonId && !isImpersonating && type !== 'platformowner') return;
         setIsSaving(true);
         try {
-            const configRef = (type === 'superadmin' && !isImpersonating)
+            const configRef = (type === 'platformowner' && !isImpersonating)
                 ? doc(db, 'settings', 'platform_config')
                 : doc(db, `salons/${activeSalonId}/settings`, 'app_config');
             await setDoc(configRef, configs);
@@ -285,52 +285,30 @@ const AppConfig = () => {
                         action={
                             <PillButton icon={Plus} onClick={() => {
                                 const name = prompt('Enter color name:');
-                                if (name) setConfigs({ ...configs, hairColors: [...(configs.hairColors || []), { id: Date.now().toString(), name, imageUrl: '' }] });
+                                const colorHex = prompt('Enter hex color code (e.g. #8B4513):', '#000000');
+                                if (name) setConfigs({ ...configs, hairColors: [...(configs.hairColors || []), { id: Date.now().toString(), name, colorHex: colorHex || '#000000', imageUrl: '' }] });
                             }}>Add Color</PillButton>
                         }
                     >
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                             {(configs.hairColors || []).map(color => (
-                                <div key={color.id} className="relative group glass-card p-3 space-y-3 overflow-hidden border border-tea-100">
-                                    <button
-                                        onClick={() => setConfigs({ ...configs, hairColors: configs.hairColors.filter(c => c.id !== color.id) })}
-                                        className="absolute top-2 right-2 z-10 w-7 h-7 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
-                                    >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                    <div className="aspect-square bg-tea-50 rounded-xl overflow-hidden relative">
-                                        <ImageWithFallback
-                                            src={color.imageUrl}
-                                            alt={color.name}
-                                            className="w-full h-full object-cover"
-                                            fallbackClassName="w-full h-full flex items-center justify-center p-6 opacity-20"
-                                        />
-                                        <label className="absolute inset-0 bg-tea-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
-                                            <input
-                                                type="file"
-                                                className="hidden"
-                                                onChange={async e => {
-                                                    const file = e.target.files[0];
-                                                    if (file) {
-                                                        const url = await uploadImage(file, `config/colors/${file.name}`);
-                                                        const updated = configs.hairColors.map(c => c.id === color.id ? { ...c, imageUrl: url } : c);
-                                                        setConfigs({ ...configs, hairColors: updated });
-                                                    }
-                                                }}
-                                            />
-                                            <Upload className="w-5 h-5 text-white" />
-                                        </label>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        value={color.name}
-                                        onChange={e => {
-                                            const updated = configs.hairColors.map(c => c.id === color.id ? { ...c, name: e.target.value } : c);
+                                <ColorSwatch
+                                    key={color.id}
+                                    color={color}
+                                    onRemove={() => setConfigs({ ...configs, hairColors: configs.hairColors.filter(c => c.id !== color.id) })}
+                                    onNameChange={(value, field) => {
+                                        const updated = configs.hairColors.map(c => c.id === color.id ? { ...c, [field]: value } : c);
+                                        setConfigs({ ...configs, hairColors: updated });
+                                    }}
+                                    onImageChange={async e => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            const url = await uploadImage(file, `config/colors/${file.name}`);
+                                            const updated = configs.hairColors.map(c => c.id === color.id ? { ...c, imageUrl: url } : c);
                                             setConfigs({ ...configs, hairColors: updated });
-                                        }}
-                                        className="w-full text-center text-xs font-black text-tea-800 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-tea-200 rounded-lg p-1 uppercase tracking-widest"
-                                    />
-                                </div>
+                                        }
+                                    }}
+                                />
                             ))}
                             {(!configs.hairColors || configs.hairColors.length === 0) && (
                                 <div className="col-span-full py-12 text-center">
@@ -518,6 +496,57 @@ const PillButton = ({ icon: Icon, onClick, children }) => (
         {Icon && <Icon className="w-3.5 h-3.5" />}
         {children}
     </button>
+);
+
+const ColorSwatch = ({ color, onRemove, onNameChange, onImageChange }) => (
+    <div className="relative group glass-card p-3 space-y-3 overflow-hidden border border-tea-100">
+        <button
+            onClick={onRemove}
+            className="absolute top-2 right-2 z-10 w-7 h-7 rounded-lg bg-rose-50 text-rose-400 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+        >
+            <Trash2 className="w-3.5 h-3.5" />
+        </button>
+        <div className="aspect-square bg-tea-50 rounded-xl overflow-hidden relative">
+            {color.colorHex ? (
+                <div
+                    className="w-full h-full"
+                    style={{ backgroundColor: color.colorHex }}
+                />
+            ) : (
+                <ImageWithFallback
+                    src={color.imageUrl}
+                    alt={color.name}
+                    className="w-full h-full object-cover"
+                    fallbackClassName="w-full h-full flex items-center justify-center p-6 opacity-20"
+                />
+            )}
+            <label className="absolute inset-0 bg-tea-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={onImageChange}
+                />
+                <Upload className="w-5 h-5 text-white" />
+            </label>
+        </div>
+        <div className="space-y-2">
+            <input
+                type="color"
+                value={color.colorHex || '#000000'}
+                onChange={e => onNameChange(e.target.value, 'colorHex')}
+                className="w-full h-8 rounded-lg cursor-pointer border border-tea-200"
+                title="Pick color sample"
+            />
+            <input
+                type="text"
+                value={color.name}
+                onChange={e => onNameChange(e.target.value, 'name')}
+                className="w-full text-center text-xs font-black text-tea-800 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-tea-200 rounded-lg p-1 uppercase tracking-widest"
+                placeholder="Shade name"
+            />
+        </div>
+    </div>
 );
 
 const TagList = ({ items, onRemove }) => (

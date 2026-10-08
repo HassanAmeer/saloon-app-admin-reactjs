@@ -45,13 +45,13 @@ To deploy the admin panel to Firebase:
 ## 🛡 4. Admin Panel & Credentials
 The system has two layers of administration:
 
-### 1. Super Admin (Global Control)
-Used to manage all salons, salon managers, and platform-wide settings.
+### 1. Platform Owner (Global Control)
+Used to manage all salons, salon owners, and platform-wide settings.
 *   **URL**: `/super` (Login page)
 *   **Default Email**: `admin@gmail.com`
 *   **Default Password**: `12345678`
 
-### 2. Salon Manager (Branch Control)
+### 2. Salon Owner (Branch Control)
 Used to manage a specific salon's products, stylists, clients, and branch-specific app configuration.
 *   **URL**: `/manager` (Login page)
 *   **Default Email**: `salon1@manager.com`
@@ -61,7 +61,7 @@ Used to manage a specific salon's products, stylists, clients, and branch-specif
 ## 📊 5. How to Upload Demo Data
 The project includes a built-in seeding tool to populate your Firestore database with dummy/demo data instantly.
 
-1.  Log in as **Super Admin**.
+1.  Log in as **Platform Owner**.
 2.  Navigate to the **Developer Center** (sidebar).
 3.  Click on **"Go to Seeding Page"** or visit the URL `/seeding`.
 4.  Run the **Migration/Seed process**. This will populate collections like `salons`, `products`, `stylists`, and `clients`.

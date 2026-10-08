@@ -52,7 +52,7 @@ const Dashboard = ({ forceSalonId }) => {
 
     const querySalonId = searchParams.get('salonId');
     const salonId = forceSalonId || querySalonId || user?.salonId;
-    const isImpersonating = type === 'superadmin' && querySalonId;
+    const isImpersonating = type === 'platformowner' && querySalonId;
 
     // Subscribe to all collections scoped by salonId
     useEffect(() => {
@@ -68,8 +68,8 @@ const Dashboard = ({ forceSalonId }) => {
                 subscribeToCollectionGroup('Ai recommendations', setRecommendations, [{ field: 'salonId', operator: '==', value: salonId }])
             ];
             timeout = setTimeout(() => setLoading(false), 1000);
-        } else if (type === 'superadmin') {
-            // Aggregate view for Super Admin (all salons)
+        } else if (type === 'platformowner') {
+            // Aggregate view for Platform Owner (all salons)
             unsubs = [
                 subscribeToCollectionGroup('sales', setSales),
                 subscribeToCollectionGroup('stylists', setStylists),
@@ -79,7 +79,7 @@ const Dashboard = ({ forceSalonId }) => {
             ];
             timeout = setTimeout(() => setLoading(false), 1000);
         } else {
-            // For managers without a salonId, stop the loader so they can see the error
+            // For salon owners without a salonId, stop the loader so they can see the error
             setLoading(false);
         }
 
@@ -145,11 +145,12 @@ const Dashboard = ({ forceSalonId }) => {
             totalStylists: stylists.length,
             totalClients: clients.length,
             totalManagers: managers.length,
-            salesGrowth: (sGrowthVal >= 0 ? '+' : '') + sGrowthVal.toFixed(1) + '%',
-            scansGrowth: '+0.0%',
-            clientsGrowth: '+0.0%',
-            managersGrowth: '+0.0%',
-            stylistGrowth: '+0.0%'
+            salesGrowth: sGrowthVal === 0 && prevTotalSales === 0 ? 'No previous data' : (sGrowthVal >= 0 ? '+' : '') + sGrowthVal.toFixed(1) + '%',
+            scansGrowth: 'No previous data',
+            clientsGrowth: 'No previous data',
+            managersGrowth: 'No previous data',
+            stylistGrowth: 'No previous data',
+            productsGrowth: 'No previous data'
         };
 
         // Dynamic Chart Data
@@ -201,13 +202,13 @@ const Dashboard = ({ forceSalonId }) => {
         return <DashboardSkeleton />;
     }
 
-    if (type === 'salonmanager' && !salonId) {
+    if (type === 'salonowner' && !salonId) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="glass-card p-10 text-center space-y-4 max-w-md">
                     <Activity className="w-12 h-12 text-rose-500 mx-auto" />
                     <h2 className="text-2xl font-black text-tea-900 uppercase">Configuration Error</h2>
-                    <p className="text-tea-500 text-sm font-bold">Your manager account is not linked to any Salon ID. Please contact the Super Admin to resolve this.</p>
+                    <p className="text-tea-500 text-sm font-bold">Your salon owner account is not linked to any Salon ID. Please contact the Platform Owner to resolve this.</p>
                 </div>
             </div>
         );
@@ -222,7 +223,7 @@ const Dashboard = ({ forceSalonId }) => {
                             <Eye className="w-4 h-4 text-white" />
                         </div>
                         <p className="text-[10px] font-black text-tea-900 uppercase tracking-widest leading-none">
-                            <span className="text-tea-700">Super Admin Mode:</span> Watching Salon ID {salonId.substring(0, 8)}...
+                            <span className="text-tea-700">Platform Owner Mode:</span> Watching Salon ID {salonId.substring(0, 8)}...
                         </p>
                     </div>
                     <button
@@ -288,7 +289,7 @@ const Dashboard = ({ forceSalonId }) => {
                 <MetricCard
                     label="Products Sold"
                     value={stats.productsSold.toLocaleString()}
-                    growth="+14.2%"
+                    growth={stats.productsGrowth || 'No previous data'}
                     icon={Package}
                     color="brown"
                 />

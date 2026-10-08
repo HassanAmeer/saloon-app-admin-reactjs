@@ -7,23 +7,23 @@ const getDateAgo = (days) => {
 // HELPER: Generate random number between min and max
 const getRandom = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// 1. Super Admin
+// 1. Platform Owner
 export const mockSuperAdmin = {
     id: "settings",
     email: "admin@gmail.com",
     password: "12345678",
-    name: "Super Admin",
-    type: "superadmin",
+    name: "Platform Owner",
+    type: "platformowner",
     address: "lahore",
     bio: "bio abc",
     phone: "3012345678",
     imageUrl: "https://link.thelocalrent.com/v?t=1771430742&tk=37160f2e00721d906831565829ae1de7",
 };
 
-// 2. Salon Managers (2 managers)
+// 2. Salon Owners (2 owners)
 export const mockSalonManagers = [
-    { id: "manager-1", email: "salon1@manager.com", password: "12345678", name: "Hassan Ameer", salonId: "salon-1", type: "salonmanager", imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop" },
-    { id: "manager-2", email: "salon2@manager.com", password: "12345678", name: "Alex Rivera", salonId: "salon-2", type: "salonmanager", imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" }
+    { id: "manager-1", email: "salon1@manager.com", password: "12345678", name: "Hassan Ameer", salonId: "salon-1", type: "salonowner", imageUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop" },
+    { id: "manager-2", email: "salon2@manager.com", password: "12345678", name: "Alex Rivera", salonId: "salon-2", type: "salonowner", imageUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop" }
 ];
 
 // 3. Salons (2 salons)

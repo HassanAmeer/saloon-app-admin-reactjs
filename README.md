@@ -29,13 +29,13 @@ The admin panel source code is located in the current directory:
 
 The system architecture supports two distinct levels of access:
 
-### 1. 👑 Super Admin Flow
-The Super Admin has global control over the entire platform. They can manage all salon branches, create new salon managers, and update platform-wide settings.
+### 1. 👑 Platform Owner Flow
+The Platform Owner has global control over the entire platform. They can manage all salon branches, create new salon owners, and update platform-wide settings.
 
 - **URL Path:** `/super`
 - **Default Credentials:** `admin@gmail.com` / `12345678`
 
-#### **Super Admin Dashboard Preview:**
+#### **Platform Owner Dashboard Preview:**
 
 <div align="center">
   <img src="demo/super1.png" width="45%" />
@@ -48,13 +48,13 @@ The Super Admin has global control over the entire platform. They can manage all
 
 ---
 
-### 2. 🏪 Salon Manager Flow
-Each salon branch has its own manager who handles day-to-day operations specific to that location. They can manage stylists, products, clients, and branch-specific branding.
+### 2. 🏪 Salon Owner Flow
+Each salon branch has its own owner who handles day-to-day operations specific to that location. They can manage stylists, products, clients, and branch-specific branding.
 
 - **URL Path:** `/manager`
 - **Default Credentials:** `salon1@manager.com` / `12345678`
 
-#### **Salon Manager Dashboard Preview:**
+#### **Salon Owner Dashboard Preview:**
 
 <div align="center">
   <img src="demo/salon1.png" width="45%" />
@@ -108,6 +108,6 @@ Each salon branch has its own manager who handles day-to-day operations specific
 
 ## 📊 Demo Data
 To populate the dashboard with sample data:
-1. Log in as **Super Admin**.
+1. Log in as **Platform Owner**.
 2. Go to **Developer Center** -> **Seeding Page**.
 3. Run the **Migration/Seed** process.

@@ -8,19 +8,26 @@ const ProtectedRoute = ({ children, requiredType }) => {
 
     if (!isAuthenticated) {
         // If not authenticated, send to appropriate login based on requested type
-        if (requiredType === 'superadmin') {
+        if (requiredType === 'platformowner') {
             return <Navigate to="/super" replace />;
         }
         return <Navigate to="/" replace />;
     }
 
     if (requiredType && user?.type !== requiredType) {
-        // Allow super admin to access manager routes (impersonation)
-        if (user?.type === 'superadmin' && requiredType === 'salonmanager') {
+        // Allow platform owner to access salon owner routes (impersonation)
+        if (user?.type === 'platformowner' && requiredType === 'salonowner') {
             return children;
         }
-        // If wrong type, redirect to their appropriate home
-        return <Navigate to={user?.type === 'superadmin' ? '/super/dashboard' : '/manager/dashboard'} replace />;
+        // Redirect to appropriate home without looping
+        if (user?.type === 'platformowner' && requiredType !== 'platformowner') {
+            return <Navigate to="/super/dashboard" replace />;
+        }
+        if (user?.type === 'salonowner' && requiredType !== 'salonowner') {
+            return <Navigate to="/manager/dashboard" replace />;
+        }
+        // Unknown or corrupted user session: send to login
+        return <Navigate to="/" replace />;
     }
 
     return children;

@@ -29,7 +29,7 @@ const RecentActivity = () => {
     useEffect(() => {
         let unsubs = [];
 
-        if (type === 'superadmin') {
+        if (type === 'platformowner') {
             unsubs = [
                 subscribeToCollectionGroup('sales', setActivities),
                 subscribeToCollection('salon_managers', setManagers),

@@ -161,22 +161,181 @@ export const getClientHistory = async (clientName) => {
  * ========================================== */
 
 /**
- * Record a sale from the app side
+ * Record a sale from the app side with stock management
  */
-export const recordSale = async (saleData) => {
+export const recordSale = async (saleData, salonId) => {
     try {
-        // 1. Add to sales collection
+        // Check for duplicate submission
+        if (saleData._saleId) {
+            const existingSale = await getDoc(doc(db, 'sales', saleData._saleId));
+            if (existingSale.exists()) {
+                return { success: true, saleId: saleData._saleId, alreadyRecorded: true };
+            }
+        }
+
+        // 1. Validate stock availability
+        if (saleData.products && saleData.products.length > 0) {
+            for (const product of saleData.products) {
+                if (product.inventory !== undefined) {
+                    if (product.inventory < product.quantity) {
+                        return { success: false, error: `Insufficient stock for ${product.productName}. Only ${product.inventory} available.` };
+                    }
+                }
+            }
+        }
+
+        // 2. Record the sale
         const saleRef = await addDoc(collection(db, 'sales'), {
             ...saleData,
-            date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
-            timestamp: serverTimestamp()
+            date: new Date().toISOString().split('T')[0],
+            timestamp: serverTimestamp(),
+            status: 'completed',
+            recordedAt: serverTimestamp()
         });
 
-        // 2. (Optional) In a real app, you would also update product stock here
+        // 3. Update product stock
+        if (saleData.products && saleData.products.length > 0) {
+            for (const product of saleData.products) {
+                if (product.id) {
+                    const productRef = doc(db, 'products', product.id);
+                    const productSnap = await getDoc(productRef);
+                    if (productSnap.exists()) {
+                        const currentStock = productSnap.data().inventory || 0;
+                        const newStock = Math.max(0, currentStock - product.quantity);
+                        await updateDoc(productRef, {
+                            inventory: newStock,
+                            unitsSold: (productSnap.data().unitsSold || 0) + product.quantity,
+                            updatedAt: serverTimestamp()
+                        });
+                    }
+                }
+            }
+        }
 
         return { success: true, saleId: saleRef.id };
     } catch (error) {
         console.error("API Error [recordSale]:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Refund or cancel a sale
+ */
+export const refundSale = async (saleId, reason, salonId) => {
+    try {
+        const saleRef = doc(db, 'sales', saleId);
+        const saleSnap = await getDoc(saleRef);
+        
+        if (!saleSnap.exists()) {
+            return { success: false, error: 'Sale not found' };
+        }
+
+        const saleData = saleSnap.data();
+
+        // 1. Update sale status
+        await updateDoc(saleRef, {
+            status: 'refunded',
+            refundReason: reason,
+            refundDate: new Date().toISOString().split('T')[0],
+            refundTimestamp: serverTimestamp()
+        });
+
+        // 2. Return stock
+        if (saleData.products && saleData.products.length > 0) {
+            for (const product of saleData.products) {
+                if (product.id) {
+                    const productRef = doc(db, 'products', product.id);
+                    const productSnap = await getDoc(productRef);
+                    if (productSnap.exists()) {
+                        const currentStock = productSnap.data().inventory || 0;
+                        const newStock = currentStock + product.quantity;
+                        await updateDoc(productRef, {
+                            inventory: newStock,
+                            unitsSold: Math.max(0, (productSnap.data().unitsSold || 0) - product.quantity),
+                            updatedAt: serverTimestamp()
+                        });
+                    }
+                }
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("API Error [refundSale]:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Cancel a sale
+ */
+export const cancelSale = async (saleId, reason, salonId) => {
+    try {
+        const saleRef = doc(db, 'sales', saleId);
+        const saleSnap = await getDoc(saleRef);
+        
+        if (!saleSnap.exists()) {
+            return { success: false, error: 'Sale not found' };
+        }
+
+        const saleData = saleSnap.data();
+
+        // 1. Update sale status
+        await updateDoc(saleRef, {
+            status: 'cancelled',
+            cancelReason: reason,
+            cancelDate: new Date().toISOString().split('T')[0],
+            cancelTimestamp: serverTimestamp()
+        });
+
+        // 2. Return stock
+        if (saleData.products && saleData.products.length > 0) {
+            for (const product of saleData.products) {
+                if (product.id) {
+                    const productRef = doc(db, 'products', product.id);
+                    const productSnap = await getDoc(productRef);
+                    if (productSnap.exists()) {
+                        const currentStock = productSnap.data().inventory || 0;
+                        const newStock = currentStock + product.quantity;
+                        await updateDoc(productRef, {
+                            inventory: newStock,
+                            unitsSold: Math.max(0, (productSnap.data().unitsSold || 0) - product.quantity),
+                            updatedAt: serverTimestamp()
+                        });
+                    }
+                }
+            }
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error("API Error [cancelSale]:", error);
+        return { success: false, error: error.message };
+    }
+};
+
+/**
+ * Correct product stock level
+ */
+export const correctStock = async (productId, newStock, salonId) => {
+    try {
+        const productRef = doc(db, 'products', productId);
+        const productSnap = await getDoc(productRef);
+        
+        if (!productSnap.exists()) {
+            return { success: false, error: 'Product not found' };
+        }
+
+        await updateDoc(productRef, {
+            inventory: Math.max(0, newStock),
+            stockCorrectedAt: serverTimestamp(),
+            stockCorrectedBy: salonId
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("API Error [correctStock]:", error);
         return { success: false, error: error.message };
     }
 };
