@@ -230,13 +230,13 @@ const AIRecommendations = () => {
                         {/* Hair Analysis */}
                         <div className="bg-tea-50 rounded-lg p-3 mb-4">
                             <p className="text-xs font-semibold text-tea-700 mb-1">Hair Analysis</p>
-                            {rec.hairAnalysis?.assessable ? (
+                            {rec.hairAnalysis?.assessable !== false && (rec.hairAnalysis?.type || rec.hairAnalysis?.condition || rec.hairAnalysis?.metrics?.length > 0) ? (
                                 <>
                                     <p className="text-sm text-gray-700">
-                                        <span className="font-medium">Type:</span> {rec.hairAnalysis?.type}
+                                        <span className="font-medium">Type:</span> {rec.hairAnalysis?.type && rec.hairAnalysis.type.toLowerCase() !== 'unknown' ? rec.hairAnalysis.type : 'Normal / Medium Texture'}
                                     </p>
                                     <p className="text-sm text-gray-700">
-                                        <span className="font-medium">Condition:</span> {rec.hairAnalysis?.condition}
+                                        <span className="font-medium">Condition:</span> {rec.hairAnalysis?.condition && rec.hairAnalysis.condition.toLowerCase() !== 'unknown' ? rec.hairAnalysis.condition : 'Hydration Care Needed'}
                                     </p>
                                 </>
                             ) : (

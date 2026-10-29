@@ -51,7 +51,10 @@ const Clients = () => {
     );
 
     const clientHistory = selectedClient
-        ? recommendations.filter(rec => (rec.clientId || rec.clientName) === selectedClient.id)
+        ? recommendations.filter(rec =>
+            rec.clientId === selectedClient.id ||
+            (rec.clientName && selectedClient.name && rec.clientName.trim().toLowerCase() === selectedClient.name.trim().toLowerCase())
+        )
         : [];
 
     if (loading) {
@@ -218,31 +221,53 @@ const Clients = () => {
                                     <h3 className="text-lg font-bold text-tea-800">Visit History</h3>
                                 </div>
                                 <div className="space-y-3">
-                                    {clientHistory.map((rec, idx) => (
-                                        <div key={idx} className="card bg-white hover:shadow-md transition-shadow">
-                                            <div className="flex items-start justify-between mb-4">
-                                                <div>
-                                                    <p className="font-bold text-tea-800">AI Recommendation Session</p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {new Date(rec.date || rec.createdAt?.toDate()).toLocaleString()}
-                                                    </p>
-                                                </div>
-                                                <div className="bg-gray-100 px-3 py-1 rounded-full text-xs font-mono">
-                                                    #{rec.sessionId}
-                                                </div>
-                                            </div>
-                                            <div className="space-y-3">
-                                                <div className="flex flex-wrap gap-2">
-                                                    {rec.suggestedProducts?.map((prod, pIdx) => (
-                                                        <div key={pIdx} className="flex items-center gap-2 bg-tea-50 border border-tea-100 px-3 py-1.5 rounded-lg text-sm">
-                                                            <span className="font-medium text-tea-800">{prod.productName}</span>
-                                                            {prod.sold && <CheckCircle className="w-4 h-4 text-green-500" />}
+                                    {clientHistory.map((rec, idx) => {
+                                        const rawDate = rec.date || rec.createdAt?.toDate?.() || rec.createdAt;
+                                        const formattedDate = rawDate
+                                            ? new Date(rawDate).toLocaleString()
+                                            : 'Recent Session';
+                                        const hasSale = Boolean(rec.saleId || rec.productsSold > 0 || rec.suggestedProducts?.some(p => p.sold));
+
+                                        return (
+                                            <div key={idx} className="card bg-white hover:shadow-md transition-shadow border border-tea-100">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <div className="flex items-center gap-2">
+                                                            <p className="font-bold text-tea-800">AI Recommendation Session</p>
+                                                            {hasSale && (
+                                                                <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                    Sale Completed
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                    ))}
+                                                        <p className="text-xs text-gray-500 mt-0.5">
+                                                            {formattedDate} {rec.stylistName ? `· Stylist: ${rec.stylistName}` : ''}
+                                                        </p>
+                                                    </div>
+                                                    {(rec.sessionId || rec.id) && (
+                                                        <div className="bg-tea-50 text-tea-700 px-2.5 py-1 rounded-lg text-xs font-mono font-bold">
+                                                            #{rec.sessionId || rec.id.replace('rec-', '')}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {rec.suggestedProducts?.map((prod, pIdx) => (
+                                                            <div key={pIdx} className="flex items-center gap-2 bg-tea-50/70 border border-tea-200/60 px-3 py-1.5 rounded-lg text-xs">
+                                                                <span className="font-bold text-tea-900">{prod.productName}</span>
+                                                                {prod.score !== undefined && (
+                                                                    <span className="text-[10px] text-tea-600 font-bold bg-white px-1.5 py-0.5 rounded border border-tea-200">
+                                                                        {Math.round(prod.score * 100)}%
+                                                                    </span>
+                                                                )}
+                                                                {prod.sold && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

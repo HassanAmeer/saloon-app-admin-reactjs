@@ -17,6 +17,8 @@ import {
     uploadImage,
     checkEmailExists
 } from '../../lib/services';
+import { db } from '../../lib/firebase';
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { sendManagerCreatedEmail, sendManagerUpdatedEmail } from '../../lib/email';
 import { useNavigate, useParams } from 'react-router-dom';
 import ImageWithFallback from '../../components/ImageWithFallback';
@@ -64,15 +66,27 @@ const ManagerForm = ({ mode }) => {
                         }));
                         setPreviewUrl(managerData.imageUrl || null);
 
-                        if (managerData.salonId) {
-                            setSalonId(managerData.salonId);
-                            const salonData = await getDocument('salons', managerData.salonId);
-                            if (salonData) {
-                                setFormData(prev => ({
-                                    ...prev,
-                                    salon: { ...prev.salon, ...salonData }
-                                }));
+                        const targetSalonId = managerData.salonId || id;
+                        setSalonId(targetSalonId);
+                        let salonData = await getDocument('salons', targetSalonId);
+                        if (!salonData) {
+                            try {
+                                const salonsRef = collection(db, 'salons');
+                                const q = query(salonsRef, where('managerId', '==', id));
+                                const snap = await getDocs(q);
+                                if (!snap.empty) {
+                                    salonData = { id: snap.docs[0].id, ...snap.docs[0].data() };
+                                    setSalonId(snap.docs[0].id);
+                                }
+                            } catch (e) {
+                                console.warn('Querying salon by managerId failed:', e);
                             }
+                        }
+                        if (salonData) {
+                            setFormData(prev => ({
+                                ...prev,
+                                salon: { ...prev.salon, ...salonData }
+                            }));
                         }
                     }
                 } catch (error) {
@@ -123,11 +137,12 @@ const ManagerForm = ({ mode }) => {
                     salonId: newSalonId
                 });
 
-                await createDocument('salons', {
+                await setDoc(doc(db, 'salons', newSalonId), {
                     ...finalData.salon,
                     id: newSalonId,
                     managerId: managerRes.id,
-                    createdAt: new Date(),
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
                     supportEmail: 'support@salon.com',
                     supportPhone: '+0123456789'
                 });
@@ -195,7 +210,18 @@ const ManagerForm = ({ mode }) => {
 
                 await updateDocument('salon_managers', id, updatePayload);
                 if (salonId) {
-                    await updateDocument('salons', salonId, finalData.salon);
+                    await setDoc(doc(db, 'salons', salonId), {
+                        ...finalData.salon,
+                        managerId: id,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
+                }
+                if (formData.manager?.salonId && formData.manager.salonId !== salonId) {
+                    await setDoc(doc(db, 'salons', formData.manager.salonId), {
+                        ...finalData.salon,
+                        managerId: id,
+                        updatedAt: serverTimestamp()
+                    }, { merge: true });
                 }
 
                 try {

@@ -55,10 +55,32 @@ const Managers = () => {
         };
     }, []);
 
-    const filteredManagers = managers.filter(m =>
-        m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredManagers = managers.filter(m => {
+        const query = searchTerm.toLowerCase().trim();
+        if (!query) return true;
+
+        const managerMatches =
+            m.name?.toLowerCase().includes(query) ||
+            m.email?.toLowerCase().includes(query) ||
+            m.phone?.toLowerCase().includes(query) ||
+            m.brand?.toLowerCase().includes(query) ||
+            m.salonName?.toLowerCase().includes(query);
+
+        // Find associated salon by managerId, salonId, or shared id
+        const linkedSalons = salons.filter(s =>
+            s.managerId === m.id ||
+            s.id === m.salonId ||
+            s.id === m.id
+        );
+
+        const salonMatches = linkedSalons.some(s =>
+            s.name?.toLowerCase().includes(query) ||
+            s.address?.toLowerCase().includes(query) ||
+            s.email?.toLowerCase().includes(query)
+        );
+
+        return managerMatches || salonMatches;
+    });
 
     const handleAdd = () => {
         navigate('/super/managers/new');
@@ -121,7 +143,8 @@ const Managers = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {filteredManagers.map((manager) => {
-                    const salon = salons.find(s => s.managerId === manager.id);
+                    const salon = salons.find(s => s.managerId === manager.id || s.id === manager.salonId || s.id === manager.id);
+                    const salonDisplayName = salon?.name || manager.brand || manager.salonName;
                     return (
                         <div key={manager.id} className="glass-card overflow-hidden group hover:shadow-xl hover:shadow-tea-900/5 transition-all">
                             <div className="p-8 space-y-6">
@@ -155,19 +178,19 @@ const Managers = () => {
                                     </div>
                                 </div>
 
-                                {salon && (
+                                {(salon || salonDisplayName) && (
                                     <div className="p-5 bg-tea-50/50 rounded-2xl border border-tea-100 space-y-4">
                                         <div className="flex items-center gap-3">
                                             <Building2 className="w-5 h-5 text-tea-600" />
                                             <div>
                                                 <p className="text-[10px] font-black text-tea-400 uppercase tracking-widest">Linked Salon Entity</p>
-                                                <p className="text-sm font-bold text-tea-900 uppercase tracking-tight">{salon.name}</p>
+                                                <p className="text-sm font-bold text-tea-900 uppercase tracking-tight">{salonDisplayName || salon?.name}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-6">
                                             <div className="flex items-center gap-2">
                                                 <MapPin className="w-3.5 h-3.5 text-tea-400" />
-                                                <span className="text-[10px] font-bold text-tea-500 uppercase tracking-widest leading-none">{salon.address}</span>
+                                                <span className="text-[10px] font-bold text-tea-500 uppercase tracking-widest leading-none">{salon?.address || manager.address || 'Location registered'}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -183,7 +206,7 @@ const Managers = () => {
                                         </div>
                                         <div className="text-center">
                                             <p className="text-sm font-black text-tea-900">
-                                                ${allSales.filter(s => s.salonId === salon?.id).reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0).toLocaleString()}
+                                                ${allSales.filter(s => s.salonId === salon?.id && (s.status || '').toLowerCase() !== 'cancelled' && (s.status || '').toLowerCase() !== 'refunded' && !s.cancelledAt && !s.refundedAt).reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0).toLocaleString()}
                                             </p>
                                             <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">Revenue</p>
                                         </div>

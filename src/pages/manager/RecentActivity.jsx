@@ -60,13 +60,44 @@ const RecentActivity = () => {
         };
     }, [type, effectiveSalonId]);
 
+    const parseSafeDate = (d) => {
+        if (!d) return new Date();
+        if (typeof d.toDate === 'function') return d.toDate();
+        if (typeof d.seconds === 'number') return new Date(d.seconds * 1000);
+        const parsed = new Date(d);
+        return isNaN(parsed.getTime()) ? new Date() : parsed;
+    };
+
+    const getSalonAndManager = (sale) => {
+        const salon = salons.find(s => s.id === sale.salonId);
+        const manager = managers.find(m =>
+            m.id === sale.salonId ||
+            m.salonId === sale.salonId ||
+            (salon?.managerId && m.id === salon.managerId)
+        );
+        const salonName = salon?.name || manager?.brand || manager?.salonName || sale.salonName || 'Salon Brand';
+        const managerName = manager?.name || 'Partner Executive';
+        return { salon, manager, salonName, managerName };
+    };
+
     const filteredActivities = activities
-        .filter(act =>
-            act.stylistName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            act.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            act.id?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        .sort((a, b) => new Date(b.date || b.createdAt?.toDate()) - new Date(a.date || a.createdAt?.toDate()));
+        .filter(act => {
+            const query = searchTerm.toLowerCase().trim();
+            if (!query) return true;
+            const { salonName, managerName } = getSalonAndManager(act);
+            return (
+                act.stylistName?.toLowerCase().includes(query) ||
+                act.clientName?.toLowerCase().includes(query) ||
+                act.id?.toLowerCase().includes(query) ||
+                salonName?.toLowerCase().includes(query) ||
+                managerName?.toLowerCase().includes(query)
+            );
+        })
+        .sort((a, b) => {
+            const dateB = parseSafeDate(b.date || b.createdAt).getTime();
+            const dateA = parseSafeDate(a.date || a.createdAt).getTime();
+            return dateB - dateA;
+        });
 
     if (loading) return <RecentActivitySkeleton />;
 
@@ -123,17 +154,9 @@ const RecentActivity = () => {
                         </thead>
                         <tbody className="divide-y divide-tea-700/5">
                             {filteredActivities.map((sale) => {
-                                const salon = salons.find(s => s.id === sale.salonId);
-                                const manager = managers.find(m => m.salonId === sale.salonId);
+                                const { salon, manager, salonName, managerName } = getSalonAndManager(sale);
                                 const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
-                                const parseDate = (d) => {
-                                    if (!d) return new Date();
-                                    if (d.toDate) return d.toDate(); // Firestore Timestamp
-                                    const dateObj = new Date(d);
-                                    return isNaN(dateObj.getTime()) ? new Date() : dateObj;
-                                };
-
-                                const saleDate = parseDate(sale.date || sale.createdAt);
+                                const saleDate = parseSafeDate(sale.date || sale.createdAt);
                                 const amount = (sale.totalAmount || sale.total || 0).toFixed(2);
 
                                 if (isManager) {
@@ -249,8 +272,8 @@ const RecentActivity = () => {
                                                     />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-black text-tea-900 uppercase tracking-tight">{salon?.name || 'Unknown Salon'}</p>
-                                                    <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest leading-none mt-1">{manager?.name || 'Partner Executive'}</p>
+                                                    <p className="text-sm font-black text-tea-900 uppercase tracking-tight">{salonName}</p>
+                                                    <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest leading-none mt-1">{managerName}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -335,17 +358,9 @@ const RecentActivity = () => {
                 {/* Mobile view */}
                 <div className="lg:hidden flex flex-col gap-4 p-4 bg-tea-50/20">
                     {filteredActivities.map((sale) => {
-                        const salon = salons.find(s => s.id === sale.salonId);
-                        const manager = managers.find(m => m.salonId === sale.salonId);
+                        const { salon, manager, salonName, managerName } = getSalonAndManager(sale);
                         const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
-                        const parseDate = (d) => {
-                            if (!d) return new Date();
-                            if (d.toDate) return d.toDate(); // Firestore Timestamp
-                            const dateObj = new Date(d);
-                            return isNaN(dateObj.getTime()) ? new Date() : dateObj;
-                        };
-
-                        const saleDate = parseDate(sale.date || sale.createdAt);
+                        const saleDate = parseSafeDate(sale.date || sale.createdAt);
                         const amount = (sale.totalAmount || sale.total || 0).toFixed(2);
 
                         if (isManager) {
@@ -400,8 +415,8 @@ const RecentActivity = () => {
                                             <ImageWithFallback src={manager?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-tea-900 uppercase tracking-tight">{salon?.name || 'Unknown Salon'}</p>
-                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{manager?.name || 'Partner'}</p>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase tracking-tight">{salonName}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{managerName}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">

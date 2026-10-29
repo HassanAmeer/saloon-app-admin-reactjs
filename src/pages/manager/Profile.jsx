@@ -15,6 +15,8 @@ import {
     updateDocument,
     uploadImage
 } from '../../lib/services';
+import { db } from '../../lib/firebase';
+import { collection, query, where, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { sendManagerUpdatedEmail } from '../../lib/email';
@@ -22,7 +24,7 @@ import ImageWithFallback from '../../components/ImageWithFallback';
 import { ManagerFormSkeleton } from '../../components/Skeleton';
 
 const Profile = () => {
-    const { user, setUser, type } = useAuth();
+    const { user, setUser, type, effectiveSalonId, userSalons } = useAuth();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { showToast } = useToast();
@@ -63,11 +65,16 @@ const Profile = () => {
             try {
                 if (isImpersonating && querySalonId) {
                     // Super admin impersonating — load manager via salonId
-                    const salon = await getDocument('salons', querySalonId);
-                    if (salon?.managerId) {
-                        const manager = await getDocument('salon_managers', salon.managerId);
+                    let salon = await getDocument('salons', querySalonId);
+                    let mId = salon?.managerId;
+                    if (!mId) {
+                        const mgrCheck = await getDocument('salon_managers', querySalonId);
+                        if (mgrCheck) mId = querySalonId;
+                    }
+                    if (mId) {
+                        const manager = await getDocument('salon_managers', mId);
                         if (manager) {
-                            setManagerId(salon.managerId);
+                            setManagerId(mId);
                             setResolvedSalonId(querySalonId);
                             setFormData({
                                 manager: {
@@ -81,9 +88,9 @@ const Profile = () => {
                                     imageUrl: manager.imageUrl || ''
                                 },
                                 salon: {
-                                    name: salon.name || '',
-                                    address: salon.address || '',
-                                    phone: salon.phone || ''
+                                    name: salon?.name || manager.salonName || manager.brand || '',
+                                    address: salon?.address || manager.address || '',
+                                    phone: salon?.phone || manager.phone || ''
                                 }
                             });
                             setPreviewUrl(manager.imageUrl || null);
@@ -92,7 +99,7 @@ const Profile = () => {
                 } else if (user?.id) {
                     // Manager direct login
                     const manager = await getDocument('salon_managers', user.id);
-                    const sId = user.salonId;
+                    const sId = user.salonId || effectiveSalonId || user.id;
                     setManagerId(user.id);
                     setResolvedSalonId(sId);
 
@@ -113,19 +120,73 @@ const Profile = () => {
                         setPreviewUrl(manager.imageUrl || null);
                     }
 
+                    // Multi-layer salon resolution to ensure details never remain blank
+                    let salon = null;
+                    let actualSalonId = sId;
+
+                    // 1. Try direct getDocument
                     if (sId) {
-                        const salon = await getDocument('salons', sId);
-                        if (salon) {
-                            setFormData(prev => ({
-                                ...prev,
-                                salon: {
-                                    name: salon.name || '',
-                                    address: salon.address || '',
-                                    phone: salon.phone || ''
-                                }
-                            }));
+                        try {
+                            salon = await getDocument('salons', sId);
+                        } catch (err) {
+                            console.warn("Direct salon lookup error:", err);
                         }
                     }
+
+                    // 2. Check userSalons preloaded in AuthContext
+                    if ((!salon || !salon.name) && userSalons && userSalons.length > 0) {
+                        const match = userSalons.find(s => s.id === sId || s.managerId === user.id) || userSalons[0];
+                        if (match && match.name) {
+                            salon = match;
+                            actualSalonId = match.id;
+                        }
+                    }
+
+                    // 3. Query salons collection where managerId == user.id
+                    if (!salon || !salon.name) {
+                        try {
+                            const salonsRef = collection(db, 'salons');
+                            const q = query(salonsRef, where('managerId', '==', user.id));
+                            const snap = await getDocs(q);
+                            if (!snap.empty) {
+                                const docFound = snap.docs[0];
+                                salon = { id: docFound.id, ...docFound.data() };
+                                actualSalonId = docFound.id;
+                            }
+                        } catch (err) {
+                            console.warn("Querying salons by managerId failed:", err);
+                        }
+                    }
+
+                    // 4. Query salons collection where internal id == sId
+                    if (!salon || !salon.name) {
+                        try {
+                            const salonsRef = collection(db, 'salons');
+                            const q = query(salonsRef, where('id', '==', sId));
+                            const snap = await getDocs(q);
+                            if (!snap.empty) {
+                                const docFound = snap.docs[0];
+                                salon = { id: docFound.id, ...docFound.data() };
+                                actualSalonId = docFound.id;
+                            }
+                        } catch (err) {
+                            console.warn("Querying salons by internal id failed:", err);
+                        }
+                    }
+
+                    if (actualSalonId) {
+                        setResolvedSalonId(actualSalonId);
+                    }
+
+                    // Populate salon form data with robust fallback to manager fields if needed
+                    setFormData(prev => ({
+                        ...prev,
+                        salon: {
+                            name: salon?.name || manager?.salonName || manager?.brand || '',
+                            address: salon?.address || manager?.address || '',
+                            phone: salon?.phone || manager?.phone || ''
+                        }
+                    }));
                 }
             } catch (error) {
                 console.error('Error fetching profile data:', error);
@@ -136,7 +197,7 @@ const Profile = () => {
         };
 
         fetchData();
-    }, [user?.id, querySalonId, isImpersonating, showToast]);
+    }, [user?.id, querySalonId, isImpersonating, effectiveSalonId, userSalons, showToast]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -157,10 +218,27 @@ const Profile = () => {
             const managerPayload = { ...finalData.manager };
             if (!managerPayload.password) delete managerPayload.password;
 
-            await updateDocument('salon_managers', managerId, managerPayload);
+            if (managerId) {
+                await updateDocument('salon_managers', managerId, managerPayload);
+            }
 
-            if (resolvedSalonId) {
-                await updateDocument('salons', resolvedSalonId, finalData.salon);
+            // Save salon details using setDoc with merge: true so it creates or updates without throwing
+            const salonPayload = {
+                ...finalData.salon,
+                managerId: managerId || user?.id,
+                updatedAt: serverTimestamp()
+            };
+
+            const sIdToUpdate = resolvedSalonId || user?.salonId || effectiveSalonId || managerId;
+            if (sIdToUpdate) {
+                const salonDocRef = doc(db, 'salons', sIdToUpdate);
+                await setDoc(salonDocRef, { ...salonPayload, id: sIdToUpdate }, { merge: true });
+            }
+
+            // If user has a different salonId linked on their profile, keep it synced as well
+            if (user?.salonId && user.salonId !== sIdToUpdate) {
+                const altDocRef = doc(db, 'salons', user.salonId);
+                await setDoc(altDocRef, { ...salonPayload, id: user.salonId }, { merge: true });
             }
 
             // Update local auth context if manager is viewing their own profile

@@ -57,13 +57,44 @@ const RecentActivity = () => {
         };
     }, [type, user?.salonId]);
 
+    const parseSafeDate = (d) => {
+        if (!d) return new Date();
+        if (typeof d.toDate === 'function') return d.toDate();
+        if (typeof d.seconds === 'number') return new Date(d.seconds * 1000);
+        const parsed = new Date(d);
+        return isNaN(parsed.getTime()) ? new Date() : parsed;
+    };
+
+    const getSalonAndManager = (sale) => {
+        const salon = salons.find(s => s.id === sale.salonId);
+        const manager = managers.find(m =>
+            m.id === sale.salonId ||
+            m.salonId === sale.salonId ||
+            (salon?.managerId && m.id === salon.managerId)
+        );
+        const salonName = salon?.name || manager?.brand || manager?.salonName || sale.salonName || 'Salon Brand';
+        const managerName = manager?.name || 'Partner Executive';
+        return { salon, manager, salonName, managerName };
+    };
+
     const filteredActivities = activities
-        .filter(act =>
-            act.stylistName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            act.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            act.id?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        .sort((a, b) => new Date(b.date || b.createdAt?.toDate()) - new Date(a.date || a.createdAt?.toDate()));
+        .filter(act => {
+            const query = searchTerm.toLowerCase().trim();
+            if (!query) return true;
+            const { salonName, managerName } = getSalonAndManager(act);
+            return (
+                act.stylistName?.toLowerCase().includes(query) ||
+                act.clientName?.toLowerCase().includes(query) ||
+                act.id?.toLowerCase().includes(query) ||
+                salonName?.toLowerCase().includes(query) ||
+                managerName?.toLowerCase().includes(query)
+            );
+        })
+        .sort((a, b) => {
+            const dateB = parseSafeDate(b.date || b.createdAt).getTime();
+            const dateA = parseSafeDate(a.date || a.createdAt).getTime();
+            return dateB - dateA;
+        });
 
     if (loading) {
         return <RecentActivitySkeleton />;
@@ -109,13 +140,11 @@ const RecentActivity = () => {
                         </thead>
                         <tbody className="divide-y-4 divide-tea-700/5">
                             {filteredActivities.map((sale) => {
-                                const salon = salons.find(s => s.id === sale.salonId);
-                                const manager = managers.find(m => m.salonId === sale.salonId);
+                                const { salon, manager, salonName, managerName } = getSalonAndManager(sale);
+                                const saleDate = parseSafeDate(sale.date || sale.createdAt);
 
                                 return (
-
                                     <tr key={sale.id} className="hover:bg-tea-50/80 transition-all duration-300 group">
-
                                         <td className="px-4 py-4 text-center">
                                             <div className="flex items-center gap-1.5 py-1 bg-tea-100/30 rounded-lg w-fit mt-1">
                                                 <p className="text-[10px] font-mono font-black text-tea-400 leading-none tracking-tighter"> {sale.id?.substring(0, 8)}</p>
@@ -126,17 +155,17 @@ const RecentActivity = () => {
                                                 <div className="w-12 h-12 rounded-xl bg-tea-900 border border-white/10 shadow-lg overflow-hidden shrink-0 transform group-hover:scale-105 transition-transform duration-500">
                                                     <ImageWithFallback
                                                         src={manager?.imageUrl}
-                                                        alt={manager?.name}
+                                                        alt={managerName}
                                                         className="w-full h-full object-cover"
                                                         fallbackClassName="w-full h-full flex items-center justify-center bg-gradient-to-br from-tea-800 to-tea-950 p-3 text-white/50 shrink-0"
                                                         FallbackComponent={User}
                                                     />
                                                 </div>
                                                 <div className="space-y-1">
-                                                    <p className="text-[12px] font-black text-tea-950 uppercase tracking-tight leading-none">{manager?.name || 'Manager'}</p>
-                                                    <p className="text-[9px] font-bold text-tea-500 uppercase tracking-widest leading-none">{salon?.name || 'Salon Brand'}</p>
+                                                    <p className="text-[12px] font-black text-tea-950 uppercase tracking-tight leading-none">{managerName}</p>
+                                                    <p className="text-[9px] font-bold text-tea-500 uppercase tracking-widest leading-none">{salonName}</p>
                                                     <div className="flex flex-col gap-1 mt-1 opacity-40">
-                                                        <p className="text-[9px] font-mono font-black text-tea-700 leading-none tracking-tighter">MGR: {manager?.id?.substring(0, 8)}</p>
+                                                        <p className="text-[9px] font-mono font-black text-tea-700 leading-none tracking-tighter">MGR: {manager?.id?.substring(0, 8) || 'N/A'}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -190,10 +219,10 @@ const RecentActivity = () => {
                                                 <Calendar className="text-tea-700" />
                                                 <div className="space-y-1">
                                                     <p className="text-[11px] font-black text-tea-950 uppercase tracking-tighter leading-none">
-                                                        {new Date(sale.date || sale.createdAt?.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                        {saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                     </p>
                                                     <p className="text-[10px] font-black text-tea-400 uppercase tracking-widest leading-none">
-                                                        {new Date(sale.date || sale.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        {saleDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                     </p>
                                                 </div>
                                             </div>
@@ -237,10 +266,10 @@ const RecentActivity = () => {
                 {/* Mobile view */}
                 <div className="lg:hidden flex flex-col gap-4 p-4 bg-tea-50/20">
                     {filteredActivities.map((sale) => {
-                        const salon = salons.find(s => s.id === sale.salonId);
-                        const manager = managers.find(m => m.salonId === sale.salonId);
+                        const { salon, manager, salonName, managerName } = getSalonAndManager(sale);
                         const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
-                        
+                        const saleDate = parseSafeDate(sale.date || sale.createdAt);
+
                         return (
                             <div key={sale.id} className="glass-card p-4 space-y-4">
                                 <div className="flex items-center justify-between border-b border-tea-700/10 pb-3">
@@ -249,8 +278,8 @@ const RecentActivity = () => {
                                             <ImageWithFallback src={manager?.imageUrl} className="w-full h-full object-cover" FallbackComponent={User} />
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-black text-tea-900 uppercase tracking-tight">{salon?.name || 'Unknown Salon'}</p>
-                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{manager?.name || 'Manager'}</p>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase tracking-tight">{salonName}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{managerName}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">
@@ -272,8 +301,8 @@ const RecentActivity = () => {
                                     <div className="flex items-center gap-2">
                                         <Calendar className="w-3.5 h-3.5 text-tea-400" />
                                         <div>
-                                            <p className="text-[10px] font-black text-tea-900 uppercase">{new Date(sale.date || sale.createdAt?.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{new Date(sale.date || sale.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                            <p className="text-[10px] font-black text-tea-900 uppercase">{saleDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                            <p className="text-[8px] font-black text-tea-400 uppercase tracking-widest">{saleDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                         </div>
                                     </div>
                                     <div className="text-right">

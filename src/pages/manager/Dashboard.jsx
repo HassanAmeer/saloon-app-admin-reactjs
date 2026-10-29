@@ -116,11 +116,19 @@ const Dashboard = ({ forceSalonId }) => {
         });
     }, [sales, period]);
 
+    const isSaleActive = (sale) => {
+        const status = (sale.status || '').toLowerCase();
+        if (status === 'cancelled' || sale.cancelledAt) return false;
+        if (status === 'refunded' || sale.refundedAt) return false;
+        return true;
+    };
+
     const dashboardStats = useMemo(() => {
-        const totalSales = filteredSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
-        const totalTransactions = filteredSales.length;
+        const activeSales = filteredSales.filter(isSaleActive);
+        const totalSales = activeSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+        const totalTransactions = activeSales.length;
         const avgSaleValue = totalTransactions > 0 ? (totalSales / totalTransactions) : 0;
-        const productsSold = filteredSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
+        const productsSold = activeSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
         const totalScans = recommendations.length;
         const totalStylists = stylists.length;
         const totalClients = stylists.reduce((sum, s) => sum + (s.clientsCount || 0), 0);
@@ -149,10 +157,10 @@ const Dashboard = ({ forceSalonId }) => {
 
         const { start: prevStart, end: prevEnd } = getPreviousPeriodRange();
 
-        const prevSales = sales.filter(sale => {
+        const prevSales = sales.filter(isSaleActive).filter(sale => {
             const raw = sale.date || sale.createdAt;
             if (!raw) return false;
-            const saleDate = raw?.toDate ? raw.toDate() : new Date(raw);
+            const saleDate = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
             if (isNaN(saleDate)) return false;
 
             if (period === 'day') return saleDate.toDateString() === prevStart.toDateString();
@@ -185,6 +193,7 @@ const Dashboard = ({ forceSalonId }) => {
 
     const chartData = useMemo(() => {
         const now = new Date();
+        const activeSales = filteredSales.filter(isSaleActive);
 
         if (period === 'day') {
             // Group by hour (0-23)
@@ -193,9 +202,9 @@ const Dashboard = ({ forceSalonId }) => {
                 revenue: 0,
                 scans: 0
             }));
-            filteredSales.forEach(sale => {
+            activeSales.forEach(sale => {
                 const raw = sale.date || sale.createdAt;
-                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
                 if (!isNaN(d)) {
                     const h = d.getHours();
                     hours[h].revenue += (sale.totalAmount || sale.total || 0);
@@ -212,9 +221,9 @@ const Dashboard = ({ forceSalonId }) => {
                 d.setDate(now.getDate() - (6 - i));
                 return { name: days[d.getDay()], date: d.toDateString(), revenue: 0, scans: 0 };
             });
-            filteredSales.forEach(sale => {
+            activeSales.forEach(sale => {
                 const raw = sale.date || sale.createdAt;
-                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
                 if (!isNaN(d)) {
                     const bucket = buckets.find(b => b.date === d.toDateString());
                     if (bucket) {
@@ -233,9 +242,9 @@ const Dashboard = ({ forceSalonId }) => {
                 revenue: 0,
                 scans: 0
             }));
-            filteredSales.forEach(sale => {
+            activeSales.forEach(sale => {
                 const raw = sale.date || sale.createdAt;
-                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
                 if (!isNaN(d) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) {
                     const day = d.getDate() - 1;
                     buckets[day].revenue += (sale.totalAmount || sale.total || 0);
@@ -248,9 +257,9 @@ const Dashboard = ({ forceSalonId }) => {
         if (period === 'year') {
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const buckets = Array.from({ length: 12 }, (_, i) => ({ name: monthNames[i], revenue: 0, scans: 0 }));
-            filteredSales.forEach(sale => {
+            activeSales.forEach(sale => {
                 const raw = sale.date || sale.createdAt;
-                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
                 if (!isNaN(d) && d.getFullYear() === now.getFullYear()) {
                     buckets[d.getMonth()].revenue += (sale.totalAmount || sale.total || 0);
                     buckets[d.getMonth()].scans += (sale.products?.length || 0);
@@ -263,10 +272,11 @@ const Dashboard = ({ forceSalonId }) => {
     }, [filteredSales, period]);
 
     const lastSoldProducts = useMemo(() => {
-        const allProducts = filteredSales.flatMap(sale =>
+        const activeSales = filteredSales.filter(isSaleActive);
+        const allProducts = activeSales.flatMap(sale =>
             (sale.products || []).map(p => ({
                 ...p,
-                saleDate: sale.date || sale.createdAt?.toDate(),
+                saleDate: sale.date || sale.createdAt?.toDate?.() || sale.createdAt,
                 stylistName: sale.stylistName,
                 clientName: sale.clientName
             }))

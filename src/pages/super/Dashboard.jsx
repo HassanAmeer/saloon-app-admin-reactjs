@@ -105,11 +105,19 @@ const Dashboard = ({ forceSalonId }) => {
             return (now - d) <= periodMs;
         };
 
+        const isSaleActive = (sale) => {
+            const status = (sale.status || '').toLowerCase();
+            if (status === 'cancelled' || sale.cancelledAt) return false;
+            if (status === 'refunded' || sale.refundedAt) return false;
+            return true;
+        };
+
         const fSales = sales.filter(s => isWithinPeriod(s.date || s.createdAt));
+        const activeFSales = fSales.filter(isSaleActive);
         const fRecs = recommendations.filter(r => isWithinPeriod(r.date || r.createdAt));
 
-        const totalSales = fSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
-        const productsSold = fSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
+        const totalSales = activeFSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
+        const productsSold = activeFSales.reduce((sum, s) => sum + (s.products?.reduce((pSum, p) => pSum + p.quantity, 0) || 0), 0);
 
         // Calculate growth by comparing current period with previous period
         const periodMsMap = {
@@ -128,12 +136,12 @@ const Dashboard = ({ forceSalonId }) => {
             return d >= prevPeriodStart && d < prevPeriodEnd;
         };
 
-        const prevSales = sales.filter(s => isWithinPrevPeriod(s.date || s.createdAt));
+        const prevSales = sales.filter(isSaleActive).filter(s => isWithinPrevPeriod(s.date || s.createdAt));
         const prevTotalSales = prevSales.reduce((sum, s) => sum + (s.totalAmount || s.total || 0), 0);
 
         const sGrowthVal = prevTotalSales === 0 ? (totalSales > 0 ? 100 : 0) : ((totalSales - prevTotalSales) / prevTotalSales) * 100;
 
-        const totalTransactions = fSales.length;
+        const totalTransactions = activeFSales.length;
         const avgSaleValue = totalTransactions > 0 ? (totalSales / totalTransactions) : 0;
 
         const dashboardStats = {
@@ -153,11 +161,11 @@ const Dashboard = ({ forceSalonId }) => {
             productsGrowth: 'No previous data'
         };
 
-        // Dynamic Chart Data
+        // Dynamic Chart Data (active sales only)
         const dateGroups = {};
-        fSales.forEach(s => {
+        activeFSales.forEach(s => {
             const raw = s.date || s.createdAt;
-            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
             if (!d || isNaN(d.getTime())) return;
             const dateStr = d.toLocaleDateString('en-US', { weekday: 'short' });
             dateGroups[dateStr] = (dateGroups[dateStr] || 0) + (s.totalAmount || s.total || 0);
@@ -177,10 +185,10 @@ const Dashboard = ({ forceSalonId }) => {
             }).length
         }));
 
-        const lastSoldProducts = fSales.flatMap(sale =>
+        const lastSoldProducts = activeFSales.flatMap(sale =>
             (sale.products || []).map(p => ({
                 ...p,
-                saleDate: sale.date || sale.createdAt?.toDate(),
+                saleDate: sale.date || sale.createdAt?.toDate?.() || sale.createdAt,
                 stylistName: sale.stylistName,
                 clientName: sale.clientName
             }))

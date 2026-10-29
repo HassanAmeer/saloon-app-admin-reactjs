@@ -37,10 +37,23 @@ const Sales = () => {
     const [loading, setLoading] = useState(true);
     const [period, setPeriod] = useState('all');
     const [stylistFilter, setStylistFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
     const querySalonId = searchParams.get('salonId');
     const salonId = querySalonId || user?.salonId;
+
+    const getSaleStatus = (sale) => {
+        const status = (sale.status || '').toLowerCase();
+        if (status === 'cancelled' || sale.cancelledAt) return 'Cancelled';
+        if (status === 'refunded' || sale.refundedAt) return 'Refunded';
+        return 'Completed';
+    };
+
+    const isSaleActive = (sale) => {
+        const status = getSaleStatus(sale);
+        return status !== 'Cancelled' && status !== 'Refunded';
+    };
 
     useEffect(() => {
         if (!salonId) { setLoading(false); return; }
@@ -55,12 +68,12 @@ const Sales = () => {
         return () => { unsubSales(); unsubStylists(); };
     }, [salonId]);
 
-    // Period filter
+    // Period & Search filter
     const filteredSales = useMemo(() => {
         const now = new Date();
         return sales.filter(sale => {
             const raw = sale.createdAt || sale.date;
-            const saleDate = raw?.toDate ? raw.toDate() : new Date(raw);
+            const saleDate = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
 
             let matchesDate = true;
             if (period === 'today') matchesDate = saleDate.toDateString() === now.toDateString();
@@ -79,15 +92,27 @@ const Sales = () => {
                 sale.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 sale.id?.toLowerCase().includes(searchTerm.toLowerCase());
 
-            return matchesDate && matchesStylist && matchesSearch;
-        });
-    }, [sales, period, stylistFilter, searchTerm]);
+            const status = getSaleStatus(sale);
+            let matchesStatus = true;
+            if (statusFilter === 'completed') matchesStatus = status === 'Completed';
+            else if (statusFilter === 'reversed') matchesStatus = (status === 'Cancelled' || status === 'Refunded');
 
-    // Stats
-    const totalRevenue = useMemo(() => filteredSales.reduce((s, sale) => s + (sale.totalAmount || sale.total || 0), 0), [filteredSales]);
-    const totalProducts = useMemo(() => filteredSales.reduce((s, sale) => s + (sale.products || []).reduce((ps, p) => ps + (p.quantity || 1), 0), 0), [filteredSales]);
-    const totalTransactions = filteredSales.length;
+            return matchesDate && matchesStylist && matchesSearch && matchesStatus;
+        });
+    }, [sales, period, stylistFilter, searchTerm, statusFilter]);
+
+    // Active / completed sales (excluding cancellations & refunds)
+    const activeSales = useMemo(() => filteredSales.filter(isSaleActive), [filteredSales]);
+    const reversedSales = useMemo(() => filteredSales.filter(s => !isSaleActive(s)), [filteredSales]);
+
+    // Financial Net Stats
+    const totalRevenue = useMemo(() => activeSales.reduce((s, sale) => s + (sale.totalAmount || sale.total || 0), 0), [activeSales]);
+    const totalProducts = useMemo(() => activeSales.reduce((s, sale) => s + (sale.products || []).reduce((ps, p) => ps + (p.quantity || 1), 0), 0), [activeSales]);
+    const totalTransactions = activeSales.length;
     const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+
+    const totalReversedAmount = useMemo(() => reversedSales.reduce((s, sale) => s + (sale.totalAmount || sale.total || 0), 0), [reversedSales]);
+    const totalReversedCount = reversedSales.length;
 
     const growthMetrics = useMemo(() => {
         const now = new Date();
@@ -103,9 +128,9 @@ const Sales = () => {
         };
 
         const { start: pStart, end: pEnd } = getPreviousPeriodRange();
-        const prevSales = sales.filter(sale => {
+        const prevSales = sales.filter(isSaleActive).filter(sale => {
             const raw = sale.createdAt || sale.date;
-            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
             if (isNaN(d)) return false;
 
             if (period === 'today') return d.toDateString() === pStart.toDateString();
@@ -126,22 +151,22 @@ const Sales = () => {
         };
 
         return {
-            revGrowth: calcGrowth(totalRevenue, prevRev),
-            prodGrowth: calcGrowth(totalProducts, prevProd),
-            transGrowth: calcGrowth(totalTransactions, prevTrans),
+            revGrowth: totalReversedCount > 0 ? `Reversals: -$${totalReversedAmount.toFixed(2)}` : calcGrowth(totalRevenue, prevRev),
+            prodGrowth: totalReversedCount > 0 ? `${totalReversedCount} Returned` : calcGrowth(totalProducts, prevProd),
+            transGrowth: totalReversedCount > 0 ? `${totalReversedCount} Voided` : calcGrowth(totalTransactions, prevTrans),
             avgGrowth: calcGrowth(avgTransaction, prevTrans > 0 ? prevRev / prevTrans : 0)
         };
-    }, [sales, filteredSales, period, totalRevenue, totalProducts, totalTransactions, avgTransaction]);
+    }, [sales, activeSales, period, totalRevenue, totalProducts, totalTransactions, avgTransaction, totalReversedCount, totalReversedAmount]);
 
-    // Chart data — group filtered sales by day (last 14 days) or month
+    // Chart data — group active sales by day (last 14 days) or month
     const chartData = useMemo(() => {
         const now = new Date();
         if (period === 'year') {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const buckets = months.map(name => ({ name, revenue: 0 }));
-            filteredSales.forEach(sale => {
+            activeSales.forEach(sale => {
                 const raw = sale.createdAt || sale.date;
-                const d = raw?.toDate ? raw.toDate() : new Date(raw);
+                const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
                 if (!isNaN(d)) buckets[d.getMonth()].revenue += (sale.totalAmount || sale.total || 0);
             });
             return buckets;
@@ -151,16 +176,16 @@ const Sales = () => {
             const d = new Date(now); d.setDate(now.getDate() - (13 - i));
             return { name: `${d.getDate()}/${d.getMonth() + 1}`, date: d.toDateString(), revenue: 0 };
         });
-        filteredSales.forEach(sale => {
+        activeSales.forEach(sale => {
             const raw = sale.createdAt || sale.date;
-            const d = raw?.toDate ? raw.toDate() : new Date(raw);
+            const d = raw?.toDate ? raw.toDate() : (typeof raw?.seconds === 'number' ? new Date(raw.seconds * 1000) : new Date(raw));
             if (!isNaN(d)) {
                 const bucket = buckets.find(b => b.date === d.toDateString());
                 if (bucket) bucket.revenue += (sale.totalAmount || sale.total || 0);
             }
         });
         return buckets.map(({ name, revenue }) => ({ name, revenue }));
-    }, [filteredSales, period]);
+    }, [activeSales, period]);
 
     if (loading) {
         return (
@@ -240,6 +265,15 @@ const Sales = () => {
                         <option key={s.id} value={s.name || s.id}>{s.name}</option>
                     ))}
                 </select>
+                <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                    className="input-field md:w-52 h-12"
+                >
+                    <option value="all">All Statuses ({sales.length})</option>
+                    <option value="completed">Completed Only ({sales.filter(isSaleActive).length})</option>
+                    <option value="reversed">Cancelled / Refunded ({sales.filter(s => !isSaleActive(s)).length})</option>
+                </select>
             </div>
 
             {/* KPI Cards */}
@@ -303,6 +337,7 @@ const Sales = () => {
                                 <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Date & Time</th>
                                 <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Stylist</th>
                                 <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Client</th>
+                                <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Status</th>
                                 <th className="text-left p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Products</th>
                                 <th className="text-center p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Qty</th>
                                 <th className="text-right p-6 text-[10px] font-black text-tea-500 uppercase tracking-[0.2em]">Amount</th>
@@ -312,7 +347,8 @@ const Sales = () => {
                             {filteredSales.map(sale => {
                                 const parseDate = (d) => {
                                     if (!d) return new Date();
-                                    if (d.toDate) return d.toDate(); // Firestore Timestamp
+                                    if (d.toDate) return d.toDate();
+                                    if (typeof d.seconds === 'number') return new Date(d.seconds * 1000);
                                     const dateObj = new Date(d);
                                     return isNaN(dateObj.getTime()) ? new Date() : dateObj;
                                 };
@@ -321,6 +357,7 @@ const Sales = () => {
                                 const qty = (sale.products || []).reduce((s, p) => s + (p.quantity || 1), 0);
                                 const amount = (sale.totalAmount || sale.total || 0);
                                 const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
+                                const status = getSaleStatus(sale);
 
                                 return (
                                     <tr key={sale.id} className="hover:bg-tea-50/30 transition-colors group">
@@ -381,6 +418,25 @@ const Sales = () => {
                                             </div>
                                         </td>
 
+                                        {/* Status */}
+                                        <td className="p-6">
+                                            {status === 'Completed' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-xs">
+                                                    Completed
+                                                </span>
+                                            )}
+                                            {status === 'Cancelled' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200 shadow-xs">
+                                                    Cancelled
+                                                </span>
+                                            )}
+                                            {status === 'Refunded' && (
+                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200 shadow-xs">
+                                                    Refunded
+                                                </span>
+                                            )}
+                                        </td>
+
                                         {/* Products */}
                                         <td className="p-6">
                                             <div className="flex flex-wrap gap-2 max-w-[220px]">
@@ -410,7 +466,10 @@ const Sales = () => {
 
                                         {/* Qty */}
                                         <td className="p-6 text-center">
-                                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-tea-100 text-tea-700 text-xs font-black">
+                                            <span className={cn(
+                                                "inline-flex items-center justify-center w-8 h-8 rounded-xl text-xs font-black",
+                                                status === 'Completed' ? "bg-tea-100 text-tea-700" : "bg-gray-100 text-gray-400 line-through"
+                                            )}>
                                                 {qty}
                                             </span>
                                         </td>
@@ -418,10 +477,28 @@ const Sales = () => {
                                         {/* Amount */}
                                         <td className="p-6 text-right">
                                             <div className="space-y-0.5">
-                                                <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">
-                                                    ${amount.toFixed(2)}
-                                                </p>
-                                                <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em]">Amount</p>
+                                                {status === 'Completed' ? (
+                                                    <>
+                                                        <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">
+                                                            ${amount.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em]">Paid</p>
+                                                    </>
+                                                ) : status === 'Cancelled' ? (
+                                                    <>
+                                                        <p className="text-lg font-black text-gray-400 line-through tracking-tighter leading-none">
+                                                            ${amount.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-[8px] font-black text-rose-600 uppercase tracking-[0.2em]">Voided (-${amount.toFixed(2)})</p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="text-lg font-black text-gray-400 line-through tracking-tighter leading-none">
+                                                            ${amount.toFixed(2)}
+                                                        </p>
+                                                        <p className="text-[8px] font-black text-amber-600 uppercase tracking-[0.2em]">Refunded (-${amount.toFixed(2)})</p>
+                                                    </>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>
@@ -454,7 +531,8 @@ const Sales = () => {
                         filteredSales.map(sale => {
                             const parseDate = (d) => {
                                 if (!d) return new Date();
-                                if (d.toDate) return d.toDate(); // Firestore Timestamp
+                                if (d.toDate) return d.toDate();
+                                if (typeof d.seconds === 'number') return new Date(d.seconds * 1000);
                                 const dateObj = new Date(d);
                                 return isNaN(dateObj.getTime()) ? new Date() : dateObj;
                             };
@@ -463,6 +541,7 @@ const Sales = () => {
                             const qty = (sale.products || []).reduce((s, p) => s + (p.quantity || 1), 0);
                             const amount = (sale.totalAmount || sale.total || 0);
                             const stylist = stylists.find(s => s.id === sale.stylistId || s.name === sale.stylistName);
+                            const status = getSaleStatus(sale);
 
                             return (
                                 <div key={sale.id} className="glass-card p-4 space-y-4">
@@ -474,9 +553,36 @@ const Sales = () => {
                                             <span className="text-[10px] font-black text-tea-500 font-mono uppercase tracking-widest">
                                                 {sale.id?.substring(0, 8)}...
                                             </span>
+                                            {status === 'Completed' && (
+                                                <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    Paid
+                                                </span>
+                                            )}
+                                            {status === 'Cancelled' && (
+                                                <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-rose-50 text-rose-700 border border-rose-200">
+                                                    Cancelled
+                                                </span>
+                                            )}
+                                            {status === 'Refunded' && (
+                                                <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
+                                                    Refunded
+                                                </span>
+                                            )}
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">${amount.toFixed(2)}</p>
+                                            {status === 'Completed' ? (
+                                                <p className="text-lg font-black text-tea-900 tracking-tighter leading-none">${amount.toFixed(2)}</p>
+                                            ) : status === 'Cancelled' ? (
+                                                <div>
+                                                    <p className="text-lg font-black text-gray-400 line-through tracking-tighter leading-none">${amount.toFixed(2)}</p>
+                                                    <p className="text-[8px] font-black text-rose-600 uppercase tracking-widest">Voided</p>
+                                                </div>
+                                            ) : (
+                                                <div>
+                                                    <p className="text-lg font-black text-gray-400 line-through tracking-tighter leading-none">${amount.toFixed(2)}</p>
+                                                    <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">Refunded</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                     
