@@ -38,6 +38,8 @@ import {
     getDocument,
     checkEmailExists
 } from '../../lib/services';
+import { db } from '../../lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { sendStylistCreatedEmail, sendStylistUpdatedEmail } from '../../lib/email';
@@ -61,6 +63,7 @@ const Stylists = () => {
     const { showToast } = useToast();
     const [searchParams] = useSearchParams();
     const [stylists, setStylists] = useState([]);
+    const [sales, setSales] = useState([]);
     const [salonInfo, setSalonInfo] = useState(null);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -89,13 +92,64 @@ const Stylists = () => {
         };
         fetchSalon();
 
-        const unsubscribe = subscribeToCollection(`salons/${salonId}/stylists`, (data) => {
+        const unsubStylists = subscribeToCollection(`salons/${salonId}/stylists`, (data) => {
             setStylists(data);
             setLoading(false);
         }, [], { field: 'createdAt', direction: 'desc' });
 
-        return () => unsubscribe();
+        const unsubSales = subscribeToCollection(`salons/${salonId}/sales`, (data) => {
+            setSales(data);
+        });
+
+        return () => {
+            unsubStylists();
+            unsubSales();
+        };
     }, [salonId]);
+
+    // Compute live active metrics (excluding refunded & cancelled sales) per stylist
+    const stylistMetrics = useMemo(() => {
+        const metrics = {};
+        sales.forEach(sale => {
+            const status = (sale.status || '').toLowerCase();
+            const isActive = status !== 'cancelled' && status !== 'canceled' && status !== 'refunded' && !sale.cancelledAt && !sale.refundedAt;
+            if (!isActive) return;
+
+            const stId = sale.stylistId;
+            const stName = sale.stylistName?.trim().toLowerCase();
+            const amount = sale.totalAmount || sale.total || 0;
+            const units = sale.products?.reduce((sum, p) => sum + (p.quantity || 1), 0) || 1;
+
+            const keys = [];
+            if (stId) keys.push(`id:${stId}`);
+            if (stName) keys.push(`name:${stName}`);
+
+            keys.forEach(k => {
+                if (!metrics[k]) metrics[k] = { sales: 0, units: 0 };
+                metrics[k].sales += amount;
+                metrics[k].units += units;
+            });
+        });
+        return metrics;
+    }, [sales]);
+
+    // Keep Firestore stylist records synced with actual live active sales in background
+    useEffect(() => {
+        if (!salonId || stylists.length === 0) return;
+        stylists.forEach(async (stylist) => {
+            const m = stylistMetrics[`id:${stylist.id}`] || stylistMetrics[`name:${stylist.name?.trim().toLowerCase()}`] || { sales: 0, units: 0 };
+            if ((stylist.totalSales || 0) !== m.sales || (stylist.unitsSold || 0) !== m.units) {
+                try {
+                    await updateDoc(doc(db, 'salons', salonId, 'stylists', stylist.id), {
+                        totalSales: m.sales,
+                        unitsSold: m.units
+                    });
+                } catch (e) {
+                    console.warn("Auto-syncing stylist stats in background:", e);
+                }
+            }
+        });
+    }, [stylists, stylistMetrics, salonId]);
 
     const filteredStylists = stylists.filter(stylist => {
         const matchesSearch = stylist.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -223,39 +277,48 @@ const Stylists = () => {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                {filteredStylists.map((stylist) => (
-                    <div key={stylist.id} className="glass-card overflow-hidden group hover:bg-tea-50/50">
-                        <div className="p-6 flex flex-col md:flex-row gap-6">
-                            <div className="flex flex-col items-center gap-4 min-w-[140px]">
-                                <div className="w-24 h-24 rounded-3xl overflow-hidden ring-4 ring-tea-700/5 transition-all">
-                                    <ImageWithFallback
-                                        src={stylist.imageUrl}
-                                        alt={stylist.name}
-                                        className="w-full h-full object-cover"
-                                        fallbackClassName="w-full h-full flex items-center justify-center text-tea-300 shrink-0"
-                                        FallbackComponent={User}
-                                    />
+                {filteredStylists.map((stylist) => {
+                    const metrics = stylistMetrics[`id:${stylist.id}`] || stylistMetrics[`name:${stylist.name?.trim().toLowerCase()}`] || {
+                        sales: stylist.totalSales || 0,
+                        units: stylist.unitsSold || 0
+                    };
+                    const displaySales = metrics.sales;
+                    const displayUnits = metrics.units;
+
+                    return (
+                        <div key={stylist.id} className="glass-card overflow-hidden group hover:bg-tea-50/50">
+                            <div className="p-6 flex flex-col md:flex-row gap-6">
+                                <div className="flex flex-col items-center gap-4 min-w-[140px]">
+                                    <div className="w-24 h-24 rounded-3xl overflow-hidden ring-4 ring-tea-700/5 transition-all">
+                                        <ImageWithFallback
+                                            src={stylist.imageUrl}
+                                            alt={stylist.name}
+                                            className="w-full h-full object-cover"
+                                            fallbackClassName="w-full h-full flex items-center justify-center text-tea-300 shrink-0"
+                                            FallbackComponent={User}
+                                        />
+                                    </div>
+                                    <div className="text-center">
+                                        <h3 className="text-lg font-black text-tea-900 uppercase tracking-tight">{stylist.name}</h3>
+                                        <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">{stylist.status}</p>
+                                    </div>
                                 </div>
-                                <div className="text-center">
-                                    <h3 className="text-lg font-black text-tea-900 uppercase tracking-tight">{stylist.name}</h3>
-                                    <p className="text-[9px] font-black text-tea-400 uppercase tracking-widest">{stylist.status}</p>
-                                </div>
-                            </div>
-                            <div className="flex-1 space-y-6">
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                    <StatMini label="Sales" value={`$${stylist.totalSales || 0}`} />
-                                    <StatMini label="Clients" value={stylist.clientsCount || 0} />
-                                    <StatMini label="Units" value={stylist.unitsSold || 0} />
-                                    <StatMini label="Scans" value={stylist.scansCount || 0} />
-                                </div>
-                                <div className="flex gap-2 pt-4 border-t border-tea-700/5">
-                                    <button onClick={() => { setSelectedStylist(stylist); setViewingDetail(true); }} className="flex-1 btn-secondary text-[10px] font-black uppercase tracking-widest"><Eye className="w-4 h-4" /> View Details</button>
-                                    <button onClick={() => { setSelectedStylist(stylist); setModalMode('edit'); setShowModal(true); }} className="p-2 btn-secondary"><Edit className="w-4 h-4" /></button>
+                                <div className="flex-1 space-y-6">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                        <StatMini label="Sales" value={`$${displaySales.toLocaleString()}`} />
+                                        <StatMini label="Clients" value={stylist.clientsCount || 0} />
+                                        <StatMini label="Units" value={displayUnits.toLocaleString()} />
+                                        <StatMini label="Scans" value={stylist.scansCount || 0} />
+                                    </div>
+                                    <div className="flex gap-2 pt-4 border-t border-tea-700/5">
+                                        <button onClick={() => { setSelectedStylist(stylist); setViewingDetail(true); }} className="flex-1 btn-secondary text-[10px] font-black uppercase tracking-widest"><Eye className="w-4 h-4" /> View Details</button>
+                                        <button onClick={() => { setSelectedStylist(stylist); setModalMode('edit'); setShowModal(true); }} className="p-2 btn-secondary"><Edit className="w-4 h-4" /></button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Empty State */}
